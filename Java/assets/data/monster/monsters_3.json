@@ -1,0 +1,4 @@
+{
+"172":{"val":{"sd":35,"df":15,"at":40,"hp":20,"sp":60,"sa":35},"species_id":172,"form":0,"species_name":"皮丘","root":172,"ability":["static","static","lightning rod"],"type":["electric"],"wt":2.0},
+"173":{"val":{"sd":55,"df":28,"at":25,"hp":50,"sp":15,"sa":45},"species_id":173,"form":0,"species_name":"皮宝宝","root":173,"ability":["cute charm","magic guard","friend guard"],"type":["fairy"],"wt":3.0}
+}
