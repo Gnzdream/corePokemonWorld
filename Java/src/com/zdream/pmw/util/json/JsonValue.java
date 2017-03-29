@@ -163,10 +163,13 @@ public class JsonValue {
 	 * 默认的 Json 类型为 JsonType.ObjectType，参数为 value
 	 * @param value
 	 */
-	@SuppressWarnings("rawtypes")
 	public JsonValue(Object value) {
 		this(JsonType.ValueType);
-		
+		set(value);
+	}
+	
+	@SuppressWarnings("rawtypes")
+	private void set(Object value) {
 		if (value == null){
 			this.type = JsonType.NullType;
 		} else if (value instanceof String){
@@ -174,6 +177,9 @@ public class JsonValue {
 		} else if (value instanceof Enum){
 			this.type = JsonType.StringType;
 			this.value = ((Enum) value).name();
+			return;
+		} else if (value instanceof JsonValue) {
+			set(((JsonValue) value).getValue());
 			return;
 		}
 		
@@ -239,15 +245,7 @@ public class JsonValue {
 		switch (type) {
 		case StringType: case ValueType: case NullType:{
 			this.value = value;
-			if (!forceType){
-				if (value == null){
-					this.type = JsonType.NullType;
-				} else if (value instanceof String){
-					this.type = JsonType.StringType;
-				} else {
-					this.type = JsonType.ValueType;
-				}
-			}
+			set(value);
 		} break;
 
 		default:

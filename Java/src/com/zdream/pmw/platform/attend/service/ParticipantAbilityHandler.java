@@ -24,11 +24,6 @@ import com.zdream.pmw.platform.common.AbnormalMethods;
  */
 public class ParticipantAbilityHandler implements IPokemonDataType {
 	
-	/**
-	 * 命中参数的基数（没有任何修正的）为 150
-	 */
-	public static final int TG_BASE = 150;
-	
 	private AttendManager am;
 	
 	public ParticipantAbilityHandler(AttendManager am) {
@@ -137,7 +132,7 @@ public class ParticipantAbilityHandler implements IPokemonDataType {
 	 * @return
 	 *   命中参数的基数（没有任何修正的）为 150
 	 */
-	public int hitableLevel(byte atseat, byte dfseat) {
+	public float hitableLevel(byte atseat, byte dfseat) {
 		byte hitLevel = getParticipant(atseat).getAbilityLevel(TG),
 				hideLevel = getParticipant(dfseat).getAbilityLevel(HD);
 		
@@ -148,7 +143,7 @@ public class ParticipantAbilityHandler implements IPokemonDataType {
 			level = LEVEL_UPPER_LIMIT;
 		}
 		
-		return (short)(150 * levelRate(TG, level));
+		return levelRate(TG, level);
 	}
 	
 	/**

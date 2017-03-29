@@ -9,9 +9,8 @@ import org.junit.Test;
 import com.zdream.pmw.monster.data.SkillDataBuffer;
 import com.zdream.pmw.monster.prototype.EPokemonGender;
 import com.zdream.pmw.monster.prototype.EPokemonNature;
-import com.zdream.pmw.monster.prototype.IPokemonService;
 import com.zdream.pmw.monster.prototype.Pokemon;
-import com.zdream.pmw.monster.service.PokemonServiceImpl;
+import com.zdream.pmw.monster.prototype.PokemonHandler;
 import com.zdream.pmw.monster.skill.Skill;
 import com.zdream.pmw.platform.attend.AttendManager;
 import com.zdream.pmw.platform.attend.Attendant;
@@ -49,7 +48,7 @@ public class TestPlatform {
 		pm1.setLevel((byte) 15);
 		pm1.setStatIV(new byte[]{15, 15, 15, 15, 15, 15});
 		pm1.getSkill()[0] = (short) 7;
-		pm1.getSkill()[1] = (short) 16;
+		pm1.getSkill()[1] = (short) 178; // 35 舞剑14
 		pm1.getSkill()[2] = (short) 47;
 		pm1.getSkill()[3] = (short) 261;
 		pm1.getSkillPP()[0] = (byte) 35;
@@ -93,7 +92,7 @@ public class TestPlatform {
 		pm2.getSkill()[0] = (short) 10;
 		pm2.getSkillPP()[0] = (byte) 35;
 		
-		IPokemonService service = PokemonServiceImpl.getInstance();
+		PokemonHandler service = PokemonHandler.getInstance();
 		service.countStatValue(pm1);
 		service.recoverPokemon(pm1);
 		service.countStatValue(pm2);
@@ -114,6 +113,8 @@ public class TestPlatform {
 		
 		// 准备战斗
 		Fuse fuse = new Fuse(IBattleRule.RULE_DEBUG);
+		MessageTranslator translator = new MessageTranslator();
+		
 		fuse.putTeams(trainer, new Pokemon[]{pm1, pm3}, new IRequestCallback() {
 			
 			@Override
@@ -129,12 +130,12 @@ public class TestPlatform {
 				} else if (IRequestKey.VALUE_REQ_CONTENT_END.equals(content)) {
 					System.out.println("战斗结束，结果：" + base.getResult());
 				} else if (IRequestKey.VALUE_REQ_CONTENT_SWITCH.equals(content)) {
-					System.out.println("要换人！");
-					chooseMonsterAuto(platform, ctrl); // TODO 以后不要用自动选择换人
+					chooseMonsterManually(platform, ctrl);
 				}
 			}
-		}, new IMessageCallback[]{new MessageTranslator().getMessageCallback()});
+		}, new IMessageCallback[]{translator.getMessageCallback()});
 		fuse.putTeams(null, new Pokemon[]{pm2});
+		translator.setTeam((byte) 0);
 		scanner = new Scanner(System.in);
 		
 		bp = fuse.initPlatform();
@@ -238,7 +239,7 @@ public class TestPlatform {
 	
 	private void screenCanReplace(BattlePlatform platform, ControlBase ctrl, byte seat) {
 		AttendManager am = platform.getAttendManager();
-		byte curNo = am.noForSeat(seat);
+		byte curNo = am.noForSeat(seat); // 可能为 -1
 		
 		int length = am.attendantLength();
 		for (byte no = 0; no < length; no++) {
@@ -256,6 +257,7 @@ public class TestPlatform {
 	/**
 	 * 选择怪兽
 	 */
+	@SuppressWarnings("unused")
 	private void chooseMonsterAuto(BattlePlatform platform, ControlBase ctrl) {
 		byte[] seats = ctrl.getSeats();
 		byte team = ctrl.getTeam();
@@ -276,6 +278,40 @@ public class TestPlatform {
 				}
 			}
 		}
+		ctrl.commit();
+	}
+	
+	/**
+	 * 选择怪兽
+	 */
+	private void chooseMonsterManually(BattlePlatform platform, ControlBase ctrl) {
+		byte[] seats = ctrl.getSeats();
+		byte team = ctrl.getTeam();
+		
+		for (int i = 0; i < seats.length; i++) {
+			byte seat = seats[i]; // 暂不支持连续上场多个怪兽
+			System.out.println("选择怪兽上场至位置: " + seat);
+			screenCanReplace(platform, ctrl, seat);
+			
+			// 下面寻找能上场的怪兽
+			AttendManager am = platform.getAttendManager();
+			String input = scanner.nextLine();
+			
+			try {
+				byte inNo = Byte.parseByte(input);
+				
+				Attendant att = am.getAttendant(inNo);
+				if (am.teamForNo(inNo) == team && am.seatForNo(inNo) == -1 && att.getHpi() > 0) {
+					ctrl.chooseReplace(seat, inNo);
+					continue;
+				}
+				
+			} catch (RuntimeException e) {
+				System.err.println("错误的输入\n");
+				i--;
+			}
+		}
+
 		ctrl.commit();
 	}
 	

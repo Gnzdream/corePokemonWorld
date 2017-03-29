@@ -84,7 +84,7 @@ public abstract class ControlBase implements IRequestKey, IRespondKey, IMessageP
 	 * @return
 	 */
 	public byte[] getSeats() {
-		return (byte[]) request.get(KEY_REQ_SEATS);
+		return (byte[]) request.get(KEY_REQ_SEAT);
 	}
 	
 	/**
@@ -252,20 +252,20 @@ public abstract class ControlBase implements IRequestKey, IRespondKey, IMessageP
 	 *   请求的精灵 seat 列表
 	 */
 	public void nextMoveRequest(byte[] seats) {
-		request.put(KEY_REQ_SEATS, seats);
+		request.put(KEY_REQ_SEAT, seats);
 		request.put(KEY_REQ_CONTENT, VALUE_REQ_CONTENT_MOVE);
 		
 		nextActionRequest();
 	}
 	
 	/**
-	 * 向用户端（玩家或 AI）提出请求上场请求<br>
+	 * 向用户端（玩家或 AI）提出行动请求<br>
 	 * 战斗系统调用的方法
-	 * @param seat
-	 *   请求的怪兽的入场位置
+	 * @param seats
+	 *   请求的精灵 seat 列表
 	 */
-	public void nextEnteranceRequest(byte[] seats) {
-		request.put(KEY_REQ_SEATS, seats);
+	public void nextSwitchRequest(byte[] seats) {
+		request.put(KEY_REQ_SEAT, seats);
 		request.put(KEY_REQ_CONTENT, VALUE_REQ_CONTENT_SWITCH);
 		
 		nextActionRequest();

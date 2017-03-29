@@ -3,8 +3,18 @@ package com.zdream.pmw.monster.prototype;
 import java.io.Serializable;
 import java.util.Calendar;
 
+import com.zdream.pmw.platform.common.AbnormalMethods;
+
 /**
  * 精灵的数据模型<br>
+ * The prototype of Pokemon.<br>
+ * <p>该类中, 只会存储精灵 (怪兽) 的个性数据, 比如每个怪兽的性格、特性都会不同.<br>
+ * 而 {@link com.zdream.pmw.monster.data.PokemonBaseData} 存储的是怪兽的共性数据.
+ * 比如两个相同形态的怪兽, 他们的属性一定是相同的.</p>
+ * <p>In this class, we only store personality data like character, ability, which
+ * is the same between two Pokemon of the same species.<br>
+ * And we store the common data (ex. types) in class
+ * {@link com.zdream.pmw.monster.data.PokemonBaseData}.</p>
  * <br>
  * <b>v0.1.1</b><br>
  *   修改了 toString() 方法<br>
@@ -47,6 +57,7 @@ public class Pokemon implements IPokemonDataType, IPokemonTrainerMarker, Seriali
 	/**
 	 * 精灵编号 species ID<br>
 	 * 标定了每个精灵的类型，以官方的全国图鉴为准。
+	 * <p>According to National Pokedex</p>
 	 */
 	private short speciesID;
 	
@@ -76,6 +87,7 @@ public class Pokemon implements IPokemonDataType, IPokemonTrainerMarker, Seriali
 	 * 精灵的性别；<br>
 	 * 它的可能值在 EPokemonGender 中进行了定义，可能是 M、F、N 中的一个；<br>
 	 * 对于一个固定的精灵种类，它的 EPokemonGender 可能是固定的，也可能是去掉以上三种中的某种选项。
+	 * <p>The gender can be: M(Male) F(Female) N(Unknowed)</p>
 	 */
 	private EPokemonGender gender;
 	
@@ -384,7 +396,7 @@ public class Pokemon implements IPokemonDataType, IPokemonTrainerMarker, Seriali
 	private byte[] statContest = new byte[STAT_LENGTH];
 	
 	/**
-	 * 异常状态 abnormal<br>
+	 * 异常状态 abnormal code<br>
 	 * 精灵处在的异常状态，该值标明了其编码
 	 */
 	private byte abnormal;
@@ -577,6 +589,37 @@ public class Pokemon implements IPokemonDataType, IPokemonTrainerMarker, Seriali
 	public void setTrainerMarkers(boolean[] trainerMarkers) {
 		this.trainerMarkers = trainerMarkers;
 	}
+
+	/* ************
+	 *	简单方法  *
+	 ************ */
+	/*
+	 * v0.2.1
+	 */
+	
+	/**
+	 * 获得异常状态的类型<br>
+	 * <p>如果想得到异常状态的编码, 请使用 {@code getAbnormal()}.</p>
+	 * @return
+	 *   异常状态的枚举类
+	 * @since v0.2.1
+	 */
+	public EPokemonAbnormal getAbnormalType() {
+		return AbnormalMethods.parseAbnormal(abnormal);
+	}
+	
+	/**
+	 * 确认该怪兽是否濒死
+	 * @return
+	 * @since v0.2.1
+	 */
+	public boolean isFainted() {
+		return (hpi <= 0);
+	}
+
+	/* ************
+	 *	  其它    *
+	 ************ */
 
 	@Override
 	public String toString() {

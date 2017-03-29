@@ -4,7 +4,6 @@ import com.zdream.pmw.monster.prototype.EPokemonType;
 import com.zdream.pmw.monster.prototype.IPokemonDataType;
 import com.zdream.pmw.monster.skill.ESkillCategory;
 import com.zdream.pmw.platform.attend.AttendManager;
-import com.zdream.pmw.platform.attend.service.ParticipantAbilityHandler;
 import com.zdream.pmw.platform.control.IPrintLevel;
 import com.zdream.pmw.platform.effect.Aperitif;
 import com.zdream.pmw.platform.effect.EffectManage;
@@ -48,11 +47,14 @@ public class DefaultDamageFormula implements IDamageFormula {
 			pack.setThiz(index);
 			if (writeHitable(index)) {
 				hit = true;
+			} else {
+				sendMiss(index);
 			}
 		}
 		
 		if (hit == false) {
-			// 没有命中任何怪兽 TODO
+			// 没有命中任何怪兽: 攻击终止
+			return;
 		}
 		
 		for (int index = 0; index < length; index++) {
@@ -75,6 +77,7 @@ public class DefaultDamageFormula implements IDamageFormula {
 		// 属性克制倍率
 		if (writeTypeRate(index)) {
 			// 没有效果
+			sendImmune(index);
 			return;
 		}
 		
@@ -99,7 +102,7 @@ public class DefaultDamageFormula implements IDamageFormula {
 		// 实现伤害
 		executeDamage(index);
 		
-		// 附加状态 / A 类附加效果
+		// 附加状态 / 附加效果
 		executeAddition(index);
 		
 	}
@@ -117,13 +120,13 @@ public class DefaultDamageFormula implements IDamageFormula {
 		byte atseat = pack.getAtStaff().getSeat(); // 攻击方的 seat
 		
 		byte dfseat; // 防御方的 seat
-		int rate; // 命中参数，攻击方的命中等级和防御方的躲避等级共同决定
+		float rate; // 命中参数，攻击方的命中等级和防御方的躲避等级共同决定, 基数 1.0f
 		boolean result = false;
 		
 		AttendManager am = pack.getAttends();
 
 		dfseat = pack.getDfStaff(index).getSeat();
-		// rate 计算了命中和躲避能力等级计算后的命中数值, 基点 150
+		// rate 计算了命中和躲避能力等级计算后的命中数值
 		rate = am.hitableLevel(atseat, dfseat);
 		// 攻击方命中 (必中负数)
 		pack.setAtStaffAccuracy(countHitrate(), index);
@@ -148,7 +151,7 @@ public class DefaultDamageFormula implements IDamageFormula {
 		rate *= (pack.getAtStaffAccuracy(index) / pack.getDfStaffHide(index)
 				* pack.getSkillAccuracy() / 100.0f);
 
-		result = !RanValue.isBigger(rate, ParticipantAbilityHandler.TG_BASE);
+		result = !RanValue.isBigger((int) (rate * 1000), 1000);
 		am.logPrintf(IPrintLevel.PRINT_LEVEL_VERBOSE,
 				"DefaultDamageFormula.writeHitable(1): seat = %d 的命中判定 %s", dfseat, result);
 		pack.setHitable(result, index);
@@ -158,8 +161,6 @@ public class DefaultDamageFormula implements IDamageFormula {
 			am.logPrintf(IPrintLevel.PRINT_LEVEL_INFO,
 					"DefaultDamageFormula.writeHitable(1): seat=%d 的攻击没有命中", 
 					pack.getDfStaff(index).getSeat());
-			am.logPrintf(IPrintLevel.PRINT_LEVEL_WARN,
-					"DefaultDamageFormula.writeHitable(1): 没有命中，没有向外部触发信息");
 		}
 
 		return result;
@@ -242,12 +243,32 @@ public class DefaultDamageFormula implements IDamageFormula {
 			pack.getEffects().logPrintf(IPrintLevel.PRINT_LEVEL_INFO,
 					"DefaultDamageFormula.writeTypeRate(1): seat=%d 的攻击好像没有效果", 
 					pack.getDfStaff(index).getSeat());
-			pack.getEffects().logPrintf(IPrintLevel.PRINT_LEVEL_WARN,
-					"DefaultDamageFormula.writeTypeRate(1): 攻击无效，没有向外部触发信息");
 		}
 		
 		return result == 0.0f;
 		
+	}
+	
+	/**
+	 * 由于攻击没有命中，发出开胃酒消息
+	 * @param index
+	 */
+	protected void sendMiss(int index) {
+		Aperitif ap = pack.getEffects().newAperitif(Aperitif.CODE_BROADCAST);
+		ap.append("type", "miss").append("-atseat", pack.getAtStaff().getSeat())
+			.append("-dfseat", pack.getDfStaff(index).getSeat());
+		pack.getEffects().startCode(ap);
+	}
+	
+	/**
+	 * 由于属性免疫，发出开胃酒消息
+	 * @param index
+	 */
+	protected void sendImmune(int index) {
+		Aperitif ap = pack.getEffects().newAperitif(Aperitif.CODE_BROADCAST);
+		ap.append("type", "immune").append("-atseat", pack.getAtStaff().getSeat())
+			.append("-dfseat", pack.getDfStaff(index).getSeat());
+		pack.getEffects().startCode(ap);
 	}
 	
 	/**

@@ -14,10 +14,10 @@ public interface IRequestKey {
 	
 	/**
 	 * 请求行动的怪兽位置<br>
-	 * value 值的格式为 byte[]：<br>
+	 * value 值的格式如下：<br>
 	 * [0,1] 表示 seat 为 0 和 1 的精灵在请求行动指令
 	 */
-	public static final String KEY_REQ_SEATS = "req_seats";
+	public static final String KEY_REQ_SEAT = "req_seat";
 	
 	/**
 	 * 是否需要玩家、AI 等指明行动的目标位置<br>

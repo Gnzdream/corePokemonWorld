@@ -1,51 +1,93 @@
 package com.zdream.pmw.platform.translate;
 
-import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.zdream.pmw.platform.prototype.BattlePlatform;
 import com.zdream.pmw.platform.prototype.IMessageCallback;
+import com.zdream.pmw.platform.translate.parse.DefaultParser;
+import com.zdream.pmw.platform.translate.template.ITemplateChooser;
+import com.zdream.pmw.platform.translate.translater.ITranslate;
 import com.zdream.pmw.util.common.CodeSpliter;
+import com.zdream.pmw.util.json.JsonValue;
 
 /**
  * 将战场信息翻译成人们看得懂的语言并显示<br>
+ * <br>
+ * <b>v0.2.1</b>
+ * <p>添加 team 属性</p>
  * 
  * @since v0.2
  * @author Zdream
  * @date 2017年2月26日
- * @version v0.2
+ * @version v0.2.1
  */
 public class MessageTranslator {
 	
-	Properties pro;
+	MessageRepository repository;
+	
+	/* ************
+	 *	  属性    *
+	 ************ */
+	
+	byte team = (byte) -1;
+	
+	public void setTeam(byte team) {
+		this.team = team;
+	}
+	
+	BattlePlatform pf;
+	
+	public void setPlatform(BattlePlatform pf) {
+		this.pf = pf;
+	}
 	
 	/* ************
 	 *	文字替换  *
 	 ************ */
 	
-	Map<String, ITranslate> trm = new HashMap<String, ITranslate>();
-	
-	public String translate(String msg) {
+	public String[] translate(String msg) {
 		String[] ss = CodeSpliter.split(msg);
 		String cmd = ss[0];
 		
-		String mean = this.pro.getProperty("meaning." + cmd);
-		String template = this.pro.getProperty("template." + cmd);
-		if (mean == null || template == null) {
-			return msg;
-		}
-		String[] means = mean.split(" ");
-		Map<String, String> param = new HashMap<>();
+		// 1. 原消息解析
+		JsonValue dict = repository.getDictionary(cmd);
+		DefaultParser parser = new DefaultParser();
+		Map<String, String> context = parser.parse(ss, dict);
 		
-		for (int i = 0; i < ss.length - 1; i++) {
-			param.put(means[i], ss[i + 1]);
+		if (team != -1) {
+			context.put("/team", Byte.toString(team));
 		}
 		
-		// template
+		// 2. 选择合适的模板
+		ITemplateChooser chooser = repository.getChooser(cmd);
+		String[] tempIds = chooser.choose(cmd, context, pf);
+		if (tempIds == null) {
+			if (Boolean.toString(true).equals(context.get("/mute"))) {
+				return new String[]{"( " + msg + ")"};
+			} else {
+				return new String[]{msg};
+			}
+		}
+		
+		String[] temps = repository.getTemplates(tempIds);
+		
+		// 3. 用模板和上下文生成语言
+		String[] results = new String[temps.length];
+		for (int i = 0; i < results.length; i++) {
+			String result = handleTemplate(temps[i], context);
+			if (Boolean.toString(true).equals(context.get("/mute"))) {
+				results[i] = "( " + result + ")";
+			} else {
+				results[i] = result;
+			}
+		}
+		
+		return results;
+	}
+	
+	private String handleTemplate(String template, Map<String, String> context) {
 		Pattern r = Pattern.compile("\\[(\\S+?)\\]");
 		Matcher m = r.matcher(template);
 		StringBuilder builder = new StringBuilder(template.length() * 2);
@@ -55,17 +97,17 @@ public class MessageTranslator {
 			String handle = m.group(1);
 			String replace;
 			
-			if (param.containsKey(handle)) {
+			if (context.containsKey(handle)) {
 				// 参数匹配
-				replace = param.get(handle);
+				replace = context.get(handle);
 			} else {
 				// 方法结果匹配
-				ITranslate t = this.trm.get(handle);
+				ITranslate t = this.repository.getTranslator(handle);
 				if (t == null) {
 					replace = handle;
 				} else {
-					replace = t.translate(handle, param, platform);
-					param.put(handle, replace);
+					replace = t.translate(handle, context, platform, repository);
+					context.put(handle, replace);
 				}
 			}
 			
@@ -85,22 +127,8 @@ public class MessageTranslator {
 	BattlePlatform platform;
 
 	public MessageTranslator() {
-		// 初始化模板
-		pro = new Properties();
-		try {
-			pro.load(this.getClass()
-					.getResourceAsStream("/com/zdream/pmw/platform/translate/cn.properties"));
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
-		ITranslate[] trs = new ITranslate[] {new ParticipantTranslate(), new SkillTranslate()};
-		for (int i = 0; i < trs.length; i++) {
-			String[] handlers = trs[i].canHandle();
-			for (int j = 0; j < handlers.length; j++) {
-				trm.put(handlers[j], trs[i]);
-			}
-		}
+		// v0.2.1
+		repository = new MessageRepository();
 	}
 	
 	public IMessageCallback getMessageCallback() {
@@ -114,8 +142,12 @@ public class MessageTranslator {
 		@Override
 		public void onMessage(BattlePlatform platform, String msg) {
 			MessageTranslator.this.platform = platform;
+			setPlatform(platform);
 			try {
-				System.out.println(translate(msg));
+				String[] texts = translate(msg);
+				for (int i = 0; i < texts.length; i++) {
+					System.out.println(texts[i]);
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 				System.out.println(msg);
@@ -124,5 +156,4 @@ public class MessageTranslator {
 		
 	}
 	MessageCallback msgback = new MessageCallback();
-
 }

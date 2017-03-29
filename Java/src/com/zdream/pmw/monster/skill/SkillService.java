@@ -9,33 +9,35 @@ import java.util.Set;
 import com.zdream.pmw.monster.data.dao.ISkillDao;
 
 /**
- * 技能类的服务接口实现类<br>
+ * 技能类的服务<br>
  * 
  * @since v0.1
  * @author Zdream
  * @date 2016年3月23日
  * @version v0.1
  */
-public class SkillServiceImpl implements ISkillService{
+public class SkillService {
 	
 	/* ************
 	 *	单例模式  *
 	 ************ */
-	
-	private SkillServiceImpl() {
+	/*
+	 * singleton pattern
+	 */
+	private SkillService() {
 		super();
 		// private 
 	}
 	
-	private static SkillServiceImpl instance = new SkillServiceImpl();
+	private static SkillService instance = new SkillService();
 	
 	private ISkillDao dao;
 	
-	public static SkillServiceImpl getInstance() {
+	public static SkillService getInstance() {
 		return instance;
 	}
 	
-	public static SkillServiceImpl getInstance(ISkillDao dao) {
+	public static SkillService getInstance(ISkillDao dao) {
 		instance.dao = dao;
 		return instance;
 	}
@@ -44,7 +46,13 @@ public class SkillServiceImpl implements ISkillService{
 	 *	实现方法  *
 	 ************ */
 	
-	@Override
+	/**
+	 * 向数据源中更新与添加新的技能对象<br>
+	 * <p>由于规定在数据源中的技能对象的 id 字段是不允许重复的,
+	 * 因此由输入的 skills 的 id 来判断每个技能是添加还是更新</p>
+	 * @param skills
+	 * @return
+	 */
 	public int addAndUpdateAll(List<Skill> skills) {
 		List<Skill> adds = new LinkedList<Skill>(),
 				updates = new LinkedList<Skill>();

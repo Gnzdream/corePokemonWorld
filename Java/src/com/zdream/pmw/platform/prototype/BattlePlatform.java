@@ -6,6 +6,8 @@ import com.zdream.pmw.platform.control.IPrintLevel;
 import com.zdream.pmw.platform.effect.Aperitif;
 import com.zdream.pmw.platform.effect.EffectManage;
 import com.zdream.pmw.platform.order.OrderManager;
+import com.zdream.pmw.platform.prototype.context.DefaultPlatformContext;
+import com.zdream.pmw.platform.prototype.context.IPlatformContext;
 
 /**
  * 战场实例类<br>
@@ -26,6 +28,8 @@ public class BattlePlatform implements IPlatformComponent {
 	public BattlePlatform() {
 		super();
 		// no for private
+		
+		context = new DefaultPlatformContext(this);
 	}
 	
 	@Override
@@ -144,6 +148,24 @@ public class BattlePlatform implements IPlatformComponent {
 	
 	public EffectManage getEffectManage() {
 		return effectManage;
+	}
+
+	/* ************
+	 *	 上下文   *
+	 ************ */
+	/**
+	 * 上下文, 用于更加方便地获取整个战场情况的类
+	 * @since v0.2.2
+	 */
+	private IPlatformContext context;
+	
+	/**
+	 * @return
+	 *   战场上下文
+	 * @since v0.2.2
+	 */
+	public IPlatformContext getContext() {
+		return context;
 	}
 	
 }

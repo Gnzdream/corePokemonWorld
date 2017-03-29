@@ -470,6 +470,7 @@ public class AbilityLevelAdditionFormula implements IAdditionFormula, IPokemonDa
 			value.append("dfseat", (byte) -1);
 			value.append("dfseats", dfseats);
 		}
+		
 		value.append("atseat", atseat);
 		value.append("type", "abilityLevel");
 		value.append("param", param);

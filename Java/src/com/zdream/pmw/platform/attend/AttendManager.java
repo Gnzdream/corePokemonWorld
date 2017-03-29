@@ -460,14 +460,18 @@ public class AttendManager implements IPlatformComponent {
 	 * 获得精灵的技能命中的实时能力<br>
 	 * 该能力仅检索命中、躲避两项能力<br>
 	 * 方法将返回关于指定攻击方与指定防御方共同决定的命中参数<br>
+	 * <br>
+	 * <b>v0.2.1</b>
+	 * <p>不再使用 150 作为基点, 改用 1.0f.</p>
+	 * 
 	 * @param atseat
 	 *   攻击方的 seat
 	 * @param dfseat
 	 *   防御方的 seat
 	 * @return
-	 *   命中参数的基数（没有任何修正的）为 150
+	 *   命中参数的基数（没有任何修正的）为 1.0f
 	 */
-	public int hitableLevel(byte atseat, byte dfseat) {
+	public float hitableLevel(byte atseat, byte dfseat) {
 		return partAHandler.hitableLevel(atseat, dfseat);
 	}
 

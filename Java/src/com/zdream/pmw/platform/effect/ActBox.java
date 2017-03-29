@@ -46,34 +46,23 @@ public class ActBox {
 			// TODO 让玩家选择上场的怪兽, noIn 被覆盖
 		}
 		
-		// 入场（前）
-		value = em.newAperitif(Aperitif.CODE_ENTRANCE, seat);
-		value.append("team", team);
-		value.append("no", noIn);
-		value.append("seat", seat);
-		em.startCode(value);
-		
-		// 入场（后）
-		value = em.newAperitif(Aperitif.CODE_AFTER_ENTRANCE, seat);
-		value.append("team", team);
-		value.append("no", noIn);
-		value.append("seat", seat);
-		em.startCode(value);
+		enteranceAct(seat, noIn, team);
 	}
-	
+
 	/**
-	 * 怪兽上场<br>
-	 * <p>一般为怪兽濒死后退场, 然后等到该回合要结束时, 由于此时该位置上没有怪兽,
-	 * 因此不能称其为交换. 这个时候就需要上场了.</p>
+	 * 怪兽上场
 	 * @param seat
-	 *   该上场怪兽上场时所在的位置
+	 *   座位号
 	 * @param noIn
 	 *   上场的怪兽, 必须是有效的参数
+	 * @since v0.2.1
 	 */
 	public void enteranceAct(byte seat, byte noIn) {
 		byte team = em.getAttends().teamForNo(noIn);
-		
-		// 上场部分 TODO
+		enteranceAct(seat, noIn, team);
+	}
+	
+	private void enteranceAct(byte seat, byte noIn, byte team) {
 		// 入场（前）
 		Aperitif value = em.newAperitif(Aperitif.CODE_ENTRANCE, seat);
 		value.append("team", team);
@@ -88,7 +77,6 @@ public class ActBox {
 		value.append("seat", seat);
 		em.startCode(value);
 	}
-	
 	
 	/* ************
 	 *	构造函数  *

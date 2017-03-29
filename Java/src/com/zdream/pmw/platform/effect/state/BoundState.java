@@ -4,7 +4,6 @@ import java.util.Map;
 
 import com.zdream.pmw.monster.prototype.IPokemonDataType;
 import com.zdream.pmw.platform.attend.AttendManager;
-import com.zdream.pmw.platform.attend.IState;
 import com.zdream.pmw.platform.attend.IStateInterceptable;
 import com.zdream.pmw.platform.attend.Participant;
 import com.zdream.pmw.platform.effect.Aperitif;
@@ -18,15 +17,17 @@ import com.zdream.pmw.util.random.RanValue;
  * <p><b>状态效果: </b></p>
  * <li>处于束缚状态的怪兽无法换下或逃走（未完成） TODO
  * <li>回合结束时, 损失 1/8 的最大 HP
- * <li>招式的施放方离场时, 效果解除（未完成） TODO
+ * <li>招式的施放方离场时, 效果解除（利用附属状态完成这个功能）
  * <li>不会对同一个怪兽施加多余一个的束缚状态
+ * </li>
  * 
  * @since v0.2.1
  * @author Zdream
  * @date 2017年3月4日
  * @version v0.2.1
  */
-public class BoundState extends ParticipantState implements IState, IStateMessageFormater {
+public class BoundState extends ParticipantState 
+		implements IStateMessageFormater, IParticipantSubStateCreater {
 
 	/* ************
 	 *	  属性    *
@@ -41,6 +42,11 @@ public class BoundState extends ParticipantState implements IState, IStateMessag
 	 * 招式的施放方怪兽的 no
 	 */
 	private byte atno;
+
+	/**
+	 * 附属状态
+	 */
+	private LeaveSubState subState;
 	
 	public int getRound() {
 		return round;
@@ -122,6 +128,22 @@ public class BoundState extends ParticipantState implements IState, IStateMessag
 		Map<String, JsonValue> map = v.getMap();
 		
 		this.atno = (Byte) map.get("atno").getValue();
+	}
+	
+	@Override
+	public ASubState[] getSubStates() {
+		if (subState == null) {
+			subState = new LeaveSubState(this, atno);
+		}
+		return new ASubState[]{subState};
+	}
+	
+	@Override
+	public byte toWhom(ASubState state) {
+		if (subState == state) {
+			return atno;
+		}
+		return (byte) -1;
 	}
 	
 	/* ************

@@ -134,7 +134,7 @@ public class SleepState extends AAbnormalState implements IDuration {
 		}
 		
 		value.replace("result", false);
-		value.append("fault", name());
+		value.append("fail", name());
 		return interceptor.getCommand();
 	}
 

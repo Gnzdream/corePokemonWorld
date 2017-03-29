@@ -15,7 +15,7 @@ import com.zdream.pmw.platform.control.IPrintLevel;
 import com.zdream.pmw.platform.effect.accuracy.IAccuracyFormula;
 import com.zdream.pmw.platform.effect.addition.IAdditionFormula;
 import com.zdream.pmw.platform.effect.damage.IDamageFormula;
-import com.zdream.pmw.platform.effect.movable.IMovableFormula;
+import com.zdream.pmw.platform.effect.moveable.IMoveableFormula;
 import com.zdream.pmw.platform.effect.power.IPowerFormula;
 import com.zdream.pmw.util.json.JsonValue;
 
@@ -91,7 +91,7 @@ public class SkillFormulaLoader {
 					String tag = name.substring(0, name.indexOf(".") + 1);
 					switch (tag) {
 					case TAG_MOVABLE: {
-						IMovableFormula f = loadFormula(val);
+						IMoveableFormula f = loadFormula(val);
 						pack.setMovableFormula(f);
 					} break;
 					case TAG_DAMAGE: {

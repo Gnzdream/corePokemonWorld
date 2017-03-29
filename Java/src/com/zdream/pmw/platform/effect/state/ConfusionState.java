@@ -53,7 +53,7 @@ public class ConfusionState extends ParticipantState implements IDuration {
 	@Override
 	public boolean canExecute(String msg) {
 		switch (msg) {
-		case CODE_RELEASE_SKILL: case CODE_PP_SUB:
+		case CODE_CONFIRM_SKILL: case CODE_PP_SUB:
 			return true;
 		}
 		return false;
@@ -64,7 +64,7 @@ public class ConfusionState extends ParticipantState implements IDuration {
 		String head = value.getHead();
 		
 		switch (head) {
-		case CODE_RELEASE_SKILL:
+		case CODE_CONFIRM_SKILL:
 			releaseSkill(value, pf);
 			break;
 			
@@ -74,6 +74,12 @@ public class ConfusionState extends ParticipantState implements IDuration {
 		}
 		
 		return interceptor.nextState();
+	}
+	
+	@Override
+	public void set(JsonValue v, BattlePlatform pf) {
+		super.set(v, pf);
+		IDuration.super.set(v, pf);
 	}
 
 	@Override

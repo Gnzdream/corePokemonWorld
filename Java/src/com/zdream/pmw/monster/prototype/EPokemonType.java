@@ -2,6 +2,7 @@ package com.zdream.pmw.monster.prototype;
 
 /**
  * 精灵属性<br>
+ * <p>The type</p>
  * 
  * @since v0.1
  * @author Zdream

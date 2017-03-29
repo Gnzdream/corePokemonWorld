@@ -1,8 +1,8 @@
 package com.zdream.pmw.platform.effect.damage;
 
 import com.zdream.pmw.platform.attend.AttendManager;
-import com.zdream.pmw.platform.attend.service.ParticipantAbilityHandler;
 import com.zdream.pmw.platform.control.IPrintLevel;
+import com.zdream.pmw.platform.effect.Aperitif;
 import com.zdream.pmw.platform.effect.SkillReleasePackage;
 import com.zdream.pmw.platform.effect.addition.IAdditionFormula;
 import com.zdream.pmw.util.random.RanValue;
@@ -31,28 +31,31 @@ public class DefaultStatusFormula implements IDamageFormula {
 		this.pack = pack;
 		
 		// 判断是否发动失败 + 是否有效
+		// 注意, 像麻痹之类的行动判定早已经完成, 这里不做这类数据的判断
 		if (!canAct()) {
-			// TODO
-			return;
-		}
-		if (!isEffective()) {
-			// TODO
 			return;
 		}
 		
 		int length = pack.dfStaffLength();
 		
 		// 命中判定
-		boolean hit = false;
+		boolean hit = false; // 为 true 时说明至少对一名防御方，攻击命中且有效
 		for (int index = 0; index < length; index++) {
 			pack.setThiz(index);
 			if (writeHitable()) {
-				hit = true;
+				if (isEffective()) {
+					hit = true;
+				} else {
+					sendImmune(index);
+				}
+			} else {
+				sendMiss(index);
 			}
 		}
 		
 		if (hit == false) {
-			// 没有命中任何怪兽 TODO
+			// 对任何怪兽攻击无效: 攻击终止
+			return;
 		}
 		
 		for (int index = 0; index < length; index++) {
@@ -94,13 +97,13 @@ public class DefaultStatusFormula implements IDamageFormula {
 		byte atseat = pack.getAtStaff().getSeat(); // 攻击方的 seat
 		
 		byte dfseat; // 防御方的 seat
-		int rate; // 命中参数，攻击方的命中等级和防御方的躲避等级共同决定
+		float rate; // 命中参数，攻击方的命中等级和防御方的躲避等级共同决定, 基数 1.0f
 		boolean result = false;
 		
 		AttendManager am = pack.getAttends();
 
 		dfseat = pack.getDfStaff(index).getSeat();
-		// rate 计算了命中和躲避能力等级计算后的命中数值, 基点 150
+		// rate 计算了命中和躲避能力等级计算后的命中数值
 		rate = am.hitableLevel(atseat, dfseat);
 		// 攻击方命中 (必中负数)
 		pack.setAtStaffAccuracy(countHitrate(), index);
@@ -125,7 +128,7 @@ public class DefaultStatusFormula implements IDamageFormula {
 		rate *= (pack.getAtStaffAccuracy(index) / pack.getDfStaffHide(index)
 				* pack.getSkillAccuracy() / 100.0f);
 
-		result = !RanValue.isBigger(rate, ParticipantAbilityHandler.TG_BASE);
+		result = !RanValue.isBigger((int) (1000 * rate), 1000);
 		am.logPrintf(IPrintLevel.PRINT_LEVEL_VERBOSE,
 				"DefaultDamageFormula.writeHitable(1): seat = %d 的命中判定 %s", dfseat, result);
 		pack.setHitable(result, index);
@@ -164,6 +167,28 @@ public class DefaultStatusFormula implements IDamageFormula {
 	 */
 	protected float countAccuracy() {
 		return this.pack.getEffects().calcAccuracy(pack);
+	}
+	
+	/**
+	 * 由于攻击没有命中，发出开胃酒消息
+	 * @param index
+	 */
+	protected void sendMiss(int index) {
+		Aperitif ap = pack.getEffects().newAperitif(Aperitif.CODE_BROADCAST);
+		ap.append("type", "miss").append("-atseat", pack.getAtStaff().getSeat())
+			.append("-dfseat", pack.getDfStaff(index).getSeat());
+		pack.getEffects().startCode(ap);
+	}
+	
+	/**
+	 * 由于属性免疫，发出开胃酒消息
+	 * @param index
+	 */
+	protected void sendImmune(int index) {
+		Aperitif ap = pack.getEffects().newAperitif(Aperitif.CODE_BROADCAST);
+		ap.append("type", "immune").append("-atseat", pack.getAtStaff().getSeat())
+			.append("-dfseat", pack.getDfStaff(index).getSeat());
+		pack.getEffects().startCode(ap);
 	}
 	
 	/**

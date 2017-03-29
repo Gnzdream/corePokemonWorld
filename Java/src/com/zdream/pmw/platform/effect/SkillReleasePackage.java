@@ -7,7 +7,7 @@ import com.zdream.pmw.platform.attend.SkillRelease;
 import com.zdream.pmw.platform.effect.accuracy.IAccuracyFormula;
 import com.zdream.pmw.platform.effect.addition.IAdditionFormula;
 import com.zdream.pmw.platform.effect.damage.IDamageFormula;
-import com.zdream.pmw.platform.effect.movable.IMovableFormula;
+import com.zdream.pmw.platform.effect.moveable.IMoveableFormula;
 import com.zdream.pmw.platform.effect.power.IPowerFormula;
 import com.zdream.pmw.platform.prototype.BattlePlatform;
 
@@ -24,7 +24,7 @@ import com.zdream.pmw.platform.prototype.BattlePlatform;
  * @since v0.1
  * @author Zdream
  * @date 2016年4月7日
- * @version v0.2
+ * @version v0.2.2
  */
 public class SkillReleasePackage {
 	
@@ -412,17 +412,17 @@ public class SkillReleasePackage {
 	 * @version 0.2.1
 	 */
 	
-	IMovableFormula movableFormula;
+	IMoveableFormula movableFormula;
 	IDamageFormula damageFormula;
 	IAccuracyFormula accuracyFormula;
 	IPowerFormula powerFormula;
 	IAdditionFormula[] additionFormulas;
 
-	public IMovableFormula getMovableFormula() {
+	public IMoveableFormula getMovableFormula() {
 		return movableFormula;
 	}
 
-	public void setMovableFormula(IMovableFormula movableFormula) {
+	public void setMovableFormula(IMoveableFormula movableFormula) {
 		this.movableFormula = movableFormula;
 	}
 
@@ -456,6 +456,18 @@ public class SkillReleasePackage {
 
 	public void setAdditionFormulas(IAdditionFormula[] additionFormulas) {
 		this.additionFormulas = additionFormulas;
+	}
+	
+	/**
+	 * 清除所有的公式
+	 * @since v0.2.2
+	 */
+	public void clearFormulas() {
+		movableFormula = null;
+		damageFormula = null;
+		accuracyFormula = null;
+		powerFormula = null;
+		additionFormulas = null;
 	}
 	
 	

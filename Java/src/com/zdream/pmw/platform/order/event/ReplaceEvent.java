@@ -20,7 +20,6 @@ public class ReplaceEvent extends APreviousEvent {
 	 ************ */
 	/**
 	 * 需要更换下场的 no 值<br>
-	 * <p>可能为 -1</p>
 	 */
 	private byte no;
 	/**
@@ -28,7 +27,8 @@ public class ReplaceEvent extends APreviousEvent {
 	 */
 	private byte replaceNo;
 	/**
-	 * 如果是怪兽濒死, 到回合结尾出现的上场行动, 该参数是必须的
+	 * 座位号<br>
+	 * <p>当没有退场怪兽, 只有入场怪兽时, seat 是必需的.</p>
 	 */
 	private byte seat;
 	
@@ -63,20 +63,17 @@ public class ReplaceEvent extends APreviousEvent {
 	@Override
 	public void action(BattlePlatform pf) {
 		AttendManager am = pf.getAttendManager();
-		
-		if (no == -1) {
+		if (replaceNo == -1) {
 			pf.logPrintf(IPrintLevel.PRINT_LEVEL_DEBUG, 
-					"ReplaceEvent.action(): 精灵交换上场 %s(no=%d) 至位置 seat=%d",
-					am.getAttendant(replaceNo).getNickname(), am.seatForNo(replaceNo), seat);
-			
-			pf.getEffectManage().enteranceAct(seat, replaceNo);
+					"ReplaceEvent.action(): 怪兽交换上场 %s(no=%d) 下场 %s(no=%d, seat=%d)",
+					am.getAttendant(replaceNo).getNickname(), replaceNo,
+					am.getAttendant(no).getNickname(), no, am.seatForNo(no));
+			pf.getEffectManage().exchangeAct(no, replaceNo);
 		} else {
 			pf.logPrintf(IPrintLevel.PRINT_LEVEL_DEBUG, 
-					"ReplaceEvent.action(): 精灵交换上场 %s(no=%d) 下场 %s(no=%d)",
-					am.getAttendant(replaceNo).getNickname(), am.seatForNo(replaceNo),
-					am.getAttendant(no).getNickname(), am.seatForNo(no));
-			
-			pf.getEffectManage().exchangeAct(no, replaceNo);
+					"ReplaceEvent.action(): 怪兽交换上场 %s(no=%d) 到位置 %d",
+					am.getAttendant(replaceNo).getNickname(), replaceNo, seat);
+			pf.getEffectManage().enteranceAct(seat, replaceNo);
 		}
 	}
 

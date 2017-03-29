@@ -4,12 +4,18 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import com.zdream.pmw.platform.effect.state.ISubStateCreater;
 import com.zdream.pmw.platform.prototype.BattlePlatform;
 import com.zdream.pmw.util.json.JsonValue;
 
 /**
  * 状态容器<br>
  * 座位、阵营、全场需要的状态容器，来存放状态<br>
+ * <br>
+ * <b>v0.2.1</b>
+ * <p><li>添加在添加和删除状态时, 触发状态的生命周期相关方法
+ * <li>补充附属状态的产生方法
+ * </li></p>
  * 
  * @since v0.1
  * @author Zdream
@@ -34,12 +40,20 @@ public class StateContainer implements IStateHandler {
 	}
 	
 	@Override
-	public void pushState(IState state) {
+	public void pushState(IState state, BattlePlatform pf) {
 		states.add(state);
+		state.onCreate();
+		if (state instanceof ISubStateCreater) {
+			((ISubStateCreater) state).handleCreateSubStates(pf);
+		}
 	}
 	
 	@Override
-	public void removeState(IState state) {
+	public void removeState(IState state, BattlePlatform pf) {
+		if (state instanceof ISubStateCreater) {
+			((ISubStateCreater) state).handleDestroySubStates(pf);
+		}
+		state.onDestroy();
 		states.remove(state);
 	}
 	

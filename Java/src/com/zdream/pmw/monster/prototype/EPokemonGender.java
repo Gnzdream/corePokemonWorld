@@ -2,6 +2,7 @@ package com.zdream.pmw.monster.prototype;
 
 /**
  * 精灵（玩家）的性别<br>
+ * <p>The Gender of Pokemon and Trainer.</p>
  * 
  * @since v0.1
  * @author Zdream
@@ -10,17 +11,17 @@ package com.zdream.pmw.monster.prototype;
  */
 public enum EPokemonGender {
 	/**
-	 * 男性 / 雄性
+	 * 男性 / 雄性, Male
 	 */
 	M, 
 	
 	/**
-	 * 女性 / 雌性
+	 * 女性 / 雌性, Female
 	 */
 	F, 
 	
 	/**
-	 * 无性别
+	 * 无性别, Unknowed
 	 */
 	N;
 	

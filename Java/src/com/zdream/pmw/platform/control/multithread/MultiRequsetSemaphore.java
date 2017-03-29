@@ -16,7 +16,7 @@ import com.zdream.pmw.platform.prototype.RuleConductor;
  * @since v0.1
  * @author Zdream
  * @date 2016年4月4日
- * @version v0.2
+ * @version v0.2.1
  */
 public class MultiRequsetSemaphore implements IRequestSemaphore {
 	
@@ -28,9 +28,9 @@ public class MultiRequsetSemaphore implements IRequestSemaphore {
 	}
 	
 	@Override
-	public void requestEnterance(byte team, byte[] seats) {
+	public void requestSwitch(byte team, byte[] seats) {
 		ControlBase base = cm.getCtrl(team);
-		base.nextEnteranceRequest(seats);
+		base.nextSwitchRequest(seats);
 		waitCount();
 	}
 	

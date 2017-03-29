@@ -222,13 +222,11 @@ public class ExistState extends ParticipantState implements IPokemonDataType {
 		// 防御方限定
 		byte seat = (byte) value.get("dfseat");
 		if (seat == -1) {
-			byte[] seats = (byte[]) value.get("dfseats");
-			for (int i = 0; i < seats.length; i++) {
-				if (seats[i] != pf.getAttendManager().seatForNo(getNo())) {
-					return interceptor.nextState();
-				}
-			}
-		} else if (seat != pf.getAttendManager().seatForNo(getNo())) {
+			pf.logPrintf(IPrintLevel.PRINT_LEVEL_WARN,
+					"ExistState.calcAdditionRate(3) 存在多个防御方, 按照现在的方法, 还无法处理");
+			return interceptor.nextState();
+		}
+		if (seat != pf.getAttendManager().seatForNo(getNo())) {
 			return interceptor.nextState();
 		}
 		

@@ -41,9 +41,8 @@ import javax.swing.filechooser.FileFilter;
 import com.zdream.pmw.monster.data.dao.ISkillDao;
 import com.zdream.pmw.monster.prototype.EPokemonType;
 import com.zdream.pmw.monster.skill.ESkillCategory;
-import com.zdream.pmw.monster.skill.ISkillService;
 import com.zdream.pmw.monster.skill.Skill;
-import com.zdream.pmw.monster.skill.SkillServiceImpl;
+import com.zdream.pmw.monster.skill.SkillService;
 import com.zdream.pmw.util.json.JsonBuilder;
 import com.zdream.pmw.util.json.JsonValue;
 import com.zdream.pmwdb.core.DaoGetter;
@@ -67,7 +66,7 @@ public class SkillSetterFrameManager {
 	/**
 	 * 服务
 	 */
-	ISkillService service = SkillServiceImpl.getInstance(DaoGetter.getDao(ISkillDao.class));
+	SkillService service = SkillService.getInstance(DaoGetter.getDao(ISkillDao.class));
 	
 	/**
 	 * 关于该设置技能数据的 GUI 窗口中解决菜单事件的监听器

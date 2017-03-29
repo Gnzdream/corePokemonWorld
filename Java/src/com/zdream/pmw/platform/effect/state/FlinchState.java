@@ -64,7 +64,7 @@ public class FlinchState extends ParticipantState {
 		boolean result = (boolean) value.get("result");
 		if (result) {
 			value.replace("result", false);
-			value.append("fault", name());
+			value.append("fail", name());
 			return interceptor.getCommand();
 		}
 		return interceptor.nextState();

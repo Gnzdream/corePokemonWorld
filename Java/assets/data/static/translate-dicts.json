@@ -1,0 +1,95 @@
+{
+	"entrance":["pm.team","pm.no","pm.seat"],
+	"request-move":[{
+				"/mean":"set",
+				"/key":"/mute",
+				"/value":"true"
+			},"pm.team","pm.seats"],
+	"ppSub":[{
+				"/mean":"set",
+				"/key":"/mute",
+				"/value":"true"
+			},"pm.seat","pm.skillNum","damage.usePP"],
+	"skill-damage":[
+		"pm.seat",
+		"damage.value",
+		"damage.ctable",
+		"damage.effect",
+		{
+			"/mean":"option",
+			"0":["damage.reason"],
+			"1":null
+		}
+	],
+	"exeunt-faint":["pm.team","pm.seat"],
+	"force-abnormal":[
+		"pm.seat",
+		"abnormal.code",
+		{
+			"/mean":"option",
+			"0":["'-m",{
+				"/mean":"set",
+				"/key":"/mute",
+				"/value":"true"
+			}],
+			"1":null
+		}
+	],
+	"judge-moveable":["'fail","pm.seat","state.name"],
+	"round-end":["platform.round"],
+	"nonMoves-damage":[
+		"pm.seat",
+		"damage.value",
+		"damage.reason"
+	],
+	"ability-level":[{
+		"/mean":"option",
+		"0":["'-c",{
+				"/mean":"set",
+				"/key":"damage.addition",
+				"/value":"ability-change"
+			},"pm.seat","pm.item","addition.statChangeValue",{
+				"/mean":"loop",
+				"/value":2
+			}],
+		"1":["'-s",{
+				"/mean":"set",
+				"/key":"damage.addition",
+				"/value":"ability-set"
+			},"pm.seat","pm.item","addition.statSetValue",{
+				"/mean":"loop",
+				"/value":2
+			}]
+	}],
+	"release-skill":["pm.seat","skill.id"],
+	"force-state":["state.name",{
+		"/mean":"switch",
+		"0":["'-no", "pm.no"],
+		"1":["'-source", "state.source"],
+		"2":["'-skillID", "skill.id"]
+	}],
+	"remove-state":["state.name",{
+		"/mean":"switch",
+		"0":["'-seat", "pm.seat"]
+	}],
+	"exeunt-exchange":["pm.team","pm.seat"],
+	"recover":[
+		{
+			"/mean":"option",
+			"0":["'-no",{
+				"/mean":"set",
+				"/key":"target.attend",
+				"/value":"false"
+			},"pm.no","pm.recoverHp","addition.reason"],
+			"1":["pm.seat","pm.recoverHp","addition.reason"]
+		}
+	],
+	"broadcast":[
+		"view.reason",
+		{
+			"/mean":"switch",
+			"0":["'-atseat", "damage.atseat"],
+			"1":["'-dfseat", "damage.dfseat"]
+		}
+	]
+}

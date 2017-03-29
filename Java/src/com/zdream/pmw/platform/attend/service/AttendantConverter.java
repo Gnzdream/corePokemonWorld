@@ -3,9 +3,8 @@ package com.zdream.pmw.platform.attend.service;
 import com.zdream.pmw.monster.data.IPokemonDataContainer;
 import com.zdream.pmw.monster.data.PokemonBaseData;
 import com.zdream.pmw.monster.data.PokemonDataBuffer;
-import com.zdream.pmw.monster.prototype.IPokemonService;
 import com.zdream.pmw.monster.prototype.Pokemon;
-import com.zdream.pmw.monster.service.PokemonServiceImpl;
+import com.zdream.pmw.monster.prototype.PokemonHandler;
 import com.zdream.pmw.platform.attend.AttendManager;
 import com.zdream.pmw.platform.attend.Attendant;
 import com.zdream.pmw.trainer.prototype.TrainerData;
@@ -83,6 +82,6 @@ public class AttendantConverter {
 	/**
 	 * 精灵相关服务
 	 */
-	private IPokemonService service = PokemonServiceImpl.getInstance();
+	private PokemonHandler service = PokemonHandler.getInstance();
 	
 }

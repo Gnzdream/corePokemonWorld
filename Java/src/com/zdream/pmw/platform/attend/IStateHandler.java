@@ -22,14 +22,16 @@ public interface IStateHandler {
 	/**
 	 * 向列表中加入状态
 	 * @param state
+	 * @param pf
 	 */
-	public void pushState(IState state);
+	public void pushState(IState state, BattlePlatform pf);
 
 	/**
 	 * 向列表中删除状态
 	 * @param state
+	 * @param pf
 	 */
-	public void removeState(IState state);
+	public void removeState(IState state, BattlePlatform pf);
 	
 	/**
 	 * 设置状态参数

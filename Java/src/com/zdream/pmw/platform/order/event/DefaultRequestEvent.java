@@ -24,11 +24,6 @@ public class DefaultRequestEvent extends AAttendantEvent {
 	public DefaultRequestEvent() {
 		super(EventType.LAST);
 	}
-	
-	@Override
-	public String toString() {
-		return "Event: DefaultRequest";
-	}
 
 	/* ************
 	 *	事件发动  *
@@ -113,7 +108,7 @@ public class DefaultRequestEvent extends AAttendantEvent {
 	 * 等待所有队伍的回应
 	 */
 	private void sleepForRespond() {
-		pf.getControlManager().onWaitForResponse();
+		pf.getControlManager().getSemaphore().onWaitForResponse();
 	}
 
 }

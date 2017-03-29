@@ -1,12 +1,9 @@
 package com.zdream.pmw.platform.control.code;
 
-import java.util.Map;
-
 import com.zdream.pmw.platform.control.ICodeRealizer;
 import com.zdream.pmw.platform.control.IPrintLevel;
 import com.zdream.pmw.platform.effect.Aperitif;
 import com.zdream.pmw.platform.prototype.BattlePlatform;
-import com.zdream.pmw.util.json.JsonValue;
 
 /**
  * 判定类消息行动实现<br>
@@ -33,7 +30,7 @@ public class JudgeCodeRealizer implements ICodeRealizer {
 	public void realize(String[] codes, BattlePlatform pf) {
 		this.pf = pf;
 		
-		// 判定类消息行动实现方法为空 TODO JudgeCodeRealizer
+		// TODO 判定类消息行动实现方法为空 JudgeCodeRealizer
 	}
 
 	@Override
@@ -57,15 +54,14 @@ public class JudgeCodeRealizer implements ICodeRealizer {
 	 * @param value
 	 * @return
 	 */
-	private String moveableCommandLine(JsonValue value) {
-		Map<String, JsonValue> map = value.getMap();
-		if ((Boolean) map.get("result").getValue()) {
+	private String moveableCommandLine(Aperitif ap) {
+		if ((Boolean) ap.get("result")) {
 			pf.logPrintf(IPrintLevel.PRINT_LEVEL_VERBOSE, 
 					"精灵 seat = %d 成功发动第 %d 个技能", 
-					map.get("seat").getValue(), map.get("skillNum").getValue());
+					ap.get("seat"), ap.get("skillNum"));
 			return null;
 		} else {
-			return String.format("judge-moveable fault %s", map.get("fault").getString());
+			return String.format("judge-moveable fail %d %s", ap.get("seat"), ap.get("fail"));
 		}
 	}
 	
@@ -77,16 +73,14 @@ public class JudgeCodeRealizer implements ICodeRealizer {
 	 * @param value
 	 * @return
 	 */
-	private String rangeCommandLine(JsonValue value) {
-		Map<String, JsonValue> map = value.getMap();
-		String result = map.get("result").getString();
+	private String rangeCommandLine(Aperitif value) {
+		String result = value.get("result").toString();
 		if (result.length() == 2) {
-			JsonValue v = map.get("fault");
-			return (v == null) ? "但是它失败了" : map.get("fault").getString();
+			return String.format("%s fail %s", CODE_JUDGE_RANGE, value.get("fail"));
 		} else {
 			pf.logPrintf(IPrintLevel.PRINT_LEVEL_VERBOSE, 
 					"精灵 seat = %d 技能的范围 %s", 
-					map.get("seat").getValue(), result);
+					value.get("seat"), result);
 			return null;
 		}
 	}

@@ -4,30 +4,31 @@ import java.util.Arrays;
 
 import com.zdream.pmw.platform.attend.AttendManager;
 import com.zdream.pmw.platform.attend.Attendant;
-import com.zdream.pmw.platform.control.IPrintLevel;
 import com.zdream.pmw.platform.effect.Aperitif;
-import com.zdream.pmw.platform.order.OrderManager;
 import com.zdream.pmw.platform.prototype.BattlePlatform;
 
 /**
  * 默认将精灵派上场的事件<br>
  * 该事件在每回合结尾时段触发<br>
+ * <br>
+ * <p><b>v0.2.1</b><br>
+ * 增加参数是否为零回合的记号</p>
  * 
  * @since v0.1
  * @author Zdream
  * @date 2016年4月2日
- * @version v0.1
+ * @version v0.2.1
  */
 public class DefaultEnteranceEvent extends AAttendantEvent {
 
-	public DefaultEnteranceEvent() {
-		super(EventType.LAST);
-	}
+	/* ************
+	 *	  属性    *
+	 ************ */
 	
-	@Override
-	public String toString() {
-		return "Event: DefaultEnterance";
-	}
+	/**
+	 * 判断现在是不是第零回合的记号
+	 */
+	boolean zeroRound;
 
 	/* ************
 	 *	 优先度   *
@@ -61,34 +62,20 @@ public class DefaultEnteranceEvent extends AAttendantEvent {
 			if (seatsForTeam == null) {
 				continue; // 没有属于该队伍的空座位
 			}
+			// team 队伍可以派上场的精灵的前 (seatsForTeam.length) 位
+			byte[] nos = pmCanEnter(team, seatsForTeam.length);
+			if (nos[0] == -1) {
+				continue; // 该队伍没有能够上场的精灵
+			}
 			
-			if (zeroRound(pf)) {
-				// team 队伍可以派上场的精灵的前 (seatsForTeam.length) 位
-				byte[] nos = pmCanEnter(team, seatsForTeam.length);
-				if (nos[0] == -1) {
-					continue; // 该队伍没有能够上场的精灵
-				}
-				
+			if (zeroRound) {
 				startEntranceCode(team, seatsForTeam, nos);
 			} else {
-				requestEntranceCode(team, seatsForTeam);
-				// TODO 获得请求得到的 nos, 进行上场
-				
-				OrderManager om = pf.getOrderManager();
-				// 添加 MoveEvent
-				om.pushEvents(om.buildMoveEventForTeam(team));
+				sendRequestPokemonMsg(team, seatsForTeam);
 			}
 		}
 		this.pf = null;
 		this.am = null;
-	}
-	
-	/**
-	 * 现在是不是第零回合
-	 * @return
-	 */
-	private boolean zeroRound(BattlePlatform pf) {
-		return pf.getOrderManager().getRound() == 0;
 	}
 	
 	/**
@@ -135,42 +122,38 @@ public class DefaultEnteranceEvent extends AAttendantEvent {
 			if (nos[seat] == -1) {
 				break;
 			}
-			// 入场（前）
-			Aperitif value = pf.getEffectManage().newAperitif(Aperitif.CODE_ENTRANCE, seats[seat]);
-			value.append("team", team);
-			value.append("no", nos[seat]);
-			value.append("seat", seats[seat]);
-			pf.readyCode(value);
 			
-			// 入场（后）
-			value = pf.getEffectManage().newAperitif(Aperitif.CODE_AFTER_ENTRANCE, seats[seat]);
-			value.append("team", team);
-			value.append("no", nos[seat]);
-			value.append("seat", seats[seat]);
-			pf.readyCode(value);
+			pf.getEffectManage().enteranceAct(seats[seat], nos[seat]);
 		}
 	}
 	
 	/**
-	 * 请求控制方, 选择怪兽入场方法
+	 * 向系统发送请求选择精灵上场的拦截前消息
 	 * @param team
+	 *   该濒死精灵所属的队伍
 	 * @param seats
+	 *   该队伍中的空位
 	 */
-	private void requestEntranceCode(byte team, byte[] seats) {
-		byte[] nos = pmCanEnter(team, seats.length);
-		if (nos.length < seats.length) {
-			byte[] temp = seats;
-			seats = new byte[nos.length];
-			System.arraycopy(temp, 0, seats, 0, seats.length);
-		}
-		
+	private void sendRequestPokemonMsg(byte team, byte[] seats) {
 		Aperitif value = pf.getEffectManage().newAperitif(Aperitif.CODE_REQUEST_PM);
 		value.append("seats", seats);
 		value.append("team", team);
 		pf.readyCode(value);
-		
-		pf.logPrintf(IPrintLevel.PRINT_LEVEL_WARN, 
-				"DefaultEnteranceEvent: 不是在 0 回合时触发入场事件还在施工");
+
+		pf.getOrderManager().pushEvents(pf.getOrderManager().buildMoveEvent(team));
+	}
+
+	/* ************
+	 *	 初始化   *
+	 ************ */
+
+	public DefaultEnteranceEvent() {
+		this(false);
+	}
+
+	public DefaultEnteranceEvent(boolean zeroRound) {
+		super(EventType.LAST);
+		this.zeroRound = zeroRound;
 	}
 
 }

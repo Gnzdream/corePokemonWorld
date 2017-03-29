@@ -1,16 +1,21 @@
-package com.zdream.pmw.platform.translate;
+package com.zdream.pmw.platform.translate.translater;
 
 import java.util.Map;
 
 import com.zdream.pmw.platform.prototype.BattlePlatform;
+import com.zdream.pmw.platform.translate.MessageRepository;
 
 /**
  * 将参数翻译成代表的数据<br>
+ * <br>
+ * <p>v0.2.1</p>
+ * <p><code>translate</code> 方法中增加了 <code>repository</code> 参数,
+ * 允许实现方用输出仓库中存在的预设文本</p>
  * 
  * @since v0.2
  * @author Zdream
  * @date 2017年2月26日
- * @version v0.2
+ * @version v0.2.1
  */
 public interface ITranslate {
 	
@@ -33,8 +38,11 @@ public interface ITranslate {
 	 *   附加参数
 	 * @param pf
 	 *   环境
+	 * @param repository
+	 *   仓库, 用于取预设模板和模板中预设文字
 	 * @return
 	 */
-	public String translate(String handle, Map<String, String> param, BattlePlatform pf);
+	public String translate(String handle, Map<String, String> param,
+			BattlePlatform pf, MessageRepository repository);
 
 }

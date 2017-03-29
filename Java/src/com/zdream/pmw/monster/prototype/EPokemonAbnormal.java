@@ -2,6 +2,7 @@ package com.zdream.pmw.monster.prototype;
 
 /**
  * 精灵的异常状态<br>
+ * <p>status condition</p>
  * 
  * @since v0.1
  * @author Zdream

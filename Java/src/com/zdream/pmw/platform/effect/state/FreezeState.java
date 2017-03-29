@@ -79,7 +79,7 @@ public class FreezeState extends AAbnormalState {
 		if (RanValue.isSmaller(75)) {
 			// 不能行动
 			value.replace("result", false);
-			value.append("fault", name());
+			value.append("fail", name());
 			return interceptor.getCommand();
 		} else {
 			// 冻伤解除

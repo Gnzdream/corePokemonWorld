@@ -1,4 +1,4 @@
-package com.zdream.pmw.platform.effect.movable;
+package com.zdream.pmw.platform.effect.moveable;
 
 import com.zdream.pmw.platform.control.IPrintLevel;
 import com.zdream.pmw.platform.effect.Aperitif;
@@ -18,7 +18,7 @@ import com.zdream.pmw.platform.effect.SkillReleasePackage;
  * @date 2016年4月8日
  * @version v0.2
  */
-public class DefaultMovableFormula implements IMovableFormula {
+public class DefaultMoveableFormula implements IMoveableFormula {
 	
 	@Override
 	public String name() {
@@ -61,7 +61,7 @@ public class DefaultMovableFormula implements IMovableFormula {
 	 *	 构造器   *
 	 ************ */
 
-	public DefaultMovableFormula() {
+	public DefaultMoveableFormula() {
 		
 	}
 

@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.util.List;
 
 import com.zdream.pmw.platform.control.IPrintLevel;
+import com.zdream.pmw.platform.effect.SkillReleasePackage;
 import com.zdream.pmw.platform.order.event.AEvent;
 import com.zdream.pmw.platform.order.event.MoveEvent;
 import com.zdream.pmw.platform.prototype.BattlePlatform;
@@ -25,10 +26,14 @@ import com.zdream.pmw.platform.prototype.RuleConductor;
  * <b>v0.2</b><br>
  *   添加 BattlePlatform 的变量引用<br>
  * 
+ * <p><b>v0.2.2</b><br>
+ *   添加存储历史的部分,
+ *   该类能够存储发送直接操作实现层的消息和战斗释放时数据.</p>
+ * 
  * @since v0.1
  * @author Zdream
  * @date 2016年4月19日
- * @version v0.2
+ * @version v0.2.2
  */
 public class OrderManager implements IPlatformComponent {
 	
@@ -42,8 +47,9 @@ public class OrderManager implements IPlatformComponent {
 	public int getRound() {
 		return this.round;
 	}
-	public void setRound(int round) {
-		this.round = round;
+	public void roundCount() {
+		this.round ++;
+		recorder.roundCount(round);
 	}
 	
 	/* ************
@@ -81,14 +87,15 @@ public class OrderManager implements IPlatformComponent {
 	
 	/**
 	 * 外部调用方法<br>
-	 * 为某个特定的队伍, 将用户端的消息转化成事件并返回<br>
+	 * <p>将指定的队伍的用户端的消息转化成事件并返回</p>
+	 * <p>一般在怪兽濒死后, 请求队伍获得上场的怪兽时调用的</p>
 	 * @param team
 	 * @return
 	 */
-	public List<AEvent> buildMoveEventForTeam(byte team) {
+	public List<AEvent> buildMoveEvent(byte team) {
 		return builder.buildForTeam(team);
 	}
-
+	
 	/**
 	 * 触发列表
 	 */
@@ -124,10 +131,56 @@ public class OrderManager implements IPlatformComponent {
 	public void addDefaultEndedEvent() {
 		list.addDefaultEndedEvent();
 	}
+	
+	/* ************
+	 *	存储历史  *
+	 ************ */
+	/*
+	 * 添加存储历史的部分,
+	 *   该类能够存储发送直接操作实现层的消息和战斗释放时数据.
+	 * @since v0.2.2
+	 */
+	
+	Recorder recorder;
+	
+	/**
+	 * 存储消息
+	 * @param codes
+	 */
+	public void storeMessage(String[] codes) {
+		recorder.storeMessage(codes);
+	}
+	
+	/**
+	 * 存储释放技能的数据
+	 * @param pack
+	 */
+	public void storeReleasePackage(SkillReleasePackage pack) {
+		recorder.storeReleasePackage(pack);
+	}
+	
+	/**
+	 * 获得某一回合中所有的消息
+	 * @param round
+	 *   指定的回合数
+	 */
+	public String[][] getMessage(int round) {
+		return recorder.getMessage(round);
+	}
+	
+	/**
+	 * 获得某一回合中所有释放技能的数据
+	 * @param round
+	 *   指定的回合数
+	 */
+	public SkillReleasePackage[] getReleasePackage(int round) {
+		return recorder.getReleasePackage(round);
+	}
+	
 	/* ************
 	 *	 初始化   *
 	 ************ */
-	
+
 	/**
 	 * 指向战斗平台（环境）
 	 * @since 0.2
@@ -145,6 +198,7 @@ public class OrderManager implements IPlatformComponent {
 	 */
 	public void init(Fuse msg, RuleConductor referee, BattlePlatform pf) {
 		list = new EventList(this);
+		recorder = new Recorder(this);
 		this.pf = pf;
 	}
 	

@@ -1,12 +1,9 @@
 package com.zdream.pmw.platform.control.code;
 
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import com.zdream.pmw.platform.control.ControlManager;
 import com.zdream.pmw.platform.control.ICodeRealizer;
-import com.zdream.pmw.platform.control.IPrintLevel;
 import com.zdream.pmw.platform.effect.Aperitif;
 import com.zdream.pmw.platform.prototype.BattlePlatform;
 import com.zdream.pmw.util.common.ArraysUtils;
@@ -75,13 +72,9 @@ public class RequestCodeRealizer implements ICodeRealizer {
 	 * @return
 	 */
 	private String requestPmCommandLine(Aperitif value) {
-		StringBuilder b = new StringBuilder(32);
-		b.append(CODE_REQUEST_PM).append(' ').append(value.get("team"));
-		
-		byte[] seats = (byte[]) value.get("seats");
-		for (int i = 0; i < seats.length; i++) {
-			b.append(' ').append(seats[i]);
-		}
+		StringBuilder b = new StringBuilder(40);
+		b.append(CODE_REQUEST_PM).append(' ').append(value.get("team")).append(' ');
+		b.append(ArraysUtils.bytesToString((byte[]) value.get("seats")));
 		return b.toString();
 	}
 	
@@ -91,25 +84,17 @@ public class RequestCodeRealizer implements ICodeRealizer {
 	 */
 	private void requestPm(String[] codes) {
 		byte team = Byte.valueOf(codes[1]);
-		byte[] seats = new byte[codes.length - 2];
-		for (int i = 0; i < seats.length; i++) {
-			seats[i] = Byte.valueOf(codes[2 + i]);
-		}
-		pf.logPrintf(IPrintLevel.PRINT_LEVEL_WARN, 
-				"RequestCodeRealizer.requestPm(1) %d 号队伍中请求精灵入场，位置 seat=%s",
-				team, Arrays.toString(seats));
-		pf.getControlManager().requestEnterance(team, seats);
+		byte[] seats = ArraysUtils.StringToBytes(codes[2]);
+		pf.getControlManager().requestSwitch(team, seats);
 	}
 
 	/**
 	 * 请求行动实现
 	 */
 	private void requestMove(String[] codes) {
-		ControlManager cm = pf.getControlManager();
 		byte team = Byte.parseByte(codes[1]);
 		byte[] seats = ArraysUtils.StringToBytes(codes[2]);
-		
-		cm.requestMove(team, seats);
+		pf.getControlManager().requestMove(team, seats);
 	}
 	
 	/* ************

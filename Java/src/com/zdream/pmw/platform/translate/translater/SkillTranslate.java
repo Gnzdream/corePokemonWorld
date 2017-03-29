@@ -1,9 +1,10 @@
-package com.zdream.pmw.platform.translate;
+package com.zdream.pmw.platform.translate.translater;
 
 import java.util.Map;
 
 import com.zdream.pmw.platform.attend.SkillRelease;
 import com.zdream.pmw.platform.prototype.BattlePlatform;
+import com.zdream.pmw.platform.translate.MessageRepository;
 
 /**
  * 翻译技能相关的数据<br>
@@ -26,7 +27,8 @@ public class SkillTranslate implements ITranslate {
 	}
 
 	@Override
-	public String translate(String handle, Map<String, String> param, BattlePlatform pf) {
+	public String translate(String handle, Map<String, String> param,
+			BattlePlatform pf, MessageRepository repository) {
 		switch (handle) {
 		case H_TITLE: {
 			String idstr = param.get(K_ID);

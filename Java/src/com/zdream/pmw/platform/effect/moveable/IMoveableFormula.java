@@ -1,4 +1,4 @@
-package com.zdream.pmw.platform.effect.movable;
+package com.zdream.pmw.platform.effect.moveable;
 
 import com.zdream.pmw.platform.effect.IFormula;
 import com.zdream.pmw.platform.effect.SkillReleasePackage;
@@ -14,7 +14,7 @@ import com.zdream.pmw.platform.effect.SkillReleasePackage;
  * @date 2016年4月8日
  * @version v0.2.1
  */
-public interface IMovableFormula extends IFormula {
+public interface IMoveableFormula extends IFormula {
 	
 	/**
 	 * 能否行动判定

@@ -5,6 +5,7 @@ import com.zdream.pmw.monster.prototype.EPokemonType;
 import com.zdream.pmw.monster.prototype.IPokemonDataType;
 import com.zdream.pmw.platform.attend.AttendManager;
 import com.zdream.pmw.platform.attend.Participant;
+import com.zdream.pmw.platform.attend.SkillRelease;
 import com.zdream.pmw.platform.control.IMessageCode;
 import com.zdream.pmw.platform.control.IPrintLevel;
 import com.zdream.pmw.platform.effect.damage.IDamageFormula;
@@ -52,12 +53,15 @@ public class SkillReleaseBox implements IPokemonDataType {
 	public void moveAct(byte no, byte skillNum, byte originTarget) {
 		initMoveAct(no, skillNum, originTarget);
 		
+		// 确定释放技能
+		releaseSkill();
+		
+		confirmFormula();
+		
+		// v0.2.1 后, 将判断能否行动移到确定释放技能之后
 		if (!canMove()) {
 			return;
 		}
-		
-		// 确定释放技能
-		releaseSkill();
 		
 		// 扣 PP（这里不考虑压力特性）
 		ppSubForRelease(pack);
@@ -65,8 +69,14 @@ public class SkillReleaseBox implements IPokemonDataType {
 		// 写入范围
 		writeRange();
 		
+		// 发布将要释放技能的预告
+		sendMessageForRelease();
+		
 		// 伤害判定
 		writeDamage();
+		
+		// v0.2.2
+		em.getRoot().getOrderManager().storeReleasePackage(pack);
 	}
 
 	/**
@@ -86,10 +96,17 @@ public class SkillReleaseBox implements IPokemonDataType {
 		
 		short skillID = atStaff.getAttendant().getSkill()[skillNum];
 		pack.setSkill(am.getSkillRelease(skillID));
-		em.loadFormula(pack, pack.getSkill());
 		pack.setSkillNum(skillNum);
 		
 		pack.setOriginTarget(originTarget);
+	}
+	
+	/**
+	 * 确定技能之后, 确定技能释放时所使用的公式<br>
+	 */
+	private void confirmFormula() {
+		SkillRelease skill = pack.getSkill();
+		em.loadFormula(pack, skill);
 	}
 	
 	/**
@@ -107,7 +124,7 @@ public class SkillReleaseBox implements IPokemonDataType {
 	 */
 	private void releaseSkill() {
 		byte seat = pack.getAtStaff().getSeat();
-		Aperitif value = em.newAperitif(Aperitif.CODE_RELEASE_SKILL, seat);
+		Aperitif value = em.newAperitif(Aperitif.CODE_CONFIRM_SKILL, seat);
 		
 		short skillID = em.getAttends().getParticipant(seat).getAttendant()
 				.getSkill()[pack.getSkillNum()];
@@ -183,6 +200,20 @@ public class SkillReleaseBox implements IPokemonDataType {
 			pack.setDfStaff(em.getAttends().getParticipant(seats[i]), i);
 		}
 	}
+
+	/**
+	 * 发布将要释放技能的开胃酒消息
+	 */
+	private void sendMessageForRelease() {
+		byte seat = pack.getAtStaff().getSeat();
+		Aperitif value = em.newAperitif(Aperitif.CODE_RELEASE_SKILL, seat);
+		
+		short skillID = em.getAttends().getParticipant(seat).getAttendant()
+				.getSkill()[pack.getSkillNum()];
+		value.append("seat", seat);
+		value.append("skillID", skillID);
+		em.getRoot().readyCode(value);
+	}
 	
 	/**
 	 * 判定伤害并写入释放数据包<br>
@@ -219,7 +250,7 @@ public class SkillReleaseBox implements IPokemonDataType {
 	/**
 	 * 判定行动 (未调用) TODO
 	 */
-	public boolean judgeMovable(SkillReleasePackage pack) {
+	public boolean judgeMoveable(SkillReleasePackage pack) {
 		return true;
 	}
 	

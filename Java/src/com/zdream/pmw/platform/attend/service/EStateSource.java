@@ -4,11 +4,14 @@ package com.zdream.pmw.platform.attend.service;
  * 表明一个状态是由于什么而产生的<br>
  * 在游戏中，一个状态可能是由技能、特性、携带或使用的道具产生的<br>
  * 而各种不同的产生源头产生的状态触发时，它的发动形式和特效可能有比较大的区别<br>
+ * <br>
+ * <b>v0.2.1</b>
+ * <p>补充了 {@code STATE} 枚举项</p>
  * 
  * @since v0.1
  * @author Zdream
  * @date 2016年4月12日
- * @version v0.1
+ * @version v0.2.1
  */
 public enum EStateSource {
 	
@@ -29,7 +32,11 @@ public enum EStateSource {
 	/**
 	 * 表明该状态由自己或其它精灵的携带道具、战斗使用道具所追加的
 	 */
-	ITEM;
+	ITEM,
+	/**
+	 * 表明该状态由其它的状态而生成的
+	 */
+	STATE;
 	
 	public static EStateSource parseEnum(String value) {
 		for (EStateSource e : values()) {

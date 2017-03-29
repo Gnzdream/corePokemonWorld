@@ -115,7 +115,7 @@ public class AttendantOperateHandler {
 			// 首先删除原始状态实例
 			EPokemonAbnormal ab;
 			if ((ab = am.abnormal(seat)) != EPokemonAbnormal.NONE) {
-				participant.removeState(participant.getState(ab.name()));
+				participant.removeState(participant.getState(ab.name()), am.getRoot());
 			}
 			
 			// 写入状态码
@@ -151,7 +151,7 @@ public class AttendantOperateHandler {
 			
 			if (state != null) {
 				state.setNo(participant.getNo());
-				participant.pushState(state);
+				participant.pushState(state, am.getRoot());
 			}
 		}
 	}
@@ -171,7 +171,7 @@ public class AttendantOperateHandler {
 	public void forceStateForParticipant(byte no, IState state) {
 		Participant participant = am.getParticipant(am.seatForNo(no));
 		
-		participant.pushState(state);
+		participant.pushState(state, am.getRoot());
 	}
 	
 	/**
@@ -192,7 +192,7 @@ public class AttendantOperateHandler {
 			if (state == null) {
 				break;
 			}
-			participant.removeState(state);
+			participant.removeState(state, am.getRoot());
 		}
 	}
 	

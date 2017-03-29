@@ -796,6 +796,7 @@ public class JsonBuilder {
 		
 		int ch = nextChar();
 		if (ch == ']'){
+			data.index++;
 			return value;
 		}
 		

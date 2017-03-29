@@ -14,6 +14,7 @@ import com.zdream.pmw.platform.prototype.BattlePlatform;
 import com.zdream.pmw.platform.prototype.Fuse;
 import com.zdream.pmw.platform.prototype.IPlatformComponent;
 import com.zdream.pmw.platform.prototype.RuleConductor;
+import com.zdream.pmw.util.common.CodeSpliter;
 
 /**
  * 控制中心<br>
@@ -254,16 +255,17 @@ public class ControlManager implements IPlatformComponent {
 	}
 	
 	/**
-	 * 怪兽选择怪兽或入场请求
+	 * <p>选择怪兽上场的请求</p>
+	 * <p>一般发生在原有的怪兽已经退场, 请求新的怪兽代替它的位置.</p>
 	 * @param team
 	 *   队伍号
 	 * @param seats
-	 *   选择怪兽需要入场的位置
+	 *   该队伍需要上场的怪兽站的位置的 seat 列表
 	 */
-	public void requestEnterance(byte team, byte[] seats) {
-		semaphore.requestEnterance(team, seats);
+	public void requestSwitch(byte team, byte[] seats) {
+		semaphore.requestSwitch(team, seats);
 	}
-
+	
 	public void requestEnd(byte successCamp) {
 		semaphore.requestEnd(successCamp);
 	}
@@ -282,7 +284,7 @@ public class ControlManager implements IPlatformComponent {
 	 * @param code
 	 */
 	public void outCode(String code) {
-		String[] codes = code.split(" ");
+		String[] codes = CodeSpliter.split(code);
 		ICodeRealizer cr = realizers.get(codes[0]);
 		if (cr != null) {
 			provideMessageForEachTeam(code);
@@ -291,6 +293,9 @@ public class ControlManager implements IPlatformComponent {
 			debugPrint(String.format("指令 %s 没有能够找到对应的实现者 ICodeRealizer 实现", codes[0]), 
 					PRINT_LEVEL_ERROR);
 		}
+		
+		// v0.2.2 存储数据
+		getRoot().getOrderManager().storeMessage(codes);
 	}
 	
 	/**

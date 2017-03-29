@@ -3,11 +3,14 @@ package com.zdream.pmw.platform.control;
 /**
  * 信号灯接口<br>
  * 用于指导和控制控制体传输请求、获得响应<br>
+ * <br>
+ * <b>v0.2.1</b>
+ * <p>添加选择怪兽上场的方法</p>
  * 
  * @since v0.2
  * @author Zdream
  * @date 2017年3月1日
- * @version v0.2
+ * @version v0.2.1
  */
 public interface IRequestSemaphore {
 	
@@ -21,13 +24,14 @@ public interface IRequestSemaphore {
 	public void requestMove(byte team, byte[] seats);
 	
 	/**
-	 * 怪兽选择怪兽或入场请求
+	 * <p>选择怪兽上场的请求</p>
+	 * <p>一般发生在原有的怪兽已经退场, 请求新的怪兽代替它的位置.</p>
 	 * @param team
 	 *   队伍号
 	 * @param seats
-	 *   选择怪兽需要入场的位置
+	 *   该队伍需要上场的怪兽站的位置的 seat 列表
 	 */
-	public void requestEnterance(byte team, byte[] seats);
+	public void requestSwitch(byte team, byte[] seats);
 	
 	/**
 	 * 请求通知所有的队伍的 Control，战斗已经结束<br>

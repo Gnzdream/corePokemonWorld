@@ -1,6 +1,8 @@
 package com.zdream.pmw.platform.control.code;
 
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import com.zdream.pmw.platform.attend.AttendManager;
 import com.zdream.pmw.platform.control.ICodeRealizer;
@@ -35,10 +37,10 @@ public class SystemCodeRealizer implements ICodeRealizer{
 	@Override
 	public String[] codes() {
 		return new String[] {
-				CODE_ENTRANCE, CODE_PP_SUB,
+				CODE_ENTRANCE, CODE_PP_SUB, CODE_BROADCAST,
 				CODE_SKILL_DAMAGE, CODE_EXEUNT_FAINT, CODE_RECOVER,
-				CODE_ROUND_END, CODE_NONMOVES_DAMAGE, CODE_RELEASE_SKILL,
-				CODE_EXEUNT_EXCHANGE
+				CODE_ROUND_END, CODE_NONMOVES_DAMAGE, CODE_CONFIRM_SKILL,
+				CODE_EXEUNT_EXCHANGE, CODE_RELEASE_SKILL
 				};
 	}
 
@@ -60,11 +62,12 @@ public class SystemCodeRealizer implements ICodeRealizer{
 			roundEnd(codes);
 		} else if (CODE_NONMOVES_DAMAGE.equals(code)) {
 			nonMovesDamage(codes);
-		} else if (CODE_RELEASE_SKILL.equals(code)) {
-			releaseSkill(codes);
 		} else if (CODE_EXEUNT_EXCHANGE.equals(code)) {
 			exeunt(codes);
 		}
+		
+		// CODE_BROADCAST, CODE_RELEASE_SKILL:
+		// do nothing
 	}
 
 	@Override
@@ -75,6 +78,8 @@ public class SystemCodeRealizer implements ICodeRealizer{
 			return entranceCommandLine(value);
 		} else if (CODE_PP_SUB.equals(code)) {
 			return ppSubCommandLine(value);
+		} else if (CODE_BROADCAST.equals(code)) {
+			return broadcastCommandLine(value);
 		} else if (CODE_SKILL_DAMAGE.equals(code)) {
 			return skillDamageCommandLine(value);
 		} else if (CODE_EXEUNT_FAINT.equals(code)) {
@@ -88,6 +93,10 @@ public class SystemCodeRealizer implements ICodeRealizer{
 		} else if (CODE_EXEUNT_EXCHANGE.equals(code)) {
 			return exeuntExchangeCommandLine(value);
 		}
+		
+		// CODE_CONFIRM_SKILL:
+		// no command line
+		
 		return null;
 	}
 
@@ -136,6 +145,27 @@ public class SystemCodeRealizer implements ICodeRealizer{
 	}
 	
 	/**
+	 * 广播指令
+	 * @param value
+	 * @return
+	 */
+	private String broadcastCommandLine(Aperitif value) {
+		StringBuilder builder = new StringBuilder(40);
+		builder.append(CODE_BROADCAST).append(' ').append(value.get("type"));
+		
+		Map<String, JsonValue> map = value.getMap();
+		// 所有 map 中以 '-' 开头的 key 都是要的
+		for (Iterator<Entry<String, JsonValue>> it = map.entrySet().iterator(); it.hasNext();) {
+			Entry<String, JsonValue> entry = it.next();
+			if (entry.getKey().startsWith("-")) {
+				builder.append(' ').append(entry.getKey()).append(' ').append(entry.getValue().getValue());
+			}
+		}
+		
+		return builder.toString();
+	}
+	
+	/**
 	 * 发动技能伤害实现<br>
 	 */
 	private void skillDamage(String[] codes) {
@@ -147,7 +177,7 @@ public class SystemCodeRealizer implements ICodeRealizer{
 		// 检测是否挂了
 		if (am.getParticipant(seat).getAttendant().getHpi() == 0) {
 			// seat 座位上的精灵已经挂了
-			am.getParticipant(seat).pushState(new FaintingProtectedState(seat));
+			am.getParticipant(seat).pushState(new FaintingProtectedState(seat), pf);
 			pf.getOrderManager().pushEvent(new FaintingExeuntEvent(seat));
 		}
 	}
@@ -157,13 +187,20 @@ public class SystemCodeRealizer implements ICodeRealizer{
 	 * @param value
 	 * @return
 	 */
-	private String skillDamageCommandLine(JsonValue value) {
-		Map<String, JsonValue> map = value.getMap();
-		return String.format("%s %d %d %s %d", CODE_SKILL_DAMAGE,
-				map.get("seat").getValue(),
-				map.get("value").getValue(),
-				map.get("ctable").getValue(),
-				map.get("effect").getValue());
+	private String skillDamageCommandLine(Aperitif value) {
+		StringBuilder builder = new StringBuilder();
+		
+		builder.append(CODE_SKILL_DAMAGE).append(' ')
+			.append(value.get("seat")).append(' ')
+			.append(value.get("value")).append(' ')
+			.append(value.get("ctable")).append(' ')
+			.append(value.get("effect"));
+		Object o = value.get("reason");
+		if (o != null) {
+			builder.append(' ').append(o);
+		}
+		
+		return builder.toString();
 	}
 	
 	/**
@@ -222,8 +259,7 @@ public class SystemCodeRealizer implements ICodeRealizer{
 	 * @param codes
 	 */
 	private void roundEnd(String[] codes) {
-		int round = Integer.valueOf(codes[1]);
-		pf.getOrderManager().setRound(round);
+		pf.getOrderManager().roundCount();
 	}
 
 	/**
@@ -252,7 +288,7 @@ public class SystemCodeRealizer implements ICodeRealizer{
 		// 检测是否挂了
 		if (am.getParticipant(seat).getAttendant().getHpi() == 0) {
 			// seat 座位上的精灵已经挂了
-			am.getParticipant(seat).pushState(new FaintingProtectedState(seat));
+			am.getParticipant(seat).pushState(new FaintingProtectedState(seat), pf);
 			pf.getOrderManager().pushEvent(new FaintingExeuntEvent(seat));
 		}
 	}
@@ -279,12 +315,6 @@ public class SystemCodeRealizer implements ICodeRealizer{
 				map.get("team").getValue(),
 				map.get("seat").getValue());
 	}
-
-	/**
-	 * 技能释放的实现 (无)
-	 * @param codes
-	 */
-	private void releaseSkill(String[] codes) {}
 	
 	/* ************
 	 *	 构造器   *

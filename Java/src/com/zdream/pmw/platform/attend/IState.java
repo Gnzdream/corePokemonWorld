@@ -16,8 +16,9 @@ import com.zdream.pmw.util.json.JsonValue;
  *   execute 方法补充了默认实现<br>
  * <br>
  * <b>v0.2.1</b>
- *   添加了 set 方法并补充默认实现<br>
- * <br>
+ * <p><li>添加了 set 方法并补充默认实现
+ * <li>添加了状态相关的生命周期方法
+ * </li></p>
  * 
  * @since v0.1.1
  * @author Zdream
@@ -108,5 +109,19 @@ public interface IState extends IMessageCode {
 	default public String ofCategory() {
 		return name();
 	}
+	
+	/**
+	 * 状态刚建立时, 会触发的方法<br>
+	 * 状态生命周期相关<br>
+	 * @since v0.2.1
+	 */
+	default public void onCreate() {}
+
+	/**
+	 * 状态即将销毁时, 会触发的方法<br>
+	 * 状态生命周期相关<br>
+	 * @since v0.2.1
+	 */
+	default public void onDestroy() {}
 	
 }

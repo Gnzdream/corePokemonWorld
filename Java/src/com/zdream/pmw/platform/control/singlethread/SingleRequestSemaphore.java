@@ -15,7 +15,7 @@ import com.zdream.pmw.platform.prototype.RuleConductor;
  * @since v0.2
  * @author Zdream
  * @date 2017年2月26日
- * @version v0.2
+ * @version v0.2.1
  */
 public class SingleRequestSemaphore implements IRequestSemaphore {
 
@@ -26,9 +26,9 @@ public class SingleRequestSemaphore implements IRequestSemaphore {
 	}
 	
 	@Override
-	public void requestEnterance(byte team, byte[] seats) {
+	public void requestSwitch(byte team, byte[] seats) {
 		ControlBase base = cm.getCtrl(team);
-		base.nextEnteranceRequest(seats); // 里面调用了 base, base 调用了 onCommitResponse
+		base.nextSwitchRequest(seats); // 里面调用了 base, base 调用了 onCommitResponse
 	}
 	
 	@Override

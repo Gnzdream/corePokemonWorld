@@ -9,12 +9,13 @@ import com.zdream.pmw.util.random.RanValue;
 
 /**
  * 混乱状态下, 攻击自己时伤害计算公式.<br>
- * 判定效果: <br>
- *   不判断属性加成<br>
- *   不判断是否命中<br>
- *   不判断是否命中要害<br>
- *   不通过状态计算技能威力<br>
- *   不实现附加效果和反作用<br>
+ * <p>判定效果:
+ * <li>不判断属性加成
+ * <li>不判断是否命中
+ * <li>不判断是否命中要害
+ * <li>不通过状态计算技能威力
+ * <li>不实现附加效果和反作用</li>
+ * </p>
  * 
  * @since v0.2.1
  * @author Zdream
@@ -122,7 +123,7 @@ public class ConfusionDamageFormula implements IDamageFormula {
 		
 		Aperitif value = pack.getEffects().newAperitif(Aperitif.CODE_SKILL_DAMAGE, seat);
 		value.append("seat", seat).append("value", pack.getDamage(0))
-				.append("ctable", false).append("effect", 0);
+				.append("ctable", false).append("effect", 0).append("reason", "confusion");
 		pack.getEffects().startCode(value);
 	}
 	

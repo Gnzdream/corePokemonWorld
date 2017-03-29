@@ -210,7 +210,7 @@ public class Attendant implements Serializable{
 	
 	/**
 	 * 异常状态 abnormal<br>
-	 * 精灵处在的异常状态，该值标明了其编码
+	 * 精灵处在的异常状态 code，该值标明了其编码
 	 */
 	private byte abnormal;
 	

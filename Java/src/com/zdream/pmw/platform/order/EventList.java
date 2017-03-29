@@ -26,6 +26,10 @@ import com.zdream.pmw.platform.prototype.BattlePlatform;
  * <br>
  * <b>v0.2</b><br>
  *   取消了对 pf.instance 的直接引用<br>
+ * <br>
+ * <b>v0.2.1</b>
+ * <p>修改了默认的三个回合结束事件触发的顺序.<br>
+ * 见 {@link #addDefaultEndedEvent()}</p>
  * 
  * @since v0.1.1
  * @author Zdream
@@ -177,10 +181,18 @@ public class EventList {
 	
 	/**
 	 * 添加默认的回合结束事件
+	 * <br>
+	 * <p><b>v0.2.1</b><br>
+	 * 之前的顺序是 enterance, end, request, 现在改为 end, enterance, request.<br>
+	 * end 事件会同时发动中毒、天气伤害等事件, 而这些事件在上场之前发动才更合理.</p>
 	 */
 	public void addDefaultEndedEvent() {
-		lastEvent.add(new DefaultEnteranceEvent());
 		lastEvent.add(new DefaultEndEvent());
+		if (om.getRound() <= 0) {
+			lastEvent.add(new DefaultEnteranceEvent(true));
+		} else {
+			lastEvent.add(new DefaultEnteranceEvent());
+		}
 		lastEvent.add(new DefaultRequestEvent());
 	}
 	

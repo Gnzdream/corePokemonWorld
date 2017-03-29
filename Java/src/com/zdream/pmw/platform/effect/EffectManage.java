@@ -151,12 +151,11 @@ public class EffectManage implements IPlatformComponent {
 	
 	/**
 	 * 怪兽上场
-	 * <p>一般为怪兽濒死后退场, 然后等到该回合要结束时, 由于此时该位置上没有怪兽,
-	 * 因此不能称其为交换. 这个时候就需要上场了.</p>
 	 * @param seat
-	 *   该上场怪兽上场时所在的位置
+	 *   座位号
 	 * @param noIn
 	 *   上场的怪兽, 必须是有效的参数
+	 * @since v0.2.1
 	 */
 	public void enteranceAct(byte seat, byte noIn) {
 		act.enteranceAct(seat, noIn);
@@ -166,8 +165,8 @@ public class EffectManage implements IPlatformComponent {
 		box.ppSubForRelease(pack);
 	}
 
-	public boolean judgeMovable(SkillReleasePackage pack) {
-		return box.judgeMovable(pack);
+	public boolean judgeMoveable(SkillReleasePackage pack) {
+		return box.judgeMoveable(pack);
 	}
 
 	/**

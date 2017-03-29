@@ -12,9 +12,12 @@ import com.zdream.pmw.platform.order.event.MoveEvent;
 import com.zdream.pmw.platform.order.event.ReplaceEvent;
 
 /**
- * 精灵发动技能事件的产生类
+ * 精灵发动技能事件的产生类<br>
+ * <br>
+ * <b>v0.2.1</b>
+ * <p>添加了能够产生怪兽交换的功能</p>
  * 
- * @since v0.1
+ * @since v0.2.1
  * @author Zdream
  * @date 2016年4月6日
  * @version v0.1
@@ -47,7 +50,8 @@ public class MoveEventBuilder {
 	
 	/**
 	 * 外部调用方法<br>
-	 * 为某个特定的队伍, 将用户端的消息转化成事件并返回<br>
+	 * <p>将指定的队伍的用户端的消息转化成事件并返回</p>
+	 * <p>一般在怪兽濒死后, 请求队伍获得上场的怪兽时调用的</p>
 	 * @param team
 	 * @return
 	 */
@@ -89,15 +93,8 @@ public class MoveEventBuilder {
 			case ControlBase.COMMAND_REPLACE: { // 选择换怪兽上场
 				String replaceStr = base.getParam(seat);
 				
-				byte no = am.noForSeat(seat);
-				if (no == -1) {
-					events.add(buildReplaceEventForEnterance(seat,
-							Byte.parseByte(replaceStr)));
-				} else {
-					events.add(buildReplaceEvent(am.noForSeat(seat),
-						Byte.parseByte(replaceStr)));
-				}
-				
+				events.add(buildReplaceEvent(am.noForSeat(seat),
+						Byte.parseByte(replaceStr), seat));
 			} break;
 			
 			case ControlBase.COMMAND_BAG: { // 选择使用背包道具
@@ -111,9 +108,7 @@ public class MoveEventBuilder {
 			default:
 				break;
 			}
-			
 		}
-		
 	}
 	
 	/**
@@ -141,29 +136,15 @@ public class MoveEventBuilder {
 	 * 创建并返回交换的行动事件
 	 * @param no
 	 * @param replaceNo
+	 * @param seat 
 	 * @return
 	 */
-	private ReplaceEvent buildReplaceEvent(byte no, byte replaceNo) {
+	private ReplaceEvent buildReplaceEvent(byte no, byte replaceNo, byte seat) {
 		ReplaceEvent event = new ReplaceEvent();
 		
 		event.setNo(no);
 		event.setReplaceNo(replaceNo);
-		
-		return event;
-	}
-	
-	/**
-	 * 创建并返回在濒死怪兽离场之后, 选择上场怪兽上场的行动事件
-	 * @param seat
-	 * @param replaceNo
-	 * @return
-	 */
-	private ReplaceEvent buildReplaceEventForEnterance(byte seat, byte replaceNo) {
-		ReplaceEvent event = new ReplaceEvent();
-		
 		event.setSeat(seat);
-		event.setNo((byte) -1);
-		event.setReplaceNo(replaceNo);
 		
 		return event;
 	}

@@ -24,7 +24,7 @@ import com.zdream.pmw.platform.effect.state.ExistState;
  * @date 2016年4月12日
  * @version v0.2
  */
-public class Participant extends StateContainer implements IPokemonDataType, IStateHandler{
+public class Participant extends StateContainer implements IPokemonDataType{
 	
 	private ExistState exist;
 	

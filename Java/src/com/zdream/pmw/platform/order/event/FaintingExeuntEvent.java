@@ -83,10 +83,5 @@ public class FaintingExeuntEvent extends APreviousEvent {
 		super();
 		this.seat = seat;
 	}
-	
-	@Override
-	public String toString() {
-		return "Event: FaintingExeunt, seat: " + seat;
-	}
 
 }

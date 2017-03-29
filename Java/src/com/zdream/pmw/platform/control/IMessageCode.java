@@ -32,7 +32,13 @@ public interface IMessageCode {
 	
 	/**
 	 * 拦截前消息的消息头<br>
-	 * 释放技能 (包括使用道具等)
+	 * 确定怪兽将要释放的技能 (可能包括使用道具等)
+	 */
+	public static final String CODE_CONFIRM_SKILL = "confirm-skill";
+	
+	/**
+	 * 拦截前消息的消息头<br>
+	 * 已经确定技能, 而且确认该怪兽能够行动, 此时就释放技能 (可能包括使用道具等)
 	 */
 	public static final String CODE_RELEASE_SKILL = "release-skill";
 	
@@ -182,5 +188,10 @@ public interface IMessageCode {
 	 * 能力等级变化 / 设置消息头
 	 */
 	public static final String CODE_ABILITY_LEVEL = "ability-level";
+	
+	/**
+	 * 广播
+	 */
+	public static final String CODE_BROADCAST = "broadcast";
 	
 }
