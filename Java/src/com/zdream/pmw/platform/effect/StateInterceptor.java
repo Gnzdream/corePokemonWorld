@@ -6,10 +6,9 @@ import java.util.List;
 
 import com.zdream.pmw.platform.attend.AttendManager;
 import com.zdream.pmw.platform.attend.IState;
-import com.zdream.pmw.platform.attend.IStateHandler;
+import com.zdream.pmw.platform.attend.IStateContainer;
 import com.zdream.pmw.platform.attend.IStateInterceptable;
 import com.zdream.pmw.platform.attend.Participant;
-import com.zdream.pmw.platform.control.ICodeRealizer;
 import com.zdream.pmw.platform.control.IPrintLevel;
 import com.zdream.pmw.platform.prototype.BattlePlatform;
 
@@ -139,7 +138,7 @@ public class StateInterceptor implements IStateInterceptable {
 	 * @param handler
 	 * @param states
 	 */
-	private void pushToStateList(IStateHandler handler, List<IState> states) {
+	private void pushToStateList(IStateContainer handler, List<IState> states) {
 		List<IState> list = handler.getStates();
 		if (list.isEmpty()) {
 			return;
@@ -202,12 +201,7 @@ public class StateInterceptor implements IStateInterceptable {
 	 *   可以发给 CM 模块，以此来操作 AM 模块的数据
 	 */
 	private String commandLine() {
-		ICodeRealizer realizer = pf.getControlManager().getRealizer(head);
-		if (realizer == null) {
-			return null;
-		} else {
-			return realizer.commandLine(value, this.pf);
-		}
+		return pf.getControlManager().commandLine(value);
 	}
 	
 	/* ************

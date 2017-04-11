@@ -44,7 +44,7 @@ public class PokemonDataDaoImpl implements IPokemonDataDao {
 		PokemonBaseData data = new PokemonBaseData();
 		Map<String, JsonValue> map = v.getMap();
 		data.setSpeciesID(((Number) map.get("species_id").getValue()).shortValue());
-		data.setForm(((Number) map.get("species_id").getValue()).byteValue());
+		data.setForm(((Number) map.get("form").getValue()).byteValue());
 		
 		// 属性
 		List<JsonValue> typearr = map.get("type").getArray();

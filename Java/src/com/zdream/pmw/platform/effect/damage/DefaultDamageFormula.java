@@ -57,6 +57,17 @@ public class DefaultDamageFormula implements IDamageFormula {
 			return;
 		}
 		
+		eachRound();
+	}
+	
+	/**
+	 * <p>每一轮进攻的实施</p>
+	 * <p>每次进行攻击时, 都会计算伤害和触发效果</p>
+	 * @since v0.2.2
+	 */
+	protected void eachRound() {
+		int length = pack.dfStaffLength();
+		
 		for (int index = 0; index < length; index++) {
 			if (!pack.isHitable(index)) {
 				continue;
@@ -65,6 +76,9 @@ public class DefaultDamageFormula implements IDamageFormula {
 			onDamage(index);
 		}
 		
+		// 附加状态 / 附加效果
+		// v0.2.2 版本后, addition 的判断与计算不再受制于 onDamage 方法
+		executeAddition();
 	}
 	
 	/**
@@ -101,9 +115,6 @@ public class DefaultDamageFormula implements IDamageFormula {
 		
 		// 实现伤害
 		executeDamage(index);
-		
-		// 附加状态 / 附加效果
-		executeAddition(index);
 		
 	}
 
@@ -280,7 +291,7 @@ public class DefaultDamageFormula implements IDamageFormula {
 		boolean result = false;
 		
 		byte ctLevel = pack.getEffects().calcCt(pack);
-		if (ctLevel == 0) {
+		if (ctLevel == -2) {
 			result = false;
 		} else if (ctLevel == -1) {
 			result = true;
@@ -477,10 +488,9 @@ public class DefaultDamageFormula implements IDamageFormula {
 	}
 	
 	/**
-	 * 附加状态 / A 类附加效果实现
-	 * @param index
+	 * 附加状态 / 附加效果实现
 	 */
-	protected void executeAddition(int index) {
+	protected void executeAddition() {
 		IAdditionFormula[] formulas = pack.getAdditionFormulas();
 		for (int i = 0; i < formulas.length; i++) {
 			formulas[i].addition(pack);
@@ -493,7 +503,7 @@ public class DefaultDamageFormula implements IDamageFormula {
 	/**
 	 * 释放数据包
 	 */
-	private SkillReleasePackage pack;
+	protected SkillReleasePackage pack;
 	
 	protected SkillReleasePackage getPack() {
 		return pack;

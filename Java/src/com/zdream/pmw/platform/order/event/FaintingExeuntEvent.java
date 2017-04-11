@@ -52,6 +52,7 @@ public class FaintingExeuntEvent extends APreviousEvent {
 			if (camp != -1) {
 				// 胜负已定，camp 阵营获得了胜利 TODO
 				pf.getControlManager().requestEnd(camp);
+				pf.getControlManager().inform();
 				pf.setFinish(true);
 			}
 		}

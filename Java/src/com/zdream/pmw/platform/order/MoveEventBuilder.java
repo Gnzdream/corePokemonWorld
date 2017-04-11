@@ -10,6 +10,7 @@ import com.zdream.pmw.platform.control.IPrintLevel;
 import com.zdream.pmw.platform.order.event.AEvent;
 import com.zdream.pmw.platform.order.event.MoveEvent;
 import com.zdream.pmw.platform.order.event.ReplaceEvent;
+import com.zdream.pmw.util.json.JsonValue;
 
 /**
  * 精灵发动技能事件的产生类<br>
@@ -31,6 +32,10 @@ public class MoveEventBuilder {
 	/**
 	 * 外部调用方法<br>
 	 * 将用户端的消息转化成事件并返回<br>
+	 * 
+	 * <p><b>v0.2.2</b><br>
+	 * 它行动方式进行了改动, 为有消息的控制体产生行动事件, 而不是所有控制体.</p>
+	 * 
 	 * @return
 	 */
 	public List<AEvent> build() {
@@ -42,7 +47,11 @@ public class MoveEventBuilder {
 			if (!am.isExistForTeam(team)) {
 				continue;
 			}
-			buildForEveryTeam(cm.getCtrl(team), events);
+			ControlBase ctrl = cm.getCtrl(team);
+			if (ctrl.isLoaded()) {
+				buildForEveryTeam(ctrl, events);
+				ctrl.clear();
+			}
 		}
 		
 		return events;
@@ -57,11 +66,55 @@ public class MoveEventBuilder {
 	 */
 	public List<AEvent> buildForTeam(byte team) {
 		List<AEvent> events = new ArrayList<AEvent>();
-		ControlManager cm = om.getRoot().getControlManager();
-		
-		buildForEveryTeam(cm.getCtrl(team), events);
+		ControlBase ctrl = om.getRoot().getControlManager().getCtrl(team);
+
+		if (ctrl.isLoaded()) {
+			buildForEveryTeam(ctrl, events);
+			ctrl.clear();
+		}
 		
 		return events;
+	}
+	
+	/**
+	 * <p>公共方法, 创建释放技能的行动事件并添加到指定的容器中</p>
+	 * @param no
+	 *   行动主体怪兽的 seat
+	 * @param skillNum
+	 *   选择怪兽的第几个技能
+	 * @param target
+	 *   选择目标, 默认为 -1
+	 * @param events
+	 *   盛放事件的列表, 生成的事件将加入到这里去
+	 * @since v0.2.2
+	 */
+	public void buildMoveEvent(byte no,
+			byte skillNum,
+			byte target,
+			List<AEvent> events) {
+		events.add(this.buildMoveEvent0(no, skillNum, target));
+	}
+	
+	/**
+	 * <p>公共方法, 创建释放技能的行动事件并添加到指定的容器中</p>
+	 * @param no
+	 *   行动主体怪兽的 seat
+	 * @param skillNum
+	 *   选择怪兽的第几个技能
+	 * @param target
+	 *   选择目标, 默认为 -1
+	 * @param events
+	 *   盛放事件的列表, 生成的事件将加入到这里去
+	 * @param param
+	 *   其它附加参数, 用于修改技能释放时的技能参数、触发方式、结算公式等
+	 * @since v0.2.2
+	 */
+	public void buildMoveEvent(byte no,
+			byte skillNum,
+			byte target,
+			JsonValue param,
+			List<AEvent> events) {
+		events.add(this.buildMoveEvent0(no, skillNum, target, param));
 	}
 	
 	/**
@@ -85,7 +138,7 @@ public class MoveEventBuilder {
 				String skillNumStr = base.getParam(seat);
 				String targetStr = base.getTarget(seat);
 				
-				events.add(buildMoveEvent(am.noForSeat(seat), 
+				events.add(buildMoveEvent0(am.noForSeat(seat), 
 						Byte.parseByte(skillNumStr), 
 						(targetStr == null) ? (byte) -1 : Byte.parseByte(targetStr)));
 			} break;
@@ -118,7 +171,7 @@ public class MoveEventBuilder {
 	 * @param target
 	 * @return
 	 */
-	private MoveEvent buildMoveEvent(byte no, byte skillNum, byte target) {
+	private MoveEvent buildMoveEvent0(byte no, byte skillNum, byte target) {
 		MoveEvent event = new MoveEvent();
 		
 		event.setNo(no);
@@ -127,7 +180,31 @@ public class MoveEventBuilder {
 
 		// addition TODO （例 先制之爪的发动）
 		om.logPrintf(IPrintLevel.PRINT_LEVEL_WARN, 
-				"位置：MoveEventBuilder.buildAndPush(3) addition 没有添加到 MoveEvent （例 先制之爪的发动）");
+				"位置：MoveEventBuilder.buildMoveEvent0(3) addition 没有添加到 MoveEvent （例 先制之爪的发动）");
+		
+		return event;
+	}
+	
+	/**
+	 * 创建并返回释放技能的行动事件
+	 * @param no
+	 * @param skillNum
+	 * @param target
+	 * @param param
+	 *   附加参数
+	 * @return
+	 */
+	private MoveEvent buildMoveEvent0(byte no, byte skillNum, byte target, JsonValue param) {
+		MoveEvent event = new MoveEvent();
+		
+		event.setNo(no);
+		event.setSkillNum(skillNum);
+		event.setTarget(target);
+		event.setParam(param);
+
+		// addition TODO （例 先制之爪的发动）
+		om.logPrintf(IPrintLevel.PRINT_LEVEL_WARN, 
+				"位置：MoveEventBuilder.buildMoveEvent0(4) addition 没有添加到 MoveEvent （例 先制之爪的发动）");
 		
 		return event;
 	}

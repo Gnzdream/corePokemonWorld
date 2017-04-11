@@ -51,7 +51,7 @@ public class StateCodeRealizer implements ICodeRealizer {
 		
 		switch (head) {
 		case CODE_FORCE_STATE:
-			pf.getEffectManage().forceStateRealize(codes);
+			pf.getAttendManager().forceState(codes);
 			break;
 		case CODE_REMOVE_STATE:
 			removeStateRealize(codes, pf);

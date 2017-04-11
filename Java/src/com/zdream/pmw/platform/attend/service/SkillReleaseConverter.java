@@ -112,7 +112,7 @@ public class SkillReleaseConverter {
 		
 		Map<String, JsonValue> map = data.getMap();
 		switch (map.get("t").getString()) {
-		case "a": // addition +
+		case "a": case "d": // addition +
 			release.addAddition(data);
 			break;
 		case "c": { // crit
@@ -131,8 +131,7 @@ public class SkillReleaseConverter {
 			String r = data.getMap().get("v").getString();
 			release.setRange(ESkillRange.parseEnum(r));;
 		} break;
-			
-
+		
 		default:
 			break;
 		}

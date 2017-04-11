@@ -1,19 +1,16 @@
 package com.zdream.pmw.platform.effect.addition;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import com.zdream.pmw.core.tools.ItemMethods;
 import com.zdream.pmw.monster.prototype.IPokemonDataType;
-import com.zdream.pmw.monster.skill.ESkillCategory;
 import com.zdream.pmw.platform.attend.Participant;
-import com.zdream.pmw.platform.common.ItemMethods;
 import com.zdream.pmw.platform.control.IPrintLevel;
 import com.zdream.pmw.platform.effect.Aperitif;
 import com.zdream.pmw.platform.effect.EffectManage;
-import com.zdream.pmw.platform.effect.SkillReleasePackage;
 import com.zdream.pmw.util.json.JsonValue;
 import com.zdream.pmw.util.random.RanValue;
 
@@ -27,9 +24,9 @@ import com.zdream.pmw.util.random.RanValue;
  * @since v0.1
  * @author Zdream
  * @date 2016年4月24日
- * @version v0.2
+ * @version v0.2.2
  */
-public class AbilityLevelAdditionFormula implements IAdditionFormula, IPokemonDataType {
+public class AbilityLevelAdditionFormula extends AAdditionFormula implements IPokemonDataType {
 	
 	/*
 	 * ver 0.1.1: (2016-09-16)
@@ -198,6 +195,22 @@ public class AbilityLevelAdditionFormula implements IAdditionFormula, IPokemonDa
 		return items.length;
 	}
 	
+	// v0.2.2
+	/**
+	 * 施加效果的目标<br>
+	 * 缓存<br>
+	 */
+	byte[] seats;
+	/**
+	 * 对应上面的 seats, 每个目标是否触发
+	 */
+	boolean[] forces;
+
+	/**
+	 * 对应上面的 seats, 分别缓存各个目标施加的能力项和变化等级数
+	 */
+	int[][] titems, tvalues;
+	
 	/* ************
 	 *	实现方法  *
 	 ************ */
@@ -206,14 +219,21 @@ public class AbilityLevelAdditionFormula implements IAdditionFormula, IPokemonDa
 	public String name() {
 		return "ability-level";
 	}
-
+	
 	@Override
-	public void addition(SkillReleasePackage pack) {
-		this.pack = pack;
-		if (canTrigger()) {
-			force();
-		}
-		this.pack = null;
+	protected void onStart() {
+		seats = targetSeats();
+		forces = new boolean[seats.length];
+		titems = new int[seats.length][];
+		tvalues = new int[seats.length][];
+	}
+	
+	@Override
+	protected void onFinish() {
+		seats = null;
+		forces = null;
+		titems = null;
+		tvalues = null;
 	}
 
 	/**
@@ -391,51 +411,25 @@ public class AbilityLevelAdditionFormula implements IAdditionFormula, IPokemonDa
 	
 	/**
 	 * 施加对象的 seat 数组
+	 * <p>已经除去了没有命中的对象</p>
 	 * @return
 	 */
-	private byte[] targetSeats() {
+	@Override
+	protected byte[] targetSeats() {
 		if (TARGET_ENEMY.equals(target)) {
-			List<Byte> list = new ArrayList<Byte>();
-			int length = pack.dfStaffLength();
-			for (int i = 0; i < length; i++) {
-				if (pack.getSkill().getSkill().getCategory() == ESkillCategory.STATUS) {
-					if (pack.isHitable(i)) {
-						list.add(pack.getDfStaff(i).getSeat());
-					}
-				} else {
-					if (pack.isHitable(i) && pack.getRate(i) != 0) {
-						list.add(pack.getDfStaff(i).getSeat());
-					}
-				}
-			}
-			
-			byte[] result = new byte[list.size()];
-			int index = 0;
-			for (Iterator<Byte> it = list.iterator(); it.hasNext();) {
-				Byte b = it.next();
-				result[index++] = b;
-			}
-			return result;
-			
+			return super.targetSeats();
 		} else if (TARGET_SELF.equals(target)) {
 			return new byte[]{atseat()};
 		} else if (TARGET_SELF_AND_ENEMY.equals(target)) {
-			List<Byte> list = new ArrayList<Byte>();
-			int length = pack.dfStaffLength();
-			for (int i = 0; i < length; i++) {
-				if (pack.isHitable(i) && pack.getRate(i) != 0) {
-					list.add(pack.getDfStaff(i).getSeat());
-				}
+			byte[] bs = super.targetSeats();
+			if (bs.length == 0) {
+				// 如果没有击中防御方, 那么攻击方也不会施加效果
+				return bs;
 			}
-			
-			byte[] result = new byte[list.size() + 1];
-			result[0] = atseat();
-			int index = 1;
-			for (Iterator<Byte> it = list.iterator(); it.hasNext();) {
-				Byte b = it.next();
-				result[index++] = b;
-			}
-			return result;
+			byte[] results = new byte[bs.length + 1];
+			System.arraycopy(bs, 0, results, 1, bs.length);
+			results[0] = pack.getAtStaff().getSeat();
+			return results;
 		}
 		
 		return null;
@@ -444,18 +438,12 @@ public class AbilityLevelAdditionFormula implements IAdditionFormula, IPokemonDa
 	/**
 	 * 按随机数，计算异常状态是否能够触发
 	 * @return
+	 *   如果所有目标都不能发动, 为 false
 	 */
-	private boolean canTrigger() {
+	protected boolean canTrigger() {
 		// 计算附加状态真实释放几率
 		byte atseat = pack.getAtStaff().getSeat();
-		byte[] dfseats = targetSeats();
-		
-		byte[] scanSeats = new byte[dfseats.length + 1];
-		System.arraycopy(dfseats, 0, scanSeats, 0, dfseats.length);
-		scanSeats[dfseats.length] = atseat;
-
-		Aperitif value = pack.getEffects().newAperitif(
-				Aperitif.CODE_CALC_ADDITION_RATE, scanSeats);
+		byte[] dfseats = seats;
 		
 		// item
 		int itemLen = size();
@@ -464,70 +452,75 @@ public class AbilityLevelAdditionFormula implements IAdditionFormula, IPokemonDa
 		System.arraycopy(this.items, 0, items, 0, itemLen);
 		System.arraycopy(this.values, 0, values, 0, itemLen);
 		
-		if (dfseats.length == 1) {
-			value.append("dfseat", dfseats[0]);
-		} else {
-			value.append("dfseat", (byte) -1);
-			value.append("dfseats", dfseats);
-		}
+		/*
+		 * 如果所有目标都不能发动, 为 false
+		 */
+		boolean exist = false;
 		
-		value.append("atseat", atseat);
-		value.append("type", "abilityLevel");
-		value.append("param", param);
-		value.append("items", items);
-		value.append("values", values);
-		value.append("rate", rate);
-		value.append("result", 0);
-		pack.getEffects().startCode(value);
-
-		// 计算
-		int result = (int) value.get("result");
-		if (result == 0) {
-			int instanceRate = (int) value.get("rate");
-			return RanValue.isSmaller(instanceRate);
+		for (int i = 0; i < dfseats.length; i++) {
+			byte dfseat = dfseats[i];
+			
+			Aperitif value = pack.getEffects().newAperitif(
+					Aperitif.CODE_CALC_ADDITION_RATE, atseat, dfseat);
+			
+			value.append("atseat", atseat)
+				.append("dfseats", dfseats)
+				.append("target", dfseat)
+				.append("type", "abilityLevel")
+				.append("param", param)
+				.append("items", items)
+				.append("values", values)
+				.append("rate", rate)
+				.append("result", 0);
+			pack.getEffects().startCode(value);
+			
+			int result = (int) value.get("result");
+			if (result == 0) {
+				int instanceRate = (int) value.get("rate");
+				if (RanValue.isSmaller(instanceRate)) {
+					exist = true;
+					forces[i] = true;
+					titems[i] = (int[]) value.get("items");
+					tvalues[i] = (int[]) value.get("values");
+				}
+			}	
 		}
 
-		return false;
+		return exist;
 	}
 	
 	/**
-	 * 施加能力变化
+	 * 施加能力变化<br>
+	 * <p>(v0.2.2 之后) 对所有判定对象分别进行判定</p>
 	 */
-	private void force() {
-		byte[] targets = targetSeats();
-		int size = size();
+	protected void force() {
+		int itemLen = size();
 		
-		if (targets == null) {
-			em.logPrintf(IPrintLevel.PRINT_LEVEL_ERROR, 
-					"AbilityLevelAdditionF.force(): 释放的对象无法找到，对象为 %s", this.target);
-			return;
-		}
-		
-		if (size == 0) {
+		if (itemLen == 0) {
 			em.logPrintf(IPrintLevel.PRINT_LEVEL_WARN, 
 					"AbilityLevelAdditionF.force(): 无能力变化数值");
 			return;
 		}
 		
-		for (int i = 0; i < targets.length; i++) {
-			byte dfseat = targets[i];
+		for (int i = 0; i < seats.length; i++) {
+			if (forces[i] == false) {
+				continue;
+			}
+			
+			byte dfseat = seats[i];
 			
 			// item
-			int itemLen = size();
-			int[] items = new int[itemLen];
-			int[] values = new int[itemLen];
-			System.arraycopy(this.items, 0, items, 0, itemLen);
-			System.arraycopy(this.values, 0, values, 0, itemLen);
-			
+			int[] items = titems[i];
+			int[] values = tvalues[i];
 			check(items, values, dfseat);
 			
 			// 进行修改
 			Aperitif value = pack.getEffects().newAperitif(
-					Aperitif.CODE_ABILITY_LEVEL, targets);
-			value.append("param", param);
-			value.append("dfseat", dfseat);
-			value.append("items", items);
-			value.append("values", values);
+					Aperitif.CODE_ABILITY_LEVEL, seats);
+			value.append("param", param)
+				.append("dfseat", dfseat)
+				.append("items", items)
+				.append("values", values);
 			pack.getEffects().startCode(value);
 		}
 		
@@ -561,14 +554,12 @@ public class AbilityLevelAdditionFormula implements IAdditionFormula, IPokemonDa
 				values[i] = LEVEL_LOWER_LIMIT - participant.getAbilityLevel(item);
 			}
 		}
-		
 	}
 	
 	/* ************
 	 *	 初始化   *
 	 ************ */
 	
-	private SkillReleasePackage pack;
 	private EffectManage em;
 	
 	public AbilityLevelAdditionFormula(EffectManage em) {

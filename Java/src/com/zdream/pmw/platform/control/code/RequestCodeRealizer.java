@@ -1,13 +1,9 @@
 package com.zdream.pmw.platform.control.code;
 
-import java.util.Iterator;
-import java.util.List;
-
 import com.zdream.pmw.platform.control.ICodeRealizer;
 import com.zdream.pmw.platform.effect.Aperitif;
 import com.zdream.pmw.platform.prototype.BattlePlatform;
 import com.zdream.pmw.util.common.ArraysUtils;
-import com.zdream.pmw.util.json.JsonValue;
 
 /**
  * 向各个控制体请求怪兽下一步操作、选择怪兽等等操作<br>
@@ -25,7 +21,7 @@ public class RequestCodeRealizer implements ICodeRealizer {
 
 	@Override
 	public String[] codes() {
-		return new String[] {CODE_REQUEST_MOVE, CODE_REQUEST_PM};
+		return new String[] {CODE_REQUEST_MOVE, CODE_REQUEST_PM, CODE_REQUEST_COMMIT};
 	}
 
 	@Override
@@ -37,6 +33,7 @@ public class RequestCodeRealizer implements ICodeRealizer {
 		} else if (CODE_REQUEST_PM.equals(code)) {
 			return requestPmCommandLine(value);
 		}
+		// CODE_REQUEST_COMMIT: nothing.
 		return null;
 	}
 
@@ -63,7 +60,7 @@ public class RequestCodeRealizer implements ICodeRealizer {
 	private String requestMoveCommandLine(Aperitif value) {
 		return String.format("%s %d %s", CODE_REQUEST_MOVE, 
 				value.get("team"),
-				listToString(value.getMap().get("seats").getArray()));
+				listToString((byte[]) value.getMap().get("seats").getValue()));
 	}
 
 	/**
@@ -85,7 +82,7 @@ public class RequestCodeRealizer implements ICodeRealizer {
 	private void requestPm(String[] codes) {
 		byte team = Byte.valueOf(codes[1]);
 		byte[] seats = ArraysUtils.StringToBytes(codes[2]);
-		pf.getControlManager().requestSwitch(team, seats);
+		pf.getControlManager().putSwitchRequest(team, seats);
 	}
 
 	/**
@@ -94,7 +91,7 @@ public class RequestCodeRealizer implements ICodeRealizer {
 	private void requestMove(String[] codes) {
 		byte team = Byte.parseByte(codes[1]);
 		byte[] seats = ArraysUtils.StringToBytes(codes[2]);
-		pf.getControlManager().requestMove(team, seats);
+		pf.getControlManager().putMoveRequest(team, seats);
 	}
 	
 	/* ************
@@ -106,19 +103,8 @@ public class RequestCodeRealizer implements ICodeRealizer {
 	 * @param list
 	 * @return
 	 */
-	private String listToString(List<JsonValue> list) {
-		StringBuilder builder = new StringBuilder();
-		builder.append('[');
-		Iterator<JsonValue> it = list.iterator();
-		if (it.hasNext()) {
-			builder.append(it.next().getValue());
-		}
-		while (it.hasNext()) {
-			builder.append(',');
-			builder.append(it.next().getValue());
-		}
-		builder.append(']');
-		return builder.toString();
+	private String listToString(byte[] array) {
+		return ArraysUtils.bytesToString(array);
 	}
 	
 	/* ************

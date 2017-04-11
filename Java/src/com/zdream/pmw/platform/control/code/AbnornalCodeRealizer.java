@@ -2,8 +2,8 @@ package com.zdream.pmw.platform.control.code;
 
 import java.util.Map;
 
+import com.zdream.pmw.core.tools.AbnormalMethods;
 import com.zdream.pmw.monster.prototype.EPokemonAbnormal;
-import com.zdream.pmw.platform.common.AbnormalMethods;
 import com.zdream.pmw.platform.control.ICodeRealizer;
 import com.zdream.pmw.platform.effect.Aperitif;
 import com.zdream.pmw.platform.prototype.BattlePlatform;

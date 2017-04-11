@@ -22,7 +22,7 @@ import com.zdream.pmw.util.json.JsonValue;
  * @date 2016年4月12日
  * @version v0.1
  */
-public class StateContainer implements IStateHandler {
+public class StateContainer implements IStateContainer {
 	
 	/* ************
 	 *	数据结构  *

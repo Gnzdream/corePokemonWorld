@@ -46,11 +46,15 @@ import com.zdream.pmw.util.json.JsonValue;
  * <b>v0.2.1</b>
  * <p>将查询实时能力的方法移到了 {@link com.zdream.pmw.platform.effect.EffectManage},
  * 这样, am 中就没有发送 {@link com.zdream.pmw.platform.effect.Aperitif} 的方法了</p>
+ * <br>
+ * <p><b>v0.2.2</b><br>
+ * 引入了产生状态实现层的方法</p>
  * 
  * @since v0.1
+ *   [2016-04-11]
  * @author Zdream
- * @date 2016年4月11日
- * @version v0.2.1
+ * @version v0.2.2
+ *   [2017-04-09]
  */
 public class AttendManager implements IPlatformComponent {
 
@@ -336,7 +340,7 @@ public class AttendManager implements IPlatformComponent {
 	/**
 	 * 每个 seat 上的状态列表
 	 */
-	private IStateHandler[] seatStates,
+	private IStateContainer[] seatStates,
 	/**
 	 * 每个 camp 上的状态列表
 	 */
@@ -345,17 +349,17 @@ public class AttendManager implements IPlatformComponent {
 	 * 全场状态列表<br>
 	 * 比如天气、欺骗空间等
 	 */
-	private IStateHandler platformStates;
+	private IStateContainer platformStates;
 
-	public IStateHandler getSeatStates(byte seat) {
+	public IStateContainer getSeatStates(byte seat) {
 		return seatStates[seat];
 	}
 
-	public IStateHandler getCampStates(byte camp) {
+	public IStateContainer getCampStates(byte camp) {
 		return campStates[camp];
 	}
 
-	public IStateHandler getPlatformStates() {
+	public IStateContainer getPlatformStates() {
 		return platformStates;
 	}
 
@@ -369,6 +373,7 @@ public class AttendManager implements IPlatformComponent {
 	private SkillReleaseConverter skrConvert;
 	private ParticipantAbilityHandler partAHandler;
 	private AttendantOperateHandler attOper;
+	private StateHandler stateHandler;
 	
 	/**
 	 * Pokemon 转化到 Attendant
@@ -616,6 +621,25 @@ public class AttendManager implements IPlatformComponent {
 		attOper.setStateFromParticipant(seat, stateName, value);
 	}
 
+	/**
+	 * 工厂方式创建状态类
+	 * @param args
+	 * @return
+	 * @since v0.2.2
+	 */
+	public IState buildState(JsonValue args) {
+		return stateHandler.buildState(args);
+	}
+
+	/**
+	 * 按照施加状态的命令行数据, 完成施加状态的任务<br>
+	 * @param codes
+	 * @since v0.2.2
+	 */
+	public void forceState(String[] codes) {
+		stateHandler.forceState(codes);
+	}
+
 	/* ************
 	 *	 初始化   *
 	 ************ */
@@ -637,6 +661,9 @@ public class AttendManager implements IPlatformComponent {
 		partAHandler = new ParticipantAbilityHandler(this);
 		attOper = new AttendantOperateHandler(this);
 		skrConvert = new SkillReleaseConverter(this);
+		stateHandler = new StateHandler(this);
+		
+		msg.putDeliver("stateHandler", stateHandler);
 		
 		int length = countAttendants(msg.getTeams());
 		initAttendantArray(msg.getTeams(), length);
@@ -751,13 +778,13 @@ public class AttendManager implements IPlatformComponent {
 		int length;
 		
 		length = referee.seatLength();
-		seatStates = new IStateHandler[length];
+		seatStates = new IStateContainer[length];
 		for (byte seat = 0; seat < length; seat++) {
 			seatStates[seat] = new StateContainer();
 		}
 		
 		length = referee.campLength();
-		campStates = new IStateHandler[length];
+		campStates = new IStateContainer[length];
 		for (byte camp = 0; camp < length; camp++) {
 			campStates[camp] = new StateContainer();
 		}

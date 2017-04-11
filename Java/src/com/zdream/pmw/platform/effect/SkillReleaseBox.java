@@ -10,6 +10,7 @@ import com.zdream.pmw.platform.control.IMessageCode;
 import com.zdream.pmw.platform.control.IPrintLevel;
 import com.zdream.pmw.platform.effect.damage.IDamageFormula;
 import com.zdream.pmw.util.common.ArraysUtils;
+import com.zdream.pmw.util.json.JsonValue;
 
 /**
  * 技能发动的释放计算平台<br>
@@ -51,12 +52,32 @@ public class SkillReleaseBox implements IPokemonDataType {
 	 * 例如训练师下达命令中，选择的对象，可能为 -1
 	 */
 	public void moveAct(byte no, byte skillNum, byte originTarget) {
+		moveAct(no, skillNum, originTarget, null);
+	}
+	
+	/**
+	 * <p>技能行动释放, 并加入选项参数, 来修改该技能的计算方式</p>
+	 * <p>举个例子, 蓄力技释放时的第二回合, 技能的参数与第一回合不同, 也不需要扣 PP 值,
+	 * 因此需要进行修正.</p>
+	 * <p>当不需要选项参数时, 请使用 {@link #moveAct(byte, byte, byte)}</p>
+	 * @param no
+	 *   攻击方的 no
+	 * @param skillNum
+	 *   选择的技能号码（索引）
+	 * @param originTarget
+	 *   原始目标数据<br>
+	 *   例如训练师下达命令中，选择的对象，可能为 -1
+	 * @param param
+	 *   选项, 用于修改该技能的计算方式. 默认为空.<br>
+	 *   格式:
+	 */
+	public void moveAct(byte no, byte skillNum, byte originTarget, JsonValue param) {
 		initMoveAct(no, skillNum, originTarget);
 		
 		// 确定释放技能
 		releaseSkill();
 		
-		confirmFormula();
+		confirmFormula(param);
 		
 		// v0.2.1 后, 将判断能否行动移到确定释放技能之后
 		if (!canMove()) {
@@ -64,7 +85,7 @@ public class SkillReleaseBox implements IPokemonDataType {
 		}
 		
 		// 扣 PP（这里不考虑压力特性）
-		ppSubForRelease(pack);
+		ppSubForRelease(pack, param);
 		
 		// 写入范围
 		writeRange();
@@ -103,10 +124,17 @@ public class SkillReleaseBox implements IPokemonDataType {
 	
 	/**
 	 * 确定技能之后, 确定技能释放时所使用的公式<br>
+	 * @param param
+	 *   选项参数
 	 */
-	private void confirmFormula() {
+	private void confirmFormula(JsonValue param) {
 		SkillRelease skill = pack.getSkill();
-		em.loadFormula(pack, skill);
+		if (param == null) {
+			em.loadFormula(pack, skill);
+			return;
+		}
+		JsonValue v = param.getMap().get("formula");
+		em.loadFormula(pack, skill, v);
 	}
 	
 	/**
@@ -142,16 +170,28 @@ public class SkillReleaseBox implements IPokemonDataType {
 	
 	/**
 	 * 由于释放技能而扣 PP
+	 * @param param
 	 */
-	public void ppSubForRelease(SkillReleasePackage pack) {
-		byte seat = pack.getAtStaff().getSeat();
-		Aperitif value = em.newAperitif(Aperitif.CODE_PP_SUB, seat);
+	private void ppSubForRelease(SkillReleasePackage pack, JsonValue param) {
+		int value = 1;
+		if (param != null) {
+			JsonValue v = param.getMap().get("ppSub");
+			if (v != null) {
+				value = (int) v.getValue();
+				if (value == 0) {
+					return;
+				}
+			}
+		}
 		
-		value.append("seat", seat);
-		value.append("skillNum", pack.getSkillNum());
-		value.append("skillID", pack.getSkill().getId());
-		value.append("value", 1);
-		em.getRoot().readyCode(value);
+		byte seat = pack.getAtStaff().getSeat();
+		Aperitif ap = em.newAperitif(Aperitif.CODE_PP_SUB, seat);
+		
+		ap.append("seat", seat);
+		ap.append("skillNum", pack.getSkillNum());
+		ap.append("skillID", pack.getSkill().getId());
+		ap.append("value", value);
+		em.getRoot().readyCode(ap);
 	}
 
 	/**
@@ -374,8 +414,8 @@ public class SkillReleaseBox implements IPokemonDataType {
 	 * 计算会心一击等级
 	 * @param pack
 	 * @return
-	 *   当数值大于零, 表示会心一击等级;<br>
-	 *   当数值为 0, 表示绝对回避会心;<br>
+	 *   当数值大于等于零, 表示会心一击等级;<br>
+	 *   当数值为 -2, 表示绝对回避会心;<br>
 	 *   当数值为 -1, 表示绝对会心;<br>
 	 */
 	public byte calcCt(SkillReleasePackage pack) {
@@ -394,7 +434,7 @@ public class SkillReleaseBox implements IPokemonDataType {
 		case 1:
 			return (byte) -1;
 		case 2:
-			return (byte) 0;
+			return (byte) -2;
 		default:
 			return (byte) value.get("result");
 		}
@@ -458,26 +498,28 @@ public class SkillReleaseBox implements IPokemonDataType {
 	
 	/**
 	 * 施加状态 (技能施加)
-	 * @param pack
+	 * @param atseat
+	 *   攻击方
+	 * @param dfseat
+	 *   防御方, 就是确定要施加状态的一方
 	 * @param abnormal
-	 *   {@link com.zdream.pmw.platform.common.AbnormalMethods#toBytes(EPokemonAbnormal, int)}
+	 *   {@link com.zdream.pmw.core.tools.AbnormalMethods#toBytes(EPokemonAbnormal, int)}
 	 */
-	public void forceAbnormal(SkillReleasePackage pack, byte abnormal) {
-		Aperitif ap = pack.getEffects()
-				.newAperitif("force-abnormal", pack.getAtStaff().getSeat());
+	public void forceAbnormal(byte atseat, byte dfseat, byte abnormal) {
+		Aperitif ap = em.newAperitif("force-abnormal", atseat, dfseat);
 		
-		ap.append("dfseat", pack.getDfStaff(pack.getThiz()).getSeat())
-				.append("atseat", pack.getAtStaff().getSeat())
+		ap.append("dfseat", dfseat)
+				.append("atseat", atseat)
 				.append("abnormal", abnormal)
 				.append("result", 0);
-		pack.getEffects().startCode(ap);
+		em.startCode(ap);
 	}
 	
 	/**
 	 * 施加状态 (系统施加)
 	 * @param pack
 	 * @param abnormal
-	 *   {@link com.zdream.pmw.platform.common.AbnormalMethods#toBytes(EPokemonAbnormal, int)}
+	 *   {@link com.zdream.pmw.core.tools.AbnormalMethods#toBytes(EPokemonAbnormal, int)}
 	 */
 	public void forceAbnormal(byte seat, byte abnormal) {
 		Aperitif value = em.newAperitif(Aperitif.CODE_FORCE_ABNORMAL, seat);
@@ -603,6 +645,51 @@ public class SkillReleaseBox implements IPokemonDataType {
 	 * @since v0.2.1
 	 */
 	public SkillReleasePackage getCurrentPackage() {
+		return pack;
+	}
+	
+	/**
+	 * <p>替换 {@code SkillReleasePackage}.</p>
+	 * <p>用新建的 package 的替换现在正在使用的 package.
+	 * 会将旧有的 package 存入仓库, 然后将初始化一个新的 packge 返回.</p>
+	 * <p>一般在多段攻击时, 每一轮攻击需要生成一个 package, 需要再此替换 package.</p>
+	 * @param oldPack
+	 *   原有的 package
+	 * @return
+	 *   新建的 package
+	 * @since v0.2.2
+	 */
+	public SkillReleasePackage replacePackage(SkillReleasePackage oldPack) {
+		SkillReleasePackage pack = new SkillReleasePackage();
+		pack.initEnvironment(em.getRoot());
+		
+		pack.setAtStaff(oldPack.getAtStaff());
+		pack.setSkill(oldPack.getSkill());
+		pack.setSkillNum(oldPack.getSkillNum());
+		pack.setOriginTarget(oldPack.getOriginTarget());
+		
+		pack.setAccuracyFormula(oldPack.getAccuracyFormula());
+		pack.setAdditionFormulas(oldPack.getAdditionFormulas());
+		pack.setDamageFormula(oldPack.getDamageFormula());
+		pack.setPowerFormula(oldPack.getPowerFormula());
+		pack.setMovableFormula(oldPack.getMovableFormula());
+		
+		pack.setMoveable(oldPack.isMoveable());
+		
+		final int length = oldPack.dfStaffLength();
+		
+		byte[] targets = new byte[length];
+		for (int i = 0; i < length; i++) {
+			targets[i] = oldPack.getTarget(i);
+		}
+		pack.setTargets(targets);
+		for (int i = 0; i < length; i++) {
+			pack.setDfStaff(oldPack.getDfStaff(i), i);
+		}
+		
+		em.getRoot().getOrderManager().storeReleasePackage(oldPack);
+		this.pack = pack;
+		
 		return pack;
 	}
 	

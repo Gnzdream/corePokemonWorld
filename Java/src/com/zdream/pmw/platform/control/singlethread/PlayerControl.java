@@ -22,7 +22,7 @@ import com.zdream.pmw.platform.control.ControlManager;
  * @since v0.2
  * @author Zdream
  * @date 2017年2月25日
- * @version v0.2
+ * @version v0.2.2
  */
 public class PlayerControl extends SingleModeControl {
 
@@ -30,10 +30,4 @@ public class PlayerControl extends SingleModeControl {
 		super(cm);
 		this.setType(TYPE_PLAYER);
 	}
-
-	@Override
-	public void nextActionRequest() {
-		callback.onRequest(cm.getRoot(), this);
-	}
-
 }

@@ -19,6 +19,7 @@
 "78":{"pp_max":30,"effect":[{"t":"a","i":"PARALYSIS","n":"a.abn"}],"accuracy":75,"skill_id":78,"power":0,"title":"麻痹粉","type":"grass","category":"status","desc":"（未完成）撒出麻痹粉，从而让对手陷入麻痹状态。"},
 "79":{"pp_max":15,"effect":[{"t":"a","i":"SLEEP","n":"a.abn"}],"accuracy":75,"skill_id":79,"power":0,"title":"催眠粉","type":"grass","category":"status","desc":"（未完成）撒出催眠粉，从而让对手陷入睡眠状态。"},
 "81":{"pp_max":40,"effect":[{"t":"a","v":-2,"i":"SP","n":"a.ablc"}],"accuracy":95,"skill_id":81,"power":0,"title":"吐丝","type":"bug","category":"status","desc":"用口中吐出的丝缠绕对手，从而大幅降低对手的速度。"},
+"82":{"pp_max":10,"effect":[{"p":40,"t":"d","n":"d.fixed"}],"accuracy":100,"skill_id":82,"power":1,"title":"龙之怒","type":"dragon","category":"special","desc":"将愤怒的冲击波撞向对手进行攻击。必定会给予４０的伤害。"},
 "83":{"pp_max":15,"effect":[{"t":"a","v":"bound","n":"a.state"}],"accuracy":85,"skill_id":83,"power":35,"title":"火焰旋涡","type":"fire","category":"special","desc":"将对手困在激烈的火焰旋涡中，在４～５回合内进行攻击。"},
 "84":{"pp_max":30,"effect":[{"r":10,"t":"a","i":"PARALYSIS","n":"a.abn"}],"accuracy":100,"skill_id":84,"power":40,"title":"电击","type":"electric","category":"special","desc":"发出电流刺激对手进行攻击。有时会让对手陷入麻痹状态。"},
 "85":{"pp_max":15,"effect":[{"r":10,"t":"a","i":"PARALYSIS","n":"a.abn"}],"accuracy":100,"skill_id":85,"power":90,"title":"十万伏特","type":"electric","category":"special","desc":"向对手发出强力电击进行攻击。有时会让对手陷入麻痹状态。"},

@@ -21,7 +21,7 @@ import com.zdream.pmw.platform.prototype.RuleConductor;
  * @since v0.2
  * @author Zdream
  * @date 2017年2月25日
- * @version v0.2
+ * @version v0.2.2
  */
 public class ControlFactory implements IBattleRule {
 	
@@ -97,20 +97,20 @@ public class ControlFactory implements IBattleRule {
 		
 		switch (referee.getRule()) {
 		case RULE_DEBUG:
-			createDebugControls(ctrls);
+			createDebugControls(ctrls, true);
 			break;
 		
 		// TODO 更多的规则, 见 RuleConductor
 
-		default:
-			createMultiDebugControls(ctrls);
+		case RULE_DEBUG_MULTI:
+			createDebugControls(ctrls, false);
 			break;
 		}
 		
 		return ctrls;
 	}
 	
-	private void createDebugControls(ControlBase[] ctrls) {
+	private void createDebugControls(ControlBase[] ctrls, boolean isSingle) {
 		// 单线程
 		List<IRequestCallback> callbacks = msg.getCallbacks();
 		List<IMessageCallback[]> msgbacks = msg.getMessagebacks();
@@ -121,11 +121,16 @@ public class ControlFactory implements IBattleRule {
 		 */
 		IRequestCallback call = callbacks.get(0);
 		if (call != null) {
-			PlayerControl pc = new PlayerControl(cm);
-			pc.setTeam((byte) 0);
-			pc.setCallback(call);
-			pc.setMessagebacks(msgbacks.get(0));
-			ctrls[0] = pc;
+			ControlBase base;
+			if (isSingle) {
+				base = new PlayerControl(cm);
+			} else {
+				base = new MultiPlayerControl(cm);
+			}
+			base.setTeam((byte) 0);
+			base.setCallback(call);
+			base.setMessagebacks(msgbacks.get(0));
+			ctrls[0] = base;
 		} else {
 			cm.logPrintf(IPrintLevel.PRINT_LEVEL_ERROR,
 					"ControlFactory.createDebugControls(1) 玩家 (队伍 0) 没有设置回调函数!");
@@ -138,25 +143,23 @@ public class ControlFactory implements IBattleRule {
 		 */
 		call = callbacks.get(1);
 		{
-			AIControl ac = new AIControl(cm);
-			ac.setTeam((byte) 1);
+			ControlBase base;
+			if (isSingle) {
+				base = new AIControl(cm);
+			} else {
+				base = new MultiAIControl(cm);
+			}
+			base.setTeam((byte) 1);
 			if (call == null) {
 				call = new DefaultAIBrain(cm).createAICallback();
 			}
 			
-			ac.setCallback(call);
+			base.setCallback(call);
 			// 默认的 ai 是没有消息回调函数的
-			ctrls[1] = ac;
+			ctrls[1] = base;
 		}
 	}
 	
-	private void createMultiDebugControls(ControlBase[] ctrls) {
-		ctrls[0] = new MultiPlayerControl(cm);
-		ctrls[0].setTeam((byte) 0);
-		ctrls[1] = new MultiAIControl(cm);
-		ctrls[1].setTeam((byte) 1);
-	}
-
 	public IRequestSemaphore createSemaphore() {
 		switch (referee.getRule()) {
 		case RULE_DEBUG:

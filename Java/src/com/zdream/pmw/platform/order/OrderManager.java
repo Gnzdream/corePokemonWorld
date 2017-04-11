@@ -12,6 +12,7 @@ import com.zdream.pmw.platform.prototype.BattlePlatform;
 import com.zdream.pmw.platform.prototype.Fuse;
 import com.zdream.pmw.platform.prototype.IPlatformComponent;
 import com.zdream.pmw.platform.prototype.RuleConductor;
+import com.zdream.pmw.util.json.JsonValue;
 
 /**
  * 战斗顺序管理者<br>
@@ -26,14 +27,17 @@ import com.zdream.pmw.platform.prototype.RuleConductor;
  * <b>v0.2</b><br>
  *   添加 BattlePlatform 的变量引用<br>
  * 
- * <p><b>v0.2.2</b><br>
- *   添加存储历史的部分,
- *   该类能够存储发送直接操作实现层的消息和战斗释放时数据.</p>
+ * <p><b>v0.2.2</b>
+ * <li>添加存储历史的部分,
+ *   该类能够存储发送直接操作实现层的消息和战斗释放时数据;
+ * <li>在运行被动模式 (客户端模式) 时, 整个系统将不会为事件驱动的,
+ *   因此不会生成事件和事件管理器.</p>
  * 
  * @since v0.1
+ *   [2016-04-19]
  * @author Zdream
- * @date 2016年4月19日
  * @version v0.2.2
+ *   [2017-04-01]
  */
 public class OrderManager implements IPlatformComponent {
 	
@@ -96,6 +100,31 @@ public class OrderManager implements IPlatformComponent {
 		return builder.buildForTeam(team);
 	}
 	
+	/**
+	 * <p>公共方法, 创建释放技能的行动事件并添加到指定的容器中</p>
+	 * @param no
+	 *   行动主体怪兽的 seat
+	 * @param skillNum
+	 *   选择怪兽的第几个技能
+	 * @param target
+	 *   选择目标, 默认为 -1
+	 * @param events
+	 *   盛放事件的列表, 生成的事件将加入到这里去
+	 * @since v0.2.2
+	 */
+	public void buildMoveEvent(byte no, byte skillNum, byte target, List<AEvent> events) {
+		builder.buildMoveEvent(no, skillNum, target, events);
+	}
+
+	/**
+	 * <p>公共方法, 创建释放技能的行动事件并添加到指定的容器中</p>
+	 * @see MoveEventBuilder#buildMoveEvent(byte, byte, byte, JsonValue, List)
+	 * @since v0.2.2
+	 */
+	public void buildMoveEvent(byte no, byte skillNum, byte target, JsonValue param, List<AEvent> events) {
+		builder.buildMoveEvent(no, skillNum, target, param, events);
+	}
+
 	/**
 	 * 触发列表
 	 */
@@ -190,6 +219,10 @@ public class OrderManager implements IPlatformComponent {
 	/**
 	 * 初始化 <code>OrderManager</code><br>
 	 * 初始化 EventList 触发列表(since v1.1)<br>
+	 * 
+	 * <p><b>v0.2.2</b><br>
+	 * 在运行被动模式 (客户端模式) 时, 不会生成事件和事件管理器.</p>
+	 * 
 	 * @param msg
 	 *   战斗信息开始消息
 	 * @param referee
@@ -197,7 +230,10 @@ public class OrderManager implements IPlatformComponent {
 	 * @param pf
 	 */
 	public void init(Fuse msg, RuleConductor referee, BattlePlatform pf) {
-		list = new EventList(this);
+		if (!msg.isPassive()) {
+			list = new EventList(this);
+		}
+		
 		recorder = new Recorder(this);
 		this.pf = pf;
 	}

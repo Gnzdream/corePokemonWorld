@@ -16,14 +16,20 @@ import com.zdream.pmw.trainer.prototype.Trainer;
  * <br>
  * <b>v0.2</b><br>
  * 	 删除单例模式、战场线程，转而设置成单线程操作<br>
- * <br>
- * <b>v0.2.1</b>
- * <p>将 {@code Gate} 与 {@code BattleBeginMessage} 两个类合并之后, 并命名为 {@code Fuse}</p>
+ * 
+ * <p><b>v0.2.1</b><br>
+ * 将 {@code Gate} 与 {@code BattleBeginMessage} 两个类合并之后, 并命名为 {@code Fuse}</p>
+ * 
+ * <p><b>v0.2.2</b><br>
+ * 增加了系统运行方式的选项,<br>
+ * <code>passive = false</code> 设置系统以主动模式运行,<br>
+ * <code>passive = true</code> 设置系统以被动模式 (客户端模式) 运行.</p>
  * 
  * @since v0.1
+ *   [2016-03-30]
  * @author Zdream
- * @date 2016年3月30日
- * @version v0.2.1
+ * @version v0.2.2
+ *   [2017-04-09]
  */
 public class Fuse implements IBattleRule {
 	/*
@@ -187,6 +193,56 @@ public class Fuse implements IBattleRule {
 	public List<IMessageCallback[]> getMessagebacks() {
 		return msgbacks;
 	}
+
+	/* ************
+	 *	  参数    *
+	 ************ */
+	
+	/*
+	 * v0.2.2
+	 * 设置该生成的战斗平台是主动计算结果 (服务端) 还是被动监听消息 (客户端)
+	 */
+	boolean passive;
+	
+	/*
+	 * v0.2.2
+	 * 需要在建立战场环境前传递的数据
+	 * 这些数据会在战场成功建立之后删除
+	 */
+	Map<String, Object> deliver;
+	
+	/**
+	 * <p>设置生成战斗平台的方式</p>
+	 * <p>如果为 {@code true}, 该战斗平台将从您指定的接收源接收效果, 而不是自己计算结果.
+	 * 这类效果如同服务 - 客户端模型中的客户端;<br>
+	 * 如果为 {@code false}, 该战斗平台将自己计算结果,
+	 * 如果有其它的客户端接入的话, 会发送消息给它们.
+	 * 这类效果如同服务 - 客户端模型中的服务端;</p>
+	 * @param passive
+	 *   战斗平台主被动方式
+	 * @since v0.2.2
+	 */
+	public void setPassive(boolean passive) {
+		this.passive = passive;
+	}
+	
+	/**
+	 * 获得当前战斗平台是否是被动的. 默认为 {@code false}.
+	 * @return
+	 *   战斗平台主被动方式
+	 * @since v0.2.2
+	 */
+	public boolean isPassive() {
+		return passive;
+	}
+	
+	public void putDeliver(String key, Object value) {
+		deliver.put(key, value);
+	}
+	
+	public Object getDeliver(String key) {
+		return deliver.get(key);
+	}
 	
 	/* ************
 	 *	启动战斗  *
@@ -199,6 +255,8 @@ public class Fuse implements IBattleRule {
 	 * 	BattlePlatform 的实例, since v0.2
 	 */
 	public BattlePlatform initPlatform() {
+		deliver = new HashMap<>();
+		
 		BattlePlatform pf = new BattlePlatform();
 		RuleConductor referee = pf.getReferee();
 		referee.setRule(getRule());
@@ -214,6 +272,8 @@ public class Fuse implements IBattleRule {
 		pf.getOrderManager().init(this, referee, pf);
 		
 		pf.getEffectManage().init(this, referee, pf);
+		
+		deliver = null;
 		
 		return pf;
 	}

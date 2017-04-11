@@ -25,7 +25,7 @@ public enum EPokemonGender {
 	 */
 	N;
 	
-	public EPokemonGender parseEnum(String value) {
+	public static EPokemonGender parseEnum(String value) {
 		for (EPokemonGender s : EPokemonGender.values()) {
 			if (s.name().equalsIgnoreCase(value)){
 				return s;
@@ -34,7 +34,7 @@ public enum EPokemonGender {
 		return null;
 	}
 	
-	public EPokemonGender parseEnum(int value) {
+	public static EPokemonGender parseEnum(int value) {
 		return EPokemonGender.values()[value];
 	}
 }

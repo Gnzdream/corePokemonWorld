@@ -1,2 +1,11 @@
 {
+"462":{"val":{"sd":90,"df":115,"at":70,"hp":70,"sp":60,"sa":130},"species_id":462,"son":82,"form":0,"species_name":"自爆磁怪","root":81,"ability":[0,0,0],"type":["electric","steel"],"wt":180.0},
+"463":{"val":{"sd":95,"df":95,"at":85,"hp":110,"sp":50,"sa":80},"species_id":463,"son":108,"form":0,"species_name":"大舌舔","root":108,"ability":[0,0,0],"type":["normal"],"wt":140.0},
+"464":{"val":{"sd":55,"df":130,"at":140,"hp":115,"sp":40,"sa":55},"species_id":464,"son":112,"form":0,"species_name":"超甲狂犀","root":111,"ability":[0,0,0],"type":["ground","rock"],"wt":282.8},
+"465":{"val":{"sd":50,"df":125,"at":100,"hp":100,"sp":50,"sa":110},"species_id":465,"son":114,"form":0,"species_name":"巨蔓藤","root":114,"ability":[0,0,0],"type":["grass"],"wt":128.6},
+"466":{"val":{"sd":85,"df":67,"at":123,"hp":75,"sp":95,"sa":95},"species_id":466,"son":125,"form":0,"species_name":"电击魔兽","root":239,"ability":[0,0,0],"type":["electric"],"wt":138.6},
+"467":{"val":{"sd":95,"df":67,"at":95,"hp":75,"sp":83,"sa":125},"species_id":467,"son":126,"form":0,"species_name":"鸭嘴炎兽","root":240,"ability":[0,0,0],"type":["fire"],"wt":68.0},
+"470":{"val":{"sd":65,"df":130,"at":110,"hp":65,"sp":95,"sa":60},"species_id":470,"son":133,"form":0,"species_name":"叶伊布","root":133,"ability":[0,0,0],"type":["grass"],"wt":25.5},
+"471":{"val":{"sd":95,"df":110,"at":60,"hp":65,"sp":65,"sa":130},"species_id":471,"son":133,"form":0,"species_name":"冰伊布","root":133,"ability":[0,0,0],"type":["ice"],"wt":25.9},
+"474":{"val":{"sd":75,"df":70,"at":80,"hp":85,"sp":90,"sa":135},"species_id":474,"son":233,"form":0,"species_name":"多边兽Ｚ","root":137,"ability":[0,0,0],"type":["normal"],"wt":34.0}
 }

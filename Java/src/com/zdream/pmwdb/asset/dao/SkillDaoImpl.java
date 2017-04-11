@@ -5,10 +5,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.zdream.pmw.core.tools.ItemMethods;
 import com.zdream.pmw.monster.data.dao.ISkillDao;
 import com.zdream.pmw.monster.prototype.EPokemonType;
 import com.zdream.pmw.monster.skill.Skill;
-import com.zdream.pmw.platform.common.ItemMethods;
 import com.zdream.pmw.util.json.JsonValue;
 import com.zdream.pmwdb.asset.io.SkillDataReader;
 

@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import com.zdream.pmw.platform.effect.Aperitif;
 import com.zdream.pmw.platform.prototype.BattlePlatform;
 import com.zdream.pmw.platform.prototype.Fuse;
 import com.zdream.pmw.platform.prototype.IPlatformComponent;
@@ -28,7 +29,7 @@ import com.zdream.pmw.util.common.CodeSpliter;
  * @since v0.1
  * @author Zdream
  * @date 2016年3月31日
- * @version v0.2
+ * @version v0.2.2
  */
 public class ControlManager implements IPlatformComponent {
 	
@@ -85,6 +86,8 @@ public class ControlManager implements IPlatformComponent {
 			builder.append("\tat ").append(element).append('\n');
 		}
 		debugPrint(builder.toString(), level);
+		
+		System.err.println(throwable.getClass().getSimpleName() + ": " + throwable.getMessage());
 	}
 	
 	/**
@@ -185,12 +188,20 @@ public class ControlManager implements IPlatformComponent {
 	private Map<String, ICodeRealizer> realizers = new HashMap<String, ICodeRealizer>();
 	
 	/**
-	 * 返回 ICodeRealizer
-	 * @param key
+	 * 返回开胃酒消息转化的命令行指令
+	 * @param ap
+	 *   开胃酒消息
 	 * @return
+	 *   命令行指令
+	 * @since v0.2.2
 	 */
-	public ICodeRealizer getRealizer(String key) {
-		return realizers.get(key);
+	public String commandLine(Aperitif ap) {
+		ICodeRealizer realizer = realizers.get(ap.getHead());
+		if (realizer == null) {
+			return null;
+		} else {
+			return realizer.commandLine(ap, getRoot());
+		}
 	}
 	
 	/* ************
@@ -228,6 +239,46 @@ public class ControlManager implements IPlatformComponent {
 		}
 	}
 	
+	/**
+	 * <p>将行动请求的规则等数据放入到对应队伍的控制体中,
+	 * 等待之后正式提出请求.</p>
+	 * @param team
+	 *   队伍号
+	 * @param seats
+	 *   该队伍需要行动的怪兽 seat 列表
+	 */
+	public void putMoveRequest(byte team, byte[] seats) {
+		ctrls[team].putMoveRequest(seats);
+	}
+	
+	/**
+	 * <p>将选择怪兽上场的请求数据放入到对应队伍的控制体中,
+	 * 等待之后正式提出请求.</p>
+	 * <p>一般发生在原有的怪兽已经退场, 请求新的怪兽代替它的位置.</p>
+	 * @param team
+	 *   队伍号
+	 * @param seats
+	 *   该队伍需要上场的怪兽站的位置的 seat 列表
+	 */
+	public void putSwitchRequest(byte team, byte[] seats) {
+		ctrls[team].putSwitchRequest(seats);
+	}
+
+	/**
+	 * <p>发送结束战斗的请求数据,
+	 * 等待之后正式通知所有的队伍，战斗已经结束</p>
+	 * <p>向每个队伍的控制体放置该消息.</p>
+	 * @param successCamp
+	 *   这个是获胜的阵营，该阵营中的所有队伍宣告战斗胜利
+	 *   当出现平局的情况，这个值为 -1
+	 */
+	public void requestEnd(byte successCamp) {
+		int teamLength = teamLength();
+		for (byte team = 0; team < teamLength; team++) {
+			ctrls[team].putEndRequest(successCamp);
+		}
+	}
+	
 	private ControlFactory factory;
 	public ControlFactory getFactory() {
 		return factory;
@@ -242,36 +293,9 @@ public class ControlManager implements IPlatformComponent {
 	public IRequestSemaphore getSemaphore() {
 		return semaphore;
 	}
-	
-	/**
-	 * 行动请求
-	 * @param team
-	 *   选择向哪个队伍的控制体发送消息
-	 * @param seats
-	 *   该队伍需要控制的座位列表
-	 */
-	public void requestMove(byte team, byte[] seats) {
-		semaphore.requestMove(team, seats);
-	}
-	
-	/**
-	 * <p>选择怪兽上场的请求</p>
-	 * <p>一般发生在原有的怪兽已经退场, 请求新的怪兽代替它的位置.</p>
-	 * @param team
-	 *   队伍号
-	 * @param seats
-	 *   该队伍需要上场的怪兽站的位置的 seat 列表
-	 */
-	public void requestSwitch(byte team, byte[] seats) {
-		semaphore.requestSwitch(team, seats);
-	}
-	
-	public void requestEnd(byte successCamp) {
-		semaphore.requestEnd(successCamp);
-	}
 
-	public void onWaitForResponse() {
-		semaphore.onWaitForResponse();
+	public void inform() {
+		semaphore.inform();
 	}
 
 	public void onCommitResponse() {
@@ -326,6 +350,10 @@ public class ControlManager implements IPlatformComponent {
 		this.pf = pf;
 		initControls(msg, referee);
 		initRealizer(msg);
+		
+		if (msg.isPassive()) {
+			// TODO 添加必要的方法, 让 cm 能够接收服务端发来的指令
+		}
 	}
 	
 	/**

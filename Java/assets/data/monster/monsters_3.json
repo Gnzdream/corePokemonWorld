@@ -1,4 +1,12 @@
 {
+"151":{"val":{"sd":100,"df":100,"at":100,"hp":100,"sp":100,"sa":100},"species_id":151,"form":0,"species_name":"梦幻","root":151,"ability":[0,0,0],"type":["psychic"],"wt":4.0},
+"169":{"val":{"sd":80,"df":80,"at":90,"hp":85,"sp":130,"sa":70},"species_id":169,"son":42,"form":0,"species_name":"叉字蝠","root":41,"ability":[0,0,0],"type":["poison","flying"],"wt":75.0},
 "172":{"val":{"sd":35,"df":15,"at":40,"hp":20,"sp":60,"sa":35},"species_id":172,"form":0,"species_name":"皮丘","root":172,"ability":["static","static","lightning rod"],"type":["electric"],"wt":2.0},
-"173":{"val":{"sd":55,"df":28,"at":25,"hp":50,"sp":15,"sa":45},"species_id":173,"form":0,"species_name":"皮宝宝","root":173,"ability":["cute charm","magic guard","friend guard"],"type":["fairy"],"wt":3.0}
+"173":{"val":{"sd":55,"df":28,"at":25,"hp":50,"sp":15,"sa":45},"species_id":173,"form":0,"species_name":"皮宝宝","root":173,"ability":["cute charm","magic guard","friend guard"],"type":["fairy"],"wt":3.0},
+"174":{"val":{"sd":20,"df":15,"at":30,"hp":90,"sp":15,"sa":40},"species_id":174,"form":0,"species_name":"宝宝丁","root":174,"ability":[0,0,0],"type":["normal","fairy"],"wt":1.0},
+"182":{"val":{"sd":100,"df":95,"at":80,"hp":75,"sp":50,"sa":90},"species_id":182,"son":44,"form":0,"species_name":"美丽花","root":43,"ability":[0,0,0],"type":["grass"],"wt":5.8},
+"186":{"val":{"sd":100,"df":75,"at":75,"hp":90,"sp":70,"sa":90},"species_id":186,"son":61,"form":0,"species_name":"蚊香蛙皇","root":60,"ability":[0,0,0],"type":["water"],"wt":33.9},
+"196":{"val":{"sd":95,"df":60,"at":65,"hp":65,"sp":110,"sa":130},"species_id":196,"son":133,"form":0,"species_name":"太阳伊布","root":133,"ability":[0,0,0],"type":["psychic"],"wt":26.5},
+"197":{"val":{"sd":130,"df":110,"at":65,"hp":95,"sp":65,"sa":60},"species_id":197,"son":133,"form":0,"species_name":"月亮伊布","root":133,"ability":[0,0,0],"type":["dark"],"wt":27.0},
+"199":{"val":{"sd":110,"df":80,"at":75,"hp":95,"sp":30,"sa":100},"species_id":199,"son":79,"form":0,"species_name":"呆呆王","root":79,"ability":[0,0,0],"type":["water","psychic"],"wt":79.5}
 }

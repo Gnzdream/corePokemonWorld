@@ -2,8 +2,8 @@ package com.zdream.pmw.platform.translate.translater;
 
 import java.util.Map;
 
+import com.zdream.pmw.core.tools.ItemMethods;
 import com.zdream.pmw.platform.attend.Participant;
-import com.zdream.pmw.platform.common.ItemMethods;
 import com.zdream.pmw.platform.prototype.BattlePlatform;
 import com.zdream.pmw.platform.translate.MessageRepository;
 

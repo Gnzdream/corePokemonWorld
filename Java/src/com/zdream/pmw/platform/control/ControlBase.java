@@ -3,17 +3,24 @@ package com.zdream.pmw.platform.control;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.zdream.pmw.platform.prototype.IMessageCallback;
+import com.zdream.pmw.platform.prototype.IRequestCallback;
+
 /**
  * 控制体的共同父类<br>
  * 利用此类可以将玩家、AI 等的行动请求写入到 <code>RequestSignal</code> 中<br>
  * <br>
  * <b>v0.2</b><br>
  *   与 <code>RequestSignal</code> 进行了合并<br>
+ * <br>
+ * <p><b>v0.2.2</b><br>
+ * 添加了回调函数属性. 原本回调函数属性实在子类 {@code SingleModeControl} 中,
+ * 现在将其移到该超类中.</p>
  * 
  * @since v0.1
  * @author Zdream
  * @date 2016年3月31日
- * @version v0.2
+ * @version v0.2.2
  */
 public abstract class ControlBase implements IRequestKey, IRespondKey, IMessageProvider {
 	
@@ -47,7 +54,159 @@ public abstract class ControlBase implements IRequestKey, IRespondKey, IMessageP
 	}
 	
 	/* ************
-	 *	用户等待  *
+	 *	其它属性  *
+	 ************ */
+	/*
+	 * v0.2.2
+	 */
+	protected boolean ready, loaded;
+	
+	/**
+	 * <p>当这个控制体中放入了请求的数据时, {@code ready} 这个参数就会为 {@code true},
+	 * 表示该请求已经准备好, 能够通知相应的控制方, 并能够接受指令.<br>
+	 * 一般而言, 对于已经落败的队伍控制体, 或者该轮行动请求中, 指定队伍没有能够行动的,
+	 * 由于不会再请求控制方行动, 因此这一轮 ready 不会为 {@code false}.
+	 * 所以系统也可以靠查询有多少控制体准备好了来判断需要等待多少控制体提交控制指令.</p>
+	 * <p>{@code ready} 会一直为 {@code true} 直到控制方提交了所有需要的指令.</p>
+	 * <p>{@code ready} 的 Getter 方法</p>
+	 * @return
+	 *   这个控制体是否已经准备好发送通知、接受指令.
+	 * @since v0.2.2
+	 */
+	public boolean isReady() {
+		return ready;
+	}
+	
+	/**
+	 * <p>当这个控制体开始请求控制方时, {@code ready} 这个参数就会开始活动.<br>
+	 * 它表示响应域数据是否已经提交完成.
+	 * 一般而言, 对于已经落败的队伍控制体, 或者该轮行动请求中, 指定队伍没有能够行动的,
+	 * 由于不会再请求控制方行动, 因此这一轮 ready 和 loaded 均不会为 {@code false}.</p>
+	 * <p>{@code loaded} 在控制方提交控制指令前都为 {@code false},<br>
+	 * 当完成提交时为 {@code true}.</p>
+	 * <p>{@code loaded} 的 Getter 方法</p>
+	 * @return
+	 *   这个控制体中, 控制方是否已经提交完控制指令.
+	 * @since v0.2.2
+	 */
+	public boolean isLoaded() {
+		return loaded;
+	}
+
+	/* ************
+	 *	回调函数  *
+	 ************ */
+	/*
+	 * v0.2.1 中, 该属性只在单线程模式的子类存在.
+	 * 在 v0.2.2 及之后版本, 它将在所有的控制体类中都存在.
+	 */
+	protected IRequestCallback callback;
+	protected IMessageCallback[] msgbacks;
+	
+	public void setCallback(IRequestCallback callback) {
+		this.callback = callback;
+	}
+	
+	public IRequestCallback getCallback() {
+		return callback;
+	}
+	
+	public void setMessagebacks(IMessageCallback[] msgbacks) {
+		this.msgbacks = msgbacks;
+	}
+	
+	public IMessageCallback[] getMessagebacks() {
+		return msgbacks;
+	}
+	
+	/* ************
+	 *	系统请求  *
+	 ************ */
+	/*
+	 * 系统的行动部分
+	 */
+	
+	/**
+	 * <p>在请求域中放入控制方进行行动的必要数据和规则,
+	 * 但是该方法不通知控制方.</p>
+	 * <p>系统调用</p>
+	 * @param seats
+	 *   请求的怪兽 seat 列表
+	 */
+	public void putMoveRequest(byte[] seats) {
+		if (ready) {
+			throw new IllegalArgumentException("putMoveRequest: already ready");
+		}
+		request.put(KEY_REQ_SEAT, seats);
+		request.put(KEY_REQ_CONTENT, VALUE_REQ_CONTENT_MOVE);
+		
+		ready = true;
+	}
+	
+	/**
+	 * <p>在请求域中放入控制方进行需要怪兽交换进场的必要数据和规则,
+	 * 但是该方法不通知控制方.</p>
+	 * <p>系统调用</p>
+	 * @param seats
+	 *   请求的怪兽 seat 列表
+	 */
+	public void putSwitchRequest(byte[] seats) {
+		if (ready) {
+			throw new IllegalArgumentException("putMoveRequest: already ready");
+		}
+		request.put(KEY_REQ_SEAT, seats);
+		request.put(KEY_REQ_CONTENT, VALUE_REQ_CONTENT_SWITCH);
+		
+		ready = true;
+	}
+	
+	/**
+	 * <p>在请求域中放入最终战斗结果的消息,
+	 * 但是该方法不通知控制方.</p>
+	 * <p>系统调用</p>
+	 * @param successCamp
+	 *   获胜的阵营
+	 */
+	public void putEndRequest(byte successCamp) {
+		request.put(KEY_REQ_CONTENT, VALUE_REQ_CONTENT_END);
+		
+		byte camp = cm.getRoot().getReferee().teamToCamp(team);
+		if (successCamp == -1) {
+			request.put(KEY_REQ_RESULT, VALUE_REQ_RESULT_TIED);
+		} else if (camp == successCamp) {
+			request.put(KEY_REQ_RESULT, VALUE_REQ_RESULT_SUCCESS);
+		} else {
+			request.put(KEY_REQ_RESULT, VALUE_REQ_RESULT_LOSE);
+		}
+		
+		ready = true;
+	}
+	
+	/**
+	 * <p>正式通知控制方处理请求.
+	 * 结果是调用 {@code IRequestCallback} 回调函数.</p>
+	 * <p>如果该控制体的 {@link isReady()} 为 {@code true} 时,
+	 * {@link IRequestSemaphore} 就会调用它.</p>
+	 */
+	public void inform() {
+		callback.onRequest(cm.getRoot(), this);
+	}
+	
+	@Override
+	public void provide(String msg) {
+		if (msgbacks == null) {
+			return;
+		}
+		
+		for (int i = 0; i < msgbacks.length; i++) {
+			try {
+				msgbacks[i].onMessage(cm.getRoot(), msg);
+			} catch (Exception e) {}
+		}
+	}
+	
+	/* ************
+	 * 控制方操作 *
 	 ************ */
 	/*
 	 * 玩家、AI 等调用一个阻塞方法，等待直到下一个请求的到来。
@@ -60,22 +219,12 @@ public abstract class ControlBase implements IRequestKey, IRespondKey, IMessageP
 	 */
 	
 	/**
-	 * 等待下一个请求<br>
-	 * 阻塞方法，由玩家、AI 等调用，当出现请求时返回
-	 * @return
-	 *   了解该请求是什么<br>
-	 *   请求行动、请求换人名额、战斗结束
-	 * @see ControlBase#requestContent()
-	 */
-	public abstract String nextRequest();
-	
-	/**
 	 * 了解该请求是什么<br>
 	 * 可能是以下的选项之一：<br>
 	 *   请求行动、请求换人名额、战斗结束
 	 * @return
 	 */
-	public String requestContent() {
+	public String getContent() {
 		return request.get(KEY_REQ_CONTENT).toString();
 	}
 	
@@ -94,6 +243,8 @@ public abstract class ControlBase implements IRequestKey, IRespondKey, IMessageP
 		cm.logPrintf(IPrintLevel.PRINT_LEVEL_WARN, "行动指令没有验证检测");
 		cm.logPrintf(IPrintLevel.PRINT_LEVEL_DEBUG, "队伍 %d 已经提交行动", team);
 		cm.getRoot().getControlManager().onCommitResponse();
+		
+		loaded = true;
 	}
 	
 	/* ************
@@ -169,9 +320,12 @@ public abstract class ControlBase implements IRequestKey, IRespondKey, IMessageP
 	/**
 	 * 数据全部清空
 	 */
-	public void domainClean(){
+	public void clear(){
 		request.clear();
 		respond.clear();
+		
+		ready = false;
+		loaded = false;
 	}
 	
 	/*
@@ -183,7 +337,7 @@ public abstract class ControlBase implements IRequestKey, IRespondKey, IMessageP
 	 * 获得战斗结果<br>
 	 * 在收到战斗结束信号之后, 用户或 AI 可以获得结果
 	 */
-	public String getResult() {
+	public String getEndResult() {
 		return (String) request.get(KEY_REQ_RESULT);
 	}
 	
@@ -244,54 +398,6 @@ public abstract class ControlBase implements IRequestKey, IRespondKey, IMessageP
 		
 		return true;
 	}
-	
-	/**
-	 * 向用户端（玩家或 AI）提出行动请求<br>
-	 * 战斗系统调用的方法
-	 * @param seats
-	 *   请求的精灵 seat 列表
-	 */
-	public void nextMoveRequest(byte[] seats) {
-		request.put(KEY_REQ_SEAT, seats);
-		request.put(KEY_REQ_CONTENT, VALUE_REQ_CONTENT_MOVE);
-		
-		nextActionRequest();
-	}
-	
-	/**
-	 * 向用户端（玩家或 AI）提出行动请求<br>
-	 * 战斗系统调用的方法
-	 * @param seats
-	 *   请求的精灵 seat 列表
-	 */
-	public void nextSwitchRequest(byte[] seats) {
-		request.put(KEY_REQ_SEAT, seats);
-		request.put(KEY_REQ_CONTENT, VALUE_REQ_CONTENT_SWITCH);
-		
-		nextActionRequest();
-	}
-	
-	/**
-	 * 向用户端（玩家或 AI）通知战斗结束的消息<br>
-	 * 战斗系统调用的方法<br>
-	 * @param isSuccess
-	 *   该队伍战斗是否胜利
-	 *   1-胜利 2-失败 0-平局
-	 */
-	public void endRequest(int isSuccess) {
-		request.put(KEY_REQ_CONTENT, VALUE_REQ_CONTENT_END);
-		request.put(KEY_REQ_RESULT,
-				(isSuccess == 1) ? VALUE_REQ_RESULT_SUCCESS : 
-					(isSuccess == 2) ? VALUE_REQ_RESULT_LOSE : 
-						VALUE_REQ_RESULT_TIED);
-		
-		nextActionRequest();
-	}
-	
-	/**
-	 * 提醒用户端（玩家或 AI）处理请求
-	 */
-	public abstract void nextActionRequest();
 	
 	/* ************
 	 *	 初始化   *

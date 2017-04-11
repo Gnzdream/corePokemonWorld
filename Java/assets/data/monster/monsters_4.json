@@ -1,2 +1,12 @@
 {
+"208":{"val":{"sd":65,"df":200,"at":85,"hp":75,"sp":30,"sa":55},"species_id":208,"son":95,"form":0,"species_name":"大钢蛇","root":95,"ability":[0,0,0],"type":["steel","ground"],"wt":400.0},
+"212":{"val":{"sd":80,"df":100,"at":130,"hp":70,"sp":65,"sa":55},"species_id":212,"son":123,"form":0,"species_name":"魔墙人偶","root":123,"ability":[0,0,0],"type":["bug","steel"],"wt":118.0},
+"230":{"val":{"sd":95,"df":95,"at":95,"hp":75,"sp":85,"sa":95},"species_id":230,"son":117,"form":0,"species_name":"刺龙王","root":116,"ability":[0,0,0],"type":["water","dragon"],"wt":152.0},
+"233":{"val":{"sd":95,"df":90,"at":80,"hp":85,"sp":60,"sa":105},"species_id":233,"son":137,"form":0,"species_name":"多边兽Ⅱ","root":137,"ability":[0,0,0],"type":["normal"],"wt":32.5},
+"236":{"val":{"sd":35,"df":35,"at":35,"hp":35,"sp":35,"sa":35},"species_id":236,"form":0,"species_name":"无畏小子","root":236,"ability":[0,0,0],"type":["fighting"],"wt":21.0},
+"237":{"val":{"sd":110,"df":95,"at":95,"hp":50,"sp":70,"sa":35},"species_id":237,"son":236,"form":0,"species_name":"战舞郎","root":236,"ability":[0,0,0],"type":["fighting"],"wt":48.0},
+"238":{"val":{"sd":65,"df":15,"at":30,"hp":45,"sp":65,"sa":85},"species_id":238,"form":0,"species_name":"迷唇娃","root":238,"ability":[0,0,0],"type":["ice","psychic"],"wt":6.0},
+"239":{"val":{"sd":55,"df":37,"at":63,"hp":45,"sp":95,"sa":65},"species_id":239,"form":0,"species_name":"电击怪","root":239,"ability":[0,0,0],"type":["electric"],"wt":23.5},
+"240":{"val":{"sd":55,"df":37,"at":63,"hp":45,"sp":95,"sa":65},"species_id":240,"form":0,"species_name":"鸭嘴宝宝","root":240,"ability":[0,0,0],"type":["fire"],"wt":21.4},
+"242":{"val":{"sd":135,"df":10,"at":10,"hp":255,"sp":55,"sa":75},"species_id":242,"son":113,"form":0,"species_name":"幸福蛋","root":440,"ability":[0,0,0],"type":["normal"],"wt":46.8}
 }

@@ -3,7 +3,6 @@ package com.zdream.pmw.platform.control.singlethread;
 import com.zdream.pmw.platform.control.ControlBase;
 import com.zdream.pmw.platform.control.ControlManager;
 import com.zdream.pmw.platform.control.IRequestSemaphore;
-import com.zdream.pmw.platform.prototype.RuleConductor;
 
 /**
  * 单线程模式请求提交信号灯
@@ -15,50 +14,24 @@ import com.zdream.pmw.platform.prototype.RuleConductor;
  * @since v0.2
  * @author Zdream
  * @date 2017年2月26日
- * @version v0.2.1
+ * @version v0.2.2
  */
 public class SingleRequestSemaphore implements IRequestSemaphore {
 
 	@Override
-	public void requestMove(byte team, byte[] seats) {
-		ControlBase base = cm.getCtrl(team);
-		base.nextMoveRequest(seats); // 里面调用了 base, base 调用了 onCommitResponse
-	}
-	
-	@Override
-	public void requestSwitch(byte team, byte[] seats) {
-		ControlBase base = cm.getCtrl(team);
-		base.nextSwitchRequest(seats); // 里面调用了 base, base 调用了 onCommitResponse
-	}
-	
-	@Override
-	public void requestEnd(byte successCamp) {
-		RuleConductor referee = cm.getRoot().getReferee();
-		int teamLength = cm.teamLength();
-		ControlBase base;
-		
-		for (byte team = 0; team < teamLength; team++) {
-			base = cm.getCtrl(team);
-			if (referee.teamToCamp(team) == successCamp) {
-				base.endRequest(1);
-			} else if (successCamp == -1) {
-				base.endRequest(0);
-			} else {
-				base.endRequest(2);
+	public void inform() {
+		final int length = cm.teamLength();
+		for (byte team = 0; team < length; team++) {
+			ControlBase base = cm.getCtrl(team);
+			if (base.isReady()) {
+				base.inform();
 			}
 		}
 	}
 
 	@Override
-	public void onWaitForResponse() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
 	public void onCommitResponse() {
 		// TODO Auto-generated method stub
-		
 	}
 	
 	/* ************

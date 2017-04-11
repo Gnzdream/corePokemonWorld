@@ -4,7 +4,6 @@ import com.zdream.pmw.platform.control.ControlBase;
 import com.zdream.pmw.platform.control.ControlManager;
 import com.zdream.pmw.platform.control.IPrintLevel;
 import com.zdream.pmw.platform.control.IRequestSemaphore;
-import com.zdream.pmw.platform.prototype.RuleConductor;
 
 /**
  * 多线程模式请求行动红绿灯<br>
@@ -16,50 +15,29 @@ import com.zdream.pmw.platform.prototype.RuleConductor;
  * @since v0.1
  * @author Zdream
  * @date 2016年4月4日
- * @version v0.2.1
+ * @version v0.2.2
  */
 public class MultiRequsetSemaphore implements IRequestSemaphore {
 	
 	@Override
-	public void requestMove(byte team, byte[] seats) {
-		ControlBase base = cm.getCtrl(team);
-		base.nextMoveRequest(seats);
-		waitCount();
-	}
-	
-	@Override
-	public void requestSwitch(byte team, byte[] seats) {
-		ControlBase base = cm.getCtrl(team);
-		base.nextSwitchRequest(seats);
-		waitCount();
-	}
-	
-	@Override
-	public void requestEnd(byte successCamp) {
-		RuleConductor referee = cm.getRoot().getReferee();
-		int teamLength = cm.teamLength();
-		ControlBase base;
-		
-		for (byte team = 0; team < teamLength; team++) {
-			base = cm.getCtrl(team);
-			if (referee.teamToCamp(team) == successCamp) {
-				base.endRequest(1);
-			} else if (successCamp == -1) {
-				base.endRequest(0);
-			} else {
-				base.endRequest(2);
+	public void inform() {
+		final int length = cm.teamLength();
+		for (byte team = 0; team < length; team++) {
+			ControlBase base = cm.getCtrl(team);
+			if (base.isReady()) {
+				base.inform();
+				waitCount();
 			}
 		}
-	}
-	
-	@Override
-	public synchronized void onWaitForResponse() {
+		
 		if (count > 0) {
-			sleep = true;
-			try {
-				wait();
-			} catch (InterruptedException e) {
-				cm.logPrintf(IPrintLevel.PRINT_LEVEL_WARN, e);
+			synchronized (this) {
+				sleep = true;
+				try {
+					wait();
+				} catch (InterruptedException e) {
+					cm.logPrintf(IPrintLevel.PRINT_LEVEL_WARN, e);
+				}
 			}
 		}
 	}

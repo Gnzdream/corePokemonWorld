@@ -43,6 +43,19 @@ public class MessageTranslator {
 		this.pf = pf;
 	}
 	
+	boolean print;
+	
+	/**
+	 * 设置是否在控制台打印消息
+	 * <p>这是一个 debug 开关. 如果将其设置为 true, 它就会在每个翻译之后, 附加输出
+	 * 该次, 收到的消息.</p>
+	 * @param print
+	 * @since v0.2.2
+	 */
+	public void setPrint(boolean print) {
+		this.print = print;
+	}
+	
 	/* ************
 	 *	文字替换  *
 	 ************ */
@@ -65,23 +78,32 @@ public class MessageTranslator {
 		String[] tempIds = chooser.choose(cmd, context, pf);
 		if (tempIds == null) {
 			if (Boolean.toString(true).equals(context.get("/mute"))) {
-				return new String[]{"( " + msg + ")"};
+				if (print) {
+					return new String[]{">>> " + msg};
+				} else {
+					return new String[]{};
+				}
 			} else {
-				return new String[]{msg};
+				return new String[]{">>> " + msg};
 			}
 		}
 		
 		String[] temps = repository.getTemplates(tempIds);
 		
 		// 3. 用模板和上下文生成语言
-		String[] results = new String[temps.length];
-		for (int i = 0; i < results.length; i++) {
+		final int length = temps.length;
+		String[] results = new String[print ? length + 1 : length];
+		for (int i = 0; i < length; i++) {
 			String result = handleTemplate(temps[i], context);
 			if (Boolean.toString(true).equals(context.get("/mute"))) {
 				results[i] = "( " + result + ")";
 			} else {
 				results[i] = result;
 			}
+		}
+		
+		if (print) {
+			results[results.length - 1] = ">>> " + msg;
 		}
 		
 		return results;

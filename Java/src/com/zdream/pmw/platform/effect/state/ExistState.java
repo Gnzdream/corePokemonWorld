@@ -1,5 +1,6 @@
 package com.zdream.pmw.platform.effect.state;
 
+import com.zdream.pmw.core.tools.AbnormalMethods;
 import com.zdream.pmw.monster.prototype.EPokemonAbnormal;
 import com.zdream.pmw.monster.prototype.EPokemonType;
 import com.zdream.pmw.monster.prototype.IPokemonDataType;
@@ -7,7 +8,6 @@ import com.zdream.pmw.platform.attend.AttendManager;
 import com.zdream.pmw.platform.attend.IStateInterceptable;
 import com.zdream.pmw.platform.attend.Participant;
 import com.zdream.pmw.platform.attend.service.EStateSource;
-import com.zdream.pmw.platform.common.AbnormalMethods;
 import com.zdream.pmw.platform.control.IMessageCode;
 import com.zdream.pmw.platform.control.IPrintLevel;
 import com.zdream.pmw.platform.effect.Aperitif;
@@ -220,12 +220,7 @@ public class ExistState extends ParticipantState implements IPokemonDataType {
 	 */
 	private String calcAdditionRate(Aperitif value, IStateInterceptable interceptor, BattlePlatform pf) {
 		// 防御方限定
-		byte seat = (byte) value.get("dfseat");
-		if (seat == -1) {
-			pf.logPrintf(IPrintLevel.PRINT_LEVEL_WARN,
-					"ExistState.calcAdditionRate(3) 存在多个防御方, 按照现在的方法, 还无法处理");
-			return interceptor.nextState();
-		}
+		byte seat = (byte) value.get("target");
 		if (seat != pf.getAttendManager().seatForNo(getNo())) {
 			return interceptor.nextState();
 		}
@@ -304,7 +299,7 @@ public class ExistState extends ParticipantState implements IPokemonDataType {
 		}
 		String stateCategory = o.toString();
 		
-		Participant p = pf.getAttendManager().getParticipant((byte) value.get("dfseat"));
+		Participant p = pf.getAttendManager().getParticipant((byte) value.get("target"));
 		if (p.hasCategoryState(stateCategory)) {
 			return true;
 		}

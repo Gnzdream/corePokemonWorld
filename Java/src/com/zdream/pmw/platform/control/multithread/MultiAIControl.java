@@ -1,7 +1,6 @@
 package com.zdream.pmw.platform.control.multithread;
 
 import com.zdream.pmw.platform.control.ControlManager;
-import com.zdream.pmw.platform.control.IPrintLevel;
 import com.zdream.pmw.platform.control.ai.DefaultAIBrain;
 import com.zdream.pmw.platform.control.ai.IAIRunnable;
 
@@ -18,7 +17,7 @@ import com.zdream.pmw.platform.control.ai.IAIRunnable;
  * @since v0.1
  * @author Zdream
  * @date 2016年4月1日
- * @version v0.2
+ * @version v0.2.2
  */
 public class MultiAIControl extends MultiModeControl {
 	
@@ -26,17 +25,6 @@ public class MultiAIControl extends MultiModeControl {
 	 *	 AI 线程  *
 	 ************ */
 	private IAIRunnable runnable; // 它不是线程, 但能生成线程
-
-	@Override
-	public void nextActionRequest() {
-		synchronized (this) {
-			cm.logPrintf(IPrintLevel.PRINT_LEVEL_DEBUG,
-					"MultiAIControl.nextActionRequest() wait");
-			notify();
-			cm.logPrintf(IPrintLevel.PRINT_LEVEL_DEBUG,
-					"MultiAIControl.nextActionRequest() be notified");
-		}
-	}
 
 	public MultiAIControl(ControlManager cm) {
 		super(cm);

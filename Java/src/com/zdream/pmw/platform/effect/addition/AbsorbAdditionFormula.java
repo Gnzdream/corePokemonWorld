@@ -8,7 +8,6 @@ import com.zdream.pmw.platform.attend.Participant;
 import com.zdream.pmw.platform.control.IPrintLevel;
 import com.zdream.pmw.platform.effect.Aperitif;
 import com.zdream.pmw.platform.effect.EffectManage;
-import com.zdream.pmw.platform.effect.SkillReleasePackage;
 import com.zdream.pmw.util.json.JsonValue;
 
 /**
@@ -22,10 +21,10 @@ import com.zdream.pmw.util.json.JsonValue;
  * @date 2017年3月18日
  * @version v0.2.1
  */
-public class AbsorbAdditionFormula implements IAdditionFormula {
+public class AbsorbAdditionFormula extends AAdditionFormula {
 	
 	/* ************
-	 *	数据结构  *
+	 *	  属性    *
 	 ************ */
 	
 	/**
@@ -95,11 +94,14 @@ public class AbsorbAdditionFormula implements IAdditionFormula {
 	public String name() {
 		return "absorb";
 	}
-
+	
 	@Override
-	public void addition(SkillReleasePackage pack) {
-		this.pack = pack;
-		
+	protected boolean canTrigger() {
+		return true;
+	}
+	
+	@Override
+	protected void force() {
 		int refer = calcRefer();
 		float value = refer * rate;
 		em.logPrintf(EffectManage.PRINT_LEVEL_VERBOSE, 
@@ -107,17 +109,29 @@ public class AbsorbAdditionFormula implements IAdditionFormula {
 				pack.getAtStaff().getNickname(), pack.getAtStaff().getSeat(),
 				(refer > 0) ? "吸血":"反作用", value);
 		
-		byte atseat = pack.getAtStaff().getSeat();
-		byte dfseat = pack.getDfStaff(pack.getThiz()).getSeat();
+		if (side == SIDE_ATSTAFF) {
+			em.logPrintf(EffectManage.PRINT_LEVEL_WARN, 
+					"AbsorbAdditionF.addition(): 目标为自己的技能还没有完成");
+		}
 		
-		Aperitif ap = em.newAperitif(Aperitif.CODE_ADDITION_SETTLE, atseat, dfseat);
-		ap.append("atseat", atseat).append("dfseat", dfseat).append("side", side)
+		byte atseat = pack.getAtStaff().getSeat();
+		byte[] dfseats = targetSeats();
+		if (dfseats.length == 0) {
+			em.logPrintf(EffectManage.PRINT_LEVEL_VERBOSE, 
+					"AbsorbAdditionF.addition(): 吸血、反伤技能没有击中任何对象");
+			return;
+		}
+		
+		byte[] scans = new byte[dfseats.length + 1];
+		scans[0] = atseat;
+		System.arraycopy(dfseats, 0, scans, 1, dfseats.length);
+		
+		Aperitif ap = em.newAperitif(Aperitif.CODE_ADDITION_SETTLE, scans);
+		ap.append("atseat", atseat).append("dfseat", dfseats).append("side", side)
 			.append("category", (refer > 0) ? "absorb" : "reaction")
-			.append("reference", reference).append("refer", refer)
+			.append("reference", reference).append("refer", refer).append("target", atseat)
 			.append("rate", rate).append("value", value);
 		em.startCode(ap);
-		
-		this.pack = null;
 	}
 	
 	@Override
@@ -208,7 +222,6 @@ public class AbsorbAdditionFormula implements IAdditionFormula {
 	 *	 初始化   *
 	 ************ */
 	
-	private SkillReleasePackage pack;
 	private EffectManage em;
 	
 	public AbsorbAdditionFormula(EffectManage em) {

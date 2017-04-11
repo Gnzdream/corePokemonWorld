@@ -1,9 +1,11 @@
 package com.zdream.pmw.monster.prototype;
 
-import java.io.Serializable;
-import java.util.Calendar;
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 
-import com.zdream.pmw.platform.common.AbnormalMethods;
+import com.zdream.pmw.core.tools.AbnormalMethods;
 
 /**
  * 精灵的数据模型<br>
@@ -18,13 +20,17 @@ import com.zdream.pmw.platform.common.AbnormalMethods;
  * <br>
  * <b>v0.1.1</b><br>
  *   修改了 toString() 方法<br>
+ * <br>
+ * <p><b>v0.2.2</b><br>
+ * <li>该模型支持自定义序列化方法;
+ * <li>修正了设置怪兽的方法, 使其无法设置数组</li></p>
  * 
  * @since v0.1
  * @author Zdream
  * @date 2016年3月14日
- * @version v0.2
+ * @version v0.2.2
  */
-public class Pokemon implements IPokemonDataType, IPokemonTrainerMarker, Serializable {
+public class Pokemon implements IPokemonDataType, IPokemonTrainerMarker, Externalizable {
 	
 	private static final long serialVersionUID = -8640016272700826226L;
 
@@ -70,7 +76,7 @@ public class Pokemon implements IPokemonDataType, IPokemonTrainerMarker, Seriali
 	/**
 	 * 性格值 PID<br>
 	 * <strong>保留项</strong><br>
-	 * 值范围为 0 - 4'294'967'295(0xFFFF FFFF)<br>
+	 * 值范围为 0 - 4_294_967_295(0xFFFF FFFF)<br>
 	 * 读取时 int 转 long 值：long l = ((long) i) & 0xffffffffL;<br>
 	 * 写入时 long 转 int 值：int i = (int)l;
 	 */
@@ -95,7 +101,7 @@ public class Pokemon implements IPokemonDataType, IPokemonTrainerMarker, Seriali
 	 * 性格 nature<br>
 	 * 精灵的性格（枚举）
 	 */
-	private EPokemonNature naturn;
+	private EPokemonNature nature;
 	
 	/**
 	 * 蛋 egg<br>
@@ -181,12 +187,12 @@ public class Pokemon implements IPokemonDataType, IPokemonTrainerMarker, Seriali
 		this.gender = gender;
 	}
 
-	public EPokemonNature getNaturn() {
-		return naturn;
+	public EPokemonNature getNature() {
+		return nature;
 	}
 	
-	public void setNaturn(EPokemonNature naturn) {
-		this.naturn = naturn;
+	public void setNature(EPokemonNature nature) {
+		this.nature = nature;
 	}
 
 	public boolean isEgg() {
@@ -274,7 +280,7 @@ public class Pokemon implements IPokemonDataType, IPokemonTrainerMarker, Seriali
 	 * 相遇时间 met date<br>
 	 * 第一次精灵与玩家相遇时的时间（精确到日）
 	 */
-	private Calendar metDate;
+	private java.time.Instant metDate;
 	
 	/**
 	 * 相遇类型 encounter<br>
@@ -295,7 +301,7 @@ public class Pokemon implements IPokemonDataType, IPokemonTrainerMarker, Seriali
 	 * 这个属性只在相遇类型为<strong>从蛋中孵化</strong>时才有效<br>
 	 * 它指明了玩家获得蛋的时间（精确到日）
 	 */
-	private Calendar metEggDate;
+	private java.time.Instant metEggDate;
 
 	public short getMetLocation() {
 		return metLocation;
@@ -321,11 +327,11 @@ public class Pokemon implements IPokemonDataType, IPokemonTrainerMarker, Seriali
 		this.metLevel = metLevel;
 	}
 
-	public Calendar getMetDate() {
+	public java.time.Instant getMetDate() {
 		return metDate;
 	}
 
-	public void setMetDate(Calendar metDate) {
+	public void setMetDate(java.time.Instant metDate) {
 		this.metDate = metDate;
 	}
 
@@ -345,11 +351,11 @@ public class Pokemon implements IPokemonDataType, IPokemonTrainerMarker, Seriali
 		this.metEggLocation = metEggLocation;
 	}
 
-	public Calendar getMetEggDate() {
+	public java.time.Instant getMetEggDate() {
 		return metEggDate;
 	}
 
-	public void setMetEggDate(Calendar metEggDate) {
+	public void setMetEggDate(java.time.Instant metEggDate) {
 		this.metEggDate = metEggDate;
 	}
 	
@@ -409,25 +415,172 @@ public class Pokemon implements IPokemonDataType, IPokemonTrainerMarker, Seriali
 	public byte[] getStatIV() {
 		return statIV;
 	}
-
-	public void setStatIV(byte[] statIV) {
-		this.statIV = statIV;
+	
+	/**
+	 * <p>设置个体值</p>
+	 * <p>当输入参数为 -1 时, 为不改变.</p>
+	 * @param statIV0
+	 *   HP 个体值
+	 * @param statIV1
+	 *   攻击个体值
+	 * @param statIV2
+	 *   防御个体值
+	 * @param statIV3
+	 *   特攻个体值
+	 * @param statIV4
+	 *   特防个体值
+	 * @param statIV5
+	 *   速度个体值
+	 * @since v0.2.2
+	 */
+	public void setStatIV(int statIV0, int statIV1, int statIV2,
+			int statIV3, int statIV4, int statIV5) {
+		if (statIV0 != -1) {
+			statIV[0] = (byte) statIV0;
+		}
+		if (statIV1 != -1) {
+			statIV[1] = (byte) statIV1;
+		}
+		if (statIV2 != -1) {
+			statIV[2] = (byte) statIV2;
+		}
+		if (statIV3 != -1) {
+			statIV[3] = (byte) statIV3;
+		}
+		if (statIV4 != -1) {
+			statIV[4] = (byte) statIV4;
+		}
+		if (statIV5 != -1) {
+			statIV[5] = (byte) statIV5;
+		}
+	}
+	
+	/**
+	 * <p>设置单项个体值</p>
+	 * @param item
+	 *   具体哪项数据
+	 *   在 {@link IPokemonDataType} 中, 设置了具体的参数,
+	 *   可以为 HP, AT, DF, SA, SD, SP.
+	 * @param statIV
+	 *   设置的个体值
+	 * @since v0.2.2
+	 */
+	public void setStatIV(int item, int statIV) {
+		this.statIV[item] = (byte) statIV;
 	}
 
 	public byte[] getStatEV() {
 		return statEV;
 	}
-
-	public void setStatEV(byte[] statEV) {
-		this.statEV = statEV;
+	
+	/**
+	 * <p>设置努力值</p>
+	 * <p>当输入参数为 -1 时, 为不改变.</p>
+	 * @param statEV0
+	 *   HP 努力值
+	 * @param statEV1
+	 *   攻击努力值
+	 * @param statEV2
+	 *   防御努力值
+	 * @param statEV3
+	 *   特攻努力值
+	 * @param statEV4
+	 *   特防努力值
+	 * @param statEV5
+	 *   速度努力值
+	 * @since v0.2.2
+	 */
+	public void setStatEV(int statEV0, int statEV1, int statEV2,
+			int statEV3, int statEV4, int statEV5) {
+		if (statEV0 != -1) {
+			statEV[0] = (byte) statEV0;
+		}
+		if (statEV1 != -1) {
+			statEV[1] = (byte) statEV1;
+		}
+		if (statEV2 != -1) {
+			statEV[2] = (byte) statEV2;
+		}
+		if (statEV3 != -1) {
+			statEV[3] = (byte) statEV3;
+		}
+		if (statEV4 != -1) {
+			statEV[4] = (byte) statEV4;
+		}
+		if (statEV5 != -1) {
+			statEV[5] = (byte) statEV5;
+		}
+	}
+	
+	/**
+	 * <p>设置单项努力值</p>
+	 * @param item
+	 *   具体哪项数据
+	 *   在 {@link IPokemonDataType} 中, 设置了具体的参数,
+	 *   可以为 HP, AT, DF, SA, SD, SP.
+	 * @param statIV
+	 *   设置的努力值
+	 * @since v0.2.2
+	 */
+	public void setStatEV(int item, int statEV) {
+		this.statEV[item] = (byte) statEV;
 	}
 
 	public short[] getStat() {
 		return stat;
 	}
-
-	public void setStat(short[] stat) {
-		this.stat = stat;
+	
+	/**
+	 * <p>设置能力值</p>
+	 * <p>当输入参数为 -1 时, 为不改变.</p>
+	 * @param stat0
+	 *   HP 能力值
+	 * @param stat1
+	 *   攻击能力值
+	 * @param stat2
+	 *   防御能力值
+	 * @param stat3
+	 *   特攻能力值
+	 * @param stat4
+	 *   特防能力值
+	 * @param stat5
+	 *   速度能力值
+	 * @since v0.2.2
+	 */
+	public void setStat(int stat0, int stat1, int stat2,
+			int stat3, int stat4, int stat5) {
+		if (stat0 != -1) {
+			stat[0] = (short) stat0;
+		}
+		if (stat1 != -1) {
+			stat[1] = (short) stat1;
+		}
+		if (stat2 != -1) {
+			stat[2] = (short) stat2;
+		}
+		if (stat3 != -1) {
+			stat[3] = (short) stat3;
+		}
+		if (stat4 != -1) {
+			stat[4] = (short) stat4;
+		}
+		if (stat5 != -1) {
+			stat[5] = (short) stat5;
+		}
+	}
+	
+	/**
+	 * <p>设置单项能力值</p>
+	 * @param item
+	 *   具体哪项数据
+	 *   在 {@link IPokemonDataType} 中, 设置了具体的参数,
+	 *   可以为 HP, AT, DF, SA, SD, SP.
+	 * @param statIV
+	 *   设置的能力值
+	 * @since v0.2.2
+	 */
+	public void setStat(int item, int stat) {
+		this.stat[item] = (short) stat;
 	}
 
 	public byte[] getStatContest() {
@@ -437,11 +590,48 @@ public class Pokemon implements IPokemonDataType, IPokemonTrainerMarker, Seriali
 	public void setStatContest(byte[] statContest) {
 		this.statContest = statContest;
 	}
+	
+	/**
+	 * <p>设置表演参数</p>
+	 * <p>当输入参数为 -1 时, 为不改变.</p>
+	 * @param c0
+	 * @param c1
+	 * @param c2
+	 * @param c3
+	 * @param c4
+	 * @param c5
+	 * @since v0.2.2
+	 */
+	public void setStatContest(int c0, int c1, int c2, int c3, int c4, int c5) {
+		if (c0 != -1) {
+			statContest[5] = (byte) c0;
+		}
+		if (c1 != -1) {
+			statContest[0] = (byte) c1;
+		}
+		if (c2 != -1) {
+			statContest[1] = (byte) c2;
+		}
+		if (c3 != -1) {
+			statContest[2] = (byte) c3;
+		}
+		if (c4 != -1) {
+			statContest[3] = (byte) c4;
+		}
+		if (c5 != -1) {
+			statContest[4] = (byte) c5;
+		}
+	}
 
 	public byte getAbnormal() {
 		return abnormal;
 	}
 
+	/**
+	 * <p>设置异常状态码</p>
+	 * @see com.zdream.pmw.core.tools.AbnormalMethods
+	 * @param abnormal
+	 */
 	public void setAbnormal(byte abnormal) {
 		this.abnormal = abnormal;
 	}
@@ -482,7 +672,7 @@ public class Pokemon implements IPokemonDataType, IPokemonTrainerMarker, Seriali
 	private byte[] skillPP = new byte[SKILL_LENGTH];
 	
 	/**
-	 * 技能 PP 上限  skill PP ups
+	 * 技能 PP 上限提升次数  skill PP ups
 	 * 值域 0-3，非负
 	 */
 	private byte[] skillPPUps = new byte[SKILL_LENGTH];
@@ -491,24 +681,48 @@ public class Pokemon implements IPokemonDataType, IPokemonTrainerMarker, Seriali
 		return skill;
 	}
 	
-	public void setSkill(short[] skill) {
-		this.skill = skill;
+	/**
+	 * 设置技能
+	 * @param index
+	 *   怪兽技能格中的位置, 从 0 开始
+	 * @param skill
+	 *   技能号码
+	 * @since v0.2.2
+	 */
+	public void setSkill(int index, int skill) {
+		this.skill[index] = (short) skill;
 	}
 	
 	public byte[] getSkillPP() {
 		return skillPP;
 	}
-
-	public void setSkillPP(byte[] skillPP) {
-		this.skillPP = skillPP;
+	
+	/**
+	 * 设置技能 PP
+	 * @param index
+	 *   怪兽技能格中的位置, 从 0 开始
+	 * @param skillPP
+	 *   技能 PP, 值域 0-64，非负
+	 * @since v0.2.2
+	 */
+	public void setSkillPP(int index, int skillPP) {
+		this.skillPP[index] = (byte) skillPP;
 	}
 
 	public byte[] getSkillPPUps() {
 		return skillPPUps;
 	}
-
-	public void setSkillPPUps(byte[] skillPPUps) {
-		this.skillPPUps = skillPPUps;
+	
+	/**
+	 * 设置技能 PP 上限提升次数
+	 * @param index
+	 *   怪兽技能格中的位置, 从 0 开始
+	 * @param skillPPUps
+	 *   技能 PP 上限提升次数, 值域 0-3，非负
+	 * @since v0.2.2
+	 */
+	public void setSkillPPUps(int index, int skillPPUps) {
+		this.skillPPUps[index] = (byte) skillPPUps;
 	}
 	
 	/* ************
@@ -586,8 +800,8 @@ public class Pokemon implements IPokemonDataType, IPokemonTrainerMarker, Seriali
 		return trainerMarkers;
 	}
 
-	public void setTrainerMarkers(boolean[] trainerMarkers) {
-		this.trainerMarkers = trainerMarkers;
+	public void setTrainerMarkers(int index, boolean m) {
+		trainerMarkers[index] = m;
 	}
 
 	/* ************
@@ -632,5 +846,154 @@ public class Pokemon implements IPokemonDataType, IPokemonTrainerMarker, Seriali
 				.append(hpi).append('/').append(stat[0]);
 		
 		return builder.toString();
+	}
+
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		// 版本
+		out.writeByte(1);
+		
+		out.writeShort(identifier);
+		out.writeShort(speciesID);
+		out.writeByte(form);
+		out.writeInt(pid);
+		out.writeShort(ability);
+		
+		byte b = (byte) nature.ordinal();
+		b += (gender.ordinal() << 5);
+		if (egg) {
+			b |= 0x80;
+		}
+		out.writeByte(b);
+		
+		if (egg) {
+			out.writeShort(happiness);
+		} else {
+			out.writeByte(happiness);
+		}
+		
+		int i = experience;
+		i += (level << 24);
+		out.writeInt(i);
+		out.writeShort(heldItem);
+		
+		byte[] bs = nickname.getBytes("UTF-8");
+		out.writeByte(bs.length);
+		out.write(bs);
+		
+		// TODO met 部分不写
+		out.writeByte(0);
+		
+		// skill 部分
+		for (; b < skill.length; b++) {
+			if (skill[b] == 0) {
+				break;
+			}
+		}
+		out.writeByte(b);
+		
+		for (i = 0; i < b; i++) {
+			out.writeShort(skill[i]);
+		}
+		for (i = 0; i < b; i++) {
+			int j = skillPP[i] + (skillPPUps[i] << 6);
+			out.writeByte(j);
+		}
+		
+		// trainer 部分
+		if (trainerName == null || trainerName.trim().length() == 0) {
+			out.writeByte(0);
+		} else {
+			bs = trainerName.getBytes("UTF-8");
+			out.writeByte(bs.length);
+			out.write(bs);
+			
+			out.writeInt(trainerID);
+			out.writeInt(trainerSID);
+			b = 0;
+			for (i = 0; i < trainerMarkers.length; i++) {
+				if (trainerMarkers[i]) {
+					b += (1 << i);
+				}
+			}
+			b += (trainerGender.ordinal() << 6);
+			out.writeByte(b);
+		}
+	}
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		// 检查版本
+		byte version = in.readByte();
+		if (version != 1) {
+			throw new ClassNotFoundException("the version of the pokemon data is not accept.");
+		}
+		
+		identifier = in.readShort();
+		speciesID = in.readShort();
+		form = in.readByte();
+		pid = in.readInt();
+		ability = in.readShort();
+		
+		int b = in.readUnsignedByte();
+		nature = EPokemonNature.values()[b & 0x1F];
+		gender = EPokemonGender.values()[(b >> 5) & 3];
+		if ((b >> 7) > 0) {
+			egg = true;
+		} else {
+			egg = false;
+		}
+		
+		if (egg) {
+			happiness = in.readShort();
+		} else {
+			happiness = (short) in.readUnsignedByte();
+		}
+		
+		int i = in.readInt();
+		level = (byte) (i >> 24);
+		experience = (i & 0xFFFFFF);
+		heldItem = in.readShort();
+		
+		i = in.readUnsignedByte();
+		byte[] bs = new byte[i];
+		in.read(bs);
+		nickname = new String(bs, "UTF-8");
+		
+		// TODO met 部分不读
+		in.readByte();
+
+		// skill 部分
+		b = in.readByte();
+		for (i = 0; i < b; i++) {
+			skill[i] = in.readShort();
+		}
+		for (i = 0; i < b; i++) {
+			int j = in.readUnsignedByte();
+			skillPP[i] = (byte) (j & 0x3F);
+			skillPPUps[i] = (byte) (j >> 6);
+		}
+		
+		// trainer 部分
+		b = in.readUnsignedByte();
+		if (b != 0) {
+			bs = new byte[b];
+			in.read(bs);
+			trainerName = new String(bs, "UTF-8");
+			
+			trainerID = in.readInt();
+			trainerSID = in.readInt();
+			b = in.readUnsignedByte();
+			for (i = 0; i < trainerMarkers.length; i++) {
+				int j = i % 2;
+				b >>= 1;
+				if (j > 0) {
+					trainerMarkers[i] = true;
+				} else {
+					trainerMarkers[i] = false;
+				}
+			}
+			trainerGender = EPokemonGender.values()[b];
+		}
 	}
 }

@@ -58,14 +58,7 @@ public class DefaultAIBrain implements IAIRunnable {
 			
 			@Override
 			public void run() {
-				while (true) {
-					String content = ctrl.nextRequest();
-					if (IRequestKey.VALUE_REQ_CONTENT_MOVE.equals(content)) {
-						chooseMove();
-					} else if (IRequestKey.VALUE_REQ_CONTENT_END.equals(content)) {
-						break;
-					}
-				}
+				// TODO
 			}
 		};
 	}
@@ -77,7 +70,7 @@ public class DefaultAIBrain implements IAIRunnable {
 			@Override
 			public void onRequest(BattlePlatform platform, ControlBase ctrl) {
 				setCtrl(ctrl);
-				String content = ctrl.nextRequest();
+				String content = ctrl.getContent();
 				if (IRequestKey.VALUE_REQ_CONTENT_MOVE.equals(content)) {
 					chooseMove();
 				} else if (IRequestKey.VALUE_REQ_CONTENT_END.equals(content)) {

@@ -49,7 +49,7 @@ public class AttendantConverter {
 		at.setHeldItem(pm.getHeldItem());
 		at.setIdentifier(pm.getIdentifier());
 		at.setLevel(pm.getLevel());
-		at.setNaturn(pm.getNaturn());
+		at.setNaturn(pm.getNature());
 		at.setNickname(pm.getNickname());
 		
 		at.setRealTrainer(service.isRealTrainer(pm, data));

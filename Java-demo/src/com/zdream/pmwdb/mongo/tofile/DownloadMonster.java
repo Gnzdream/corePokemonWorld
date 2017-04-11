@@ -22,7 +22,7 @@ import com.zdream.pmwdb.mongo.MongoBase;
 public class DownloadMonster {
 	
 	@SuppressWarnings("unchecked")
-	ArrayList<EJson>[] list = new ArrayList[10];
+	ArrayList<EJson>[] list = new ArrayList[15];
 
 	public void mkdir() {
 		File file = new File("assets/data/skill");

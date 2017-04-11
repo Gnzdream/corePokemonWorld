@@ -179,7 +179,20 @@ public class JsonValue {
 			this.value = ((Enum) value).name();
 			return;
 		} else if (value instanceof JsonValue) {
-			set(((JsonValue) value).getValue());
+			JsonValue raw = (JsonValue) value;
+			switch (raw.getType()) {
+			case ObjectType:
+				this.type = JsonType.ObjectType;
+				this.value = raw.getMap();
+				break;
+			case ArrayType:
+				this.type = JsonType.ArrayType;
+				this.value = raw.getArray();
+				break;
+			default:
+				set(raw.getValue());
+				break;
+			}
 			return;
 		}
 		

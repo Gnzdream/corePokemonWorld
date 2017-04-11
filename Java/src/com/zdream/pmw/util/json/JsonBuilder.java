@@ -15,11 +15,14 @@ import com.zdream.pmw.util.json.JsonValue.JsonType;
  * <br>
  * <b>v0.1.2 (2016-09-06)</b><br>
  *   解析负数时出错的 BUG 修复<br>
+ * <br>
+ * <b>v0.2.2</b><br>
+ *   完成对解析字符串的重构, 有更大的容错性<br>
  * 
  * @since v0.1
  * @author Zdream
  * @date 2016年3月16日
- * @version v0.1.2
+ * @version v0.2.2
  */
 public class JsonBuilder {
 	
@@ -722,7 +725,8 @@ public class JsonBuilder {
 		data.str = str;
 		JsonValue value = null;
 		
-		switch (getNextType()) {
+		int ch = nextChar();
+		switch (getNextType(ch, data.index)) {
 		case ArrayType:
 			value = this.parseArray();
 			break;
@@ -740,47 +744,51 @@ public class JsonBuilder {
 	/**
 	 * 测试下一个元素的类型，并将指针 data.index 移到数据的首个字符<br>
 	 * 
-	 * @since v0.2
+	 * @param ch
+	 *   需要判定的字符
+	 * @param index
+	 *   取到该字符时的位置
 	 * @return
 	 *   下一个元素的类型
+	 * @since v0.2.2
 	 */
-	private JsonValue.JsonType getNextType() {
-		int length = data.str.length();
-		
-		for (; data.index < length; data.index++) {
-			int ch = nextChar();
-			switch (ch) {
-			case '[':
-				return JsonType.ArrayType;
-			case '{':
-				return JsonType.ObjectType;
-			case '\"':
-				return JsonType.StringType;
-			case 't':{
-				if (data.str.indexOf("true", data.index) == data.index){
-					return JsonType.ValueType;
-				}
-			} break;
-			case 'f':{
-				if (data.str.indexOf("false", data.index) == data.index){
-					return JsonType.ValueType;
-				}
-			} break;
-			case 'n':{
-				if (data.str.indexOf("null", data.index) == data.index){
-					return JsonType.ValueType;
-				}
-			} break;
-			case '-': case '+':
-				return JsonType.ValueType;
-			}
-			
-			if (ch <= '9' && ch >= '0' || ch == '.' || ch == '.') {
-				return JsonType.ValueType;
-			}
+	private JsonValue.JsonType getNextType(int ch, int index) {
+		if (ch <= '9' && ch >= '0' || ch == '.') {
+			return JsonType.ValueType;
 		}
 		
-		return JsonType.NullType;
+		switch (ch) {
+		case '[':
+			return JsonType.ArrayType;
+		case '{':
+			return JsonType.ObjectType;
+		case '\"':
+			return JsonType.StringType;
+		case 't':{
+			if (data.str.indexOf("true", index) == index){
+				return JsonType.ValueType;
+			}
+		} break;
+		case 'f':{
+			if (data.str.indexOf("false", index) == index){
+				return JsonType.ValueType;
+			}
+		} break;
+		case 'n':{
+			if (data.str.indexOf("null", index) == index){
+				return JsonType.ValueType;
+			}
+		} break;
+		case '-': case '+':
+			return JsonType.ValueType;
+		}
+		
+		if (ch <= '9' && ch >= '0' || ch == '.' || ch == '.') {
+			return JsonType.ValueType;
+		}
+		
+		System.err.println("can not handle with: '" + (char) ch + "' at index: " + index);
+		return null;
 	}
 	
 	/**
@@ -790,18 +798,20 @@ public class JsonBuilder {
 	 *   根组织形式为数组的 JsonValue
 	 */
 	private JsonValue parseArray() {
-		JsonValue value = new JsonValue(JsonType.ArrayType);
+		// 此时 data.index 指向 '['
 		data.index++;
-		int length = data.str.length();
 		
-		int ch = nextChar();
-		if (ch == ']'){
-			data.index++;
-			return value;
-		}
+		JsonValue value = new JsonValue(JsonType.ArrayType);
+		final int length = data.str.length();
 		
 		for (; data.index < length;) {
-			switch (getNextType()) {
+			int ch = nextChar();
+			if (ch == ']') {
+				data.index++;
+				return value;
+			}
+			
+			switch (getNextType(ch, data.index)) {
 			case ArrayType:
 				value.add(this.parseArray());
 				break;
@@ -823,7 +833,7 @@ public class JsonBuilder {
 				data.index ++;
 				return value;
 			} else if (ch != ','){
-				System.err.println("can not found \',\'!");
+				System.err.println("can not found \',\' in a array!");
 			}
 			data.index ++;
 		}
@@ -838,21 +848,23 @@ public class JsonBuilder {
 	 *   根组织形式为映射的 JsonValue
 	 */
 	private JsonValue parseObject() {
-		JsonValue value = new JsonValue(JsonType.ObjectType);
+		// 此时 data.index 指向 '{'
 		data.index++;
 		
-		int ch = nextChar();
-		if (ch == '}'){
-			return value;
-		}
+		JsonValue value = new JsonValue(JsonType.ObjectType);
 		
 		String str = data.str;
-		int length = str.length();
-		
+		final int length = str.length();
 		String key;
 		
 		for (; data.index < length;) {
-			switch (getNextType()) {
+			int ch = nextChar();
+			if (ch == '}'){
+				data.index++;
+				return value;
+			}
+			
+			switch (getNextType(ch, data.index)) {
 			case StringType:
 				key = parseString();
 				break;
@@ -864,16 +876,17 @@ public class JsonBuilder {
 			
 			// 寻找并跳过为 ':' 的字符的位置
 			ch = nextChar();
+			data.index ++;
 			if (ch == '}'){
 				data.index ++;
 				System.err.println("can not found value!");
 				return value;
 			} else if (ch != ':'){
-				System.err.println("can not found \':\'!");
+				System.err.println("can not found \':\' in a object!");
 			}
-			data.index ++;
 			
-			switch (getNextType()) {
+			ch = nextChar();
+			switch (getNextType(ch, data.index)) {
 			case StringType:
 				value.add(key, new JsonValue(parseString()));
 				break;
@@ -895,7 +908,7 @@ public class JsonBuilder {
 				data.index ++;
 				return value;
 			} else if (ch != ','){
-				System.err.println("can not found \',\'!");
+				System.err.println("can not found \',\' in a object!");
 			}
 			data.index ++;
 		}
@@ -909,7 +922,9 @@ public class JsonBuilder {
 	 *   字符串 JsonValue
 	 */
 	private String parseString() {
+		// 此时 data.index 指向第一个 '"'
 		data.index++;
+		
 		String str = data.str;
 		int length = str.length();
 		StringBuilder builder = new StringBuilder();

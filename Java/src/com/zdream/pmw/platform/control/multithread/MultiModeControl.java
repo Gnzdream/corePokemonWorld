@@ -11,7 +11,7 @@ import com.zdream.pmw.platform.control.ControlManager;
  * @since v0.2
  * @author Zdream
  * @date 2017年2月25日
- * @version v0.2
+ * @version v0.2.2
  */
 public abstract class MultiModeControl extends ControlBase {
 
@@ -31,29 +31,5 @@ public abstract class MultiModeControl extends ControlBase {
 	 * @version v0.2
 	 *   在这里分出了单线程模式和多线程模式, 在 AI 与玩家游戏时采用默认的单线程模式
 	 */
-	
-	/**
-	 * 等待下一个请求<br>
-	 * 阻塞方法，由玩家、AI 等调用，当出现请求时返回
-	 * @return
-	 *   了解该请求是什么<br>
-	 *   请求行动、请求换人名额、战斗结束
-	 * @see ControlBase#requestContent()
-	 */
-	public String nextRequest() {
-		synchronized (this) {
-			try {
-				wait();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-		return requestContent();
-	}
-	
-	@Override
-	public void provide(String msg) {
-		cm.getInfoOut().print(msg); // 示例中输出在控制台的就是这里
-	}
 
 }

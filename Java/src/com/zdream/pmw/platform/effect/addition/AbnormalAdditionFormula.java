@@ -4,12 +4,11 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import com.zdream.pmw.core.tools.AbnormalMethods;
 import com.zdream.pmw.monster.prototype.EPokemonAbnormal;
-import com.zdream.pmw.platform.common.AbnormalMethods;
 import com.zdream.pmw.platform.control.IPrintLevel;
 import com.zdream.pmw.platform.effect.Aperitif;
 import com.zdream.pmw.platform.effect.EffectManage;
-import com.zdream.pmw.platform.effect.SkillReleasePackage;
 import com.zdream.pmw.util.json.JsonValue;
 import com.zdream.pmw.util.random.RanValue;
 
@@ -23,9 +22,9 @@ import com.zdream.pmw.util.random.RanValue;
  * @since v0.1
  * @author Zdream
  * @date 2016年4月16日
- * @version v0.2
+ * @version v0.2.2
  */
-public class AbnormalAdditionFormula implements IAdditionFormula {
+public class AbnormalAdditionFormula extends AAdditionFormula {
 	
 	/* ************
 	 *	数据结构  *
@@ -77,6 +76,17 @@ public class AbnormalAdditionFormula implements IAdditionFormula {
 	public void setSide(int side) {
 		this.side = side;
 	}
+
+	// v0.2.2
+	/**
+	 * 施加效果的目标<br>
+	 * 缓存<br>
+	 */
+	byte[] seats;
+	/**
+	 * 对应上面的 seats, 每个目标是否触发
+	 */
+	boolean[] forces;
 	
 	/* ************
 	 *	实现方法  *
@@ -86,14 +96,11 @@ public class AbnormalAdditionFormula implements IAdditionFormula {
 	public String name() {
 		return "abnormal";
 	}
-
+	
 	@Override
-	public void addition(SkillReleasePackage pack) {
-		this.pack = pack;
-		if (canTrigger()) {
-			force();
-		}
-		this.pack = null;
+	protected void onFinish() {
+		seats = null;
+		forces = null;
 	}
 
 	/**
@@ -160,23 +167,90 @@ public class AbnormalAdditionFormula implements IAdditionFormula {
 	/**
 	 * 按随机数，计算异常状态是否能够触发
 	 * @return
+	 *   如果所有目标都不能发动, 为 false
 	 */
-	private boolean canTrigger() {
+	protected boolean canTrigger() {
 		// 计算附加状态真实释放几率
-		byte atseat = pack.getAtStaff().getSeat();
-		byte dfseat = (side == 0) ? pack.getDfStaff(pack.getThiz()).getSeat() : atseat;
+		if (side == SIDE_ATSTAFF) {
+			if (canTriggerForSelf()) {
+				this.seats = new byte[]{pack.getAtStaff().getSeat()};
+				this.forces = new boolean[]{true};
+				return true;
+			}
+		} else if (side == SIDE_DFSTAFF) {
+			this.seats = targetSeats();
+			this.forces = new boolean[seats.length];
+		} else {
+			throw new IllegalArgumentException("side: " + side + " is illegal.");
+		}
 		
-		Aperitif value = pack.getEffects().newAperitif(Aperitif.CODE_CALC_ADDITION_RATE, atseat, dfseat);
-		value.append("type", "abnormal");
-		value.append("dfseat", dfseat);
-		value.append("atseat", atseat);
-		value.append("abnormal", AbnormalMethods.toBytes(abnormal)); // 不含参数
-		value.append("rate", rate);
-		value.append("result", 0);
-		value.append("state-category", "abnormal");
+		boolean exist = false;
+		for (int i = 0; i < this.seats.length; i++) {
+			if (canTriggerForEnemy(i)) {
+				exist = true;
+				this.forces[i] = true;
+			}
+		}
+		
+		return exist;
+	}
+	/**
+	 * 施加异常状态到自己身上
+	 * @return
+	 */
+	private boolean canTriggerForSelf() {
+		// 如果没有攻击到人
+		byte[] dfseats = targetSeats();
+		if (dfseats.length == 0) {
+			return false;
+		}
+		
+		final byte atseat = pack.getAtStaff().getSeat();
+		byte[] scans = new byte[dfseats.length + 1];
+		scans[0] = atseat;
+		System.arraycopy(dfseats, 0, scans, 1, dfseats.length);
+		
+		Aperitif value = pack.getEffects().newAperitif(Aperitif.CODE_CALC_ADDITION_RATE, scans);
+		value.append("type", "abnormal")
+			.append("dfseats", dfseats)
+			.append("atseat", atseat)
+			.append("target", atseat)
+			.append("abnormal", AbnormalMethods.toBytes(abnormal)) // 不含参数
+			.append("rate", rate)
+			.append("result", 0)
+			.append("state-category", "abnormal");
 		pack.getEffects().startCode(value);
 		
-		// 计算
+		int result = (Integer) value.get("result");
+		if (result == 0) {
+			int instanceRate = (int) value.get("rate");
+			return RanValue.isSmaller(instanceRate);
+		}
+		
+		return false;
+	}
+	
+	/**
+	 * 施加异常状态到防御方身上
+	 * @param i
+	 *   在攻击到的对象列表中的索引, 指向 <code>this.seats</code>
+	 * @return
+	 */
+	private boolean canTriggerForEnemy(int i) {
+		byte target = seats[i];
+		byte atseat = pack.getAtStaff().getSeat();
+		
+		Aperitif value = pack.getEffects().newAperitif(Aperitif.CODE_CALC_ADDITION_RATE, atseat, target);
+		value.append("type", "abnormal")
+			.append("dfseats", this.seats)
+			.append("atseat", atseat)
+			.append("target", target)
+			.append("abnormal", AbnormalMethods.toBytes(abnormal)) // 不含参数
+			.append("rate", rate)
+			.append("result", 0)
+			.append("state-category", "abnormal");
+		pack.getEffects().startCode(value);
+		
 		int result = (Integer) value.get("result");
 		if (result == 0) {
 			int instanceRate = (int) value.get("rate");
@@ -189,15 +263,22 @@ public class AbnormalAdditionFormula implements IAdditionFormula {
 	/**
 	 * 施加状态
 	 */
-	private void force() {
-		pack.getEffects().forceAbnormal(pack, AbnormalMethods.toBytes(abnormal));
+	protected void force() {
+		final int length = seats.length;
+		
+		byte atseat = pack.getAtStaff().getSeat();
+		for (int i = 0; i < length; i++) {
+			if (forces[i]) {
+				pack.getEffects().forceAbnormal(atseat, seats[i],
+						AbnormalMethods.toBytes(abnormal));
+			}
+		}
 	}
 	
 	/* ************
 	 *	 初始化   *
 	 ************ */
 	
-	private SkillReleasePackage pack;
 	private EffectManage em;
 	
 	public AbnormalAdditionFormula(EffectManage em) {

@@ -4,7 +4,6 @@ import java.util.Map;
 
 import com.zdream.pmw.platform.effect.Aperitif;
 import com.zdream.pmw.platform.effect.EffectManage;
-import com.zdream.pmw.platform.effect.SkillReleasePackage;
 import com.zdream.pmw.util.json.JsonValue;
 import com.zdream.pmw.util.random.RanValue;
 
@@ -17,7 +16,7 @@ import com.zdream.pmw.util.random.RanValue;
  * @date 2017年3月2日
  * @version v0.2.1
  */
-public class ParticipantStateAdditionFormula implements IAdditionFormula {
+public class ParticipantStateAdditionFormula extends AAdditionFormula {
 	
 	/* ************
 	 *	数据结构  *
@@ -76,6 +75,17 @@ public class ParticipantStateAdditionFormula implements IAdditionFormula {
 		return side;
 	}
 	
+	// v0.2.2
+	/**
+	 * 施加效果的目标<br>
+	 * 缓存<br>
+	 */
+	byte[] seats;
+	/**
+	 * 对应上面的 seats, 每个目标是否触发
+	 */
+	boolean[] forces;
+	
 	/* ************
 	 *	实现方法  *
 	 ************ */
@@ -84,14 +94,11 @@ public class ParticipantStateAdditionFormula implements IAdditionFormula {
 	public String name() {
 		return "participant-state";
 	}
-
+	
 	@Override
-	public void addition(SkillReleasePackage pack) {
-		this.pack = pack;
-		if (canTrigger()) {
-			force();
-		}
-		this.pack = null;
+	protected void onFinish() {
+		seats = null;
+		forces = null;
 	}
 	
 	@Override
@@ -138,34 +145,91 @@ public class ParticipantStateAdditionFormula implements IAdditionFormula {
 	 *	私有方法  *
 	 ************ */
 	
-	private boolean canTrigger() {
+	protected boolean canTrigger() {
 		// 计算附加状态真实释放几率
-		byte atseat = pack.getAtStaff().getSeat();
-		byte dfseat = (side == 0) ? pack.getDfStaff(pack.getThiz()).getSeat() : atseat;
-
-		Aperitif value = pack.getEffects().newAperitif(Aperitif.CODE_CALC_ADDITION_RATE, atseat, dfseat);
-		value.append("type", "state");
-		value.append("dfseat", dfseat);
-		value.append("atseat", atseat);
-		value.append("rate", rate);
-		value.append("state", stateInfo);
-		value.append("result", 0);
+		if (side == SIDE_ATSTAFF) {
+			if (canTriggerForSelf()) {
+				this.seats = new byte[]{pack.getAtStaff().getSeat()};
+				this.forces = new boolean[]{true};
+				return true;
+			}
+		} else if (side == SIDE_DFSTAFF) {
+			this.seats = targetSeats();
+			this.forces = new boolean[seats.length];
+		} else {
+			throw new IllegalArgumentException("side: " + side + " is illegal.");
+		}
+		
+		boolean exist = false;
+		for (int i = 0; i < this.seats.length; i++) {
+			if (canTriggerForEnemy(i)) {
+				exist = true;
+				this.forces[i] = true;
+			}
+		}
+		
+		return exist;
+	}
+	
+	private boolean canTriggerForSelf() {
+		// 如果没有攻击到人
+		byte[] dfseats = targetSeats();
+		if (dfseats.length == 0) {
+			return false;
+		}
+		
+		final byte atseat = pack.getAtStaff().getSeat();
+		byte[] scans = new byte[dfseats.length + 1];
+		scans[0] = atseat;
+		System.arraycopy(dfseats, 0, scans, 1, dfseats.length);
+		
+		Aperitif value = pack.getEffects().newAperitif(Aperitif.CODE_CALC_ADDITION_RATE, scans);
+		value.append("type", "state")
+			.append("dfseats", dfseats)
+			.append("atseat", atseat)
+			.append("target", atseat)
+			.append("rate", rate)
+			.append("state", stateInfo)
+			.append("result", 0);
 		pack.getEffects().startCode(value);
-
-		// 计算
-		int result = (int) value.get("result");
+		
+		int result = (Integer) value.get("result");
 		if (result == 0) {
 			int instanceRate = (int) value.get("rate");
 			return RanValue.isSmaller(instanceRate);
 		}
-
+		
+		return false;
+	}
+	
+	private boolean canTriggerForEnemy(int i) {
+		byte target = seats[i];
+		byte atseat = pack.getAtStaff().getSeat();
+		
+		Aperitif value = pack.getEffects().newAperitif(Aperitif.CODE_CALC_ADDITION_RATE, atseat, target);
+		value.append("type", "state")
+			.append("dfseats", seats)
+			.append("target", target)
+			.append("atseat", atseat)
+			.append("target", atseat)
+			.append("rate", rate)
+			.append("state", stateInfo)
+			.append("result", 0);
+		pack.getEffects().startCode(value);
+		
+		int result = (Integer) value.get("result");
+		if (result == 0) {
+			int instanceRate = (int) value.get("rate");
+			return RanValue.isSmaller(instanceRate);
+		}
+		
 		return false;
 	}
 
 	/**
 	 * @param pack
 	 */
-	private void force() {
+	protected void force() {
 		em.sendForceStateMessage(this.value, pack);
 	}
 	
@@ -173,7 +237,6 @@ public class ParticipantStateAdditionFormula implements IAdditionFormula {
 	 *	 初始化   *
 	 ************ */
 	
-	private SkillReleasePackage pack;
 	private EffectManage em;
 	
 	public ParticipantStateAdditionFormula(EffectManage em) {

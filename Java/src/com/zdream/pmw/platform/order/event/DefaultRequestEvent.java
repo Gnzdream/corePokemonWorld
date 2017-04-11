@@ -1,14 +1,10 @@
 package com.zdream.pmw.platform.order.event;
 
-import java.util.List;
-
 import com.zdream.pmw.platform.attend.AttendManager;
 import com.zdream.pmw.platform.control.IPrintLevel;
 import com.zdream.pmw.platform.effect.Aperitif;
 import com.zdream.pmw.platform.order.OrderManager;
 import com.zdream.pmw.platform.prototype.BattlePlatform;
-import com.zdream.pmw.util.json.JsonValue;
-import com.zdream.pmw.util.json.JsonValue.JsonType;
 
 /**
  * 默认启动请求各队伍做出行动指令事件<br>
@@ -45,14 +41,11 @@ public class DefaultRequestEvent extends AAttendantEvent {
 		
 		byte[] seats = seatCondition(false);
 		requestForEachTeam(seats);
-
-		OrderManager om = pf.getOrderManager();
 		
-		// 添加 MoveEvent
-		om.pushEvents(om.buildMoveEvent());
+		buildMoveEvent();
 		
 		// 添加默认事件
-		om.addDefaultEndedEvent();
+		pf.getOrderManager().addDefaultEndedEvent();
 		
 		this.pf = null;
 	}
@@ -92,23 +85,31 @@ public class DefaultRequestEvent extends AAttendantEvent {
 	private void startRequestMoveCode(byte team, byte[] seats) {
 		Aperitif value = pf.getEffectManage().newAperitif(
 				Aperitif.CODE_REQUEST_MOVE, seats); // TODO 缺少 scan-seat
-		value.append("team", team);
-		{
-			JsonValue v = new JsonValue(JsonType.ArrayType);
-			List<JsonValue> list = v.getArray();
-			for (int i = 0; i < seats.length; i++) {
-				list.add(new JsonValue(seats[i]));
-			}
-			value.add("seats", v);
-		}
+		value.append("team", team).append("seats", seats);
 		pf.readyCode(value);
+	}
+	
+	/**
+	 * 产生行动事件
+	 */
+	private void buildMoveEvent() {
+		OrderManager om = pf.getOrderManager();
+		
+		// 添加 MoveEvent
+		om.pushEvents(om.buildMoveEvent());
+		
+		byte[] seats = pf.getAttendManager().existsSeat();
+		
+		// v0.2.2 发送信息
+		Aperitif ap = pf.getEffectManage().newAperitif(Aperitif.CODE_REQUEST_COMMIT, seats);
+		pf.getEffectManage().startCode(ap);
 	}
 	
 	/**
 	 * 等待所有队伍的回应
 	 */
 	private void sleepForRespond() {
-		pf.getControlManager().getSemaphore().onWaitForResponse();
+		pf.getControlManager().inform();
 	}
 
 }

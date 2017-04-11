@@ -53,6 +53,7 @@ public class DefaultEnteranceEvent extends AAttendantEvent {
 		this.pf = pf;
 		int teamLength = teamLength();
 		
+		boolean exist = false; // 在非第零回合中, 如果需要有怪兽入场, 该参数为 trues
 		for (byte team = 0; team < teamLength; team++) {
 			if (!am.isExistForTeam(team)) {
 				continue;
@@ -72,8 +73,15 @@ public class DefaultEnteranceEvent extends AAttendantEvent {
 				startEntranceCode(team, seatsForTeam, nos);
 			} else {
 				sendRequestPokemonMsg(team, seatsForTeam);
+				exist = true;
 			}
 		}
+		
+		if (exist) {
+			pf.getControlManager().inform();
+			pf.getOrderManager().pushEvents(pf.getOrderManager().buildMoveEvent());
+		}
+		
 		this.pf = null;
 		this.am = null;
 	}
@@ -139,8 +147,6 @@ public class DefaultEnteranceEvent extends AAttendantEvent {
 		value.append("seats", seats);
 		value.append("team", team);
 		pf.readyCode(value);
-
-		pf.getOrderManager().pushEvents(pf.getOrderManager().buildMoveEvent(team));
 	}
 
 	/* ************

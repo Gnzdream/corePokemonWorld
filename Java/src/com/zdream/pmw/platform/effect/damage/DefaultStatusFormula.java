@@ -58,14 +58,7 @@ public class DefaultStatusFormula implements IDamageFormula {
 			return;
 		}
 		
-		for (int index = 0; index < length; index++) {
-			if (!pack.isHitable(index)) {
-				continue;
-			}
-			pack.setThiz(index);
-			onAddition();
-		}
-		
+		onAddition();
 	}
 
 	/**
@@ -192,7 +185,7 @@ public class DefaultStatusFormula implements IDamageFormula {
 	}
 	
 	/**
-	 * 附加状态 / A 类附加效果实现
+	 * 附加状态 / 附加效果实现
 	 * @param index
 	 */
 	private void onAddition() {

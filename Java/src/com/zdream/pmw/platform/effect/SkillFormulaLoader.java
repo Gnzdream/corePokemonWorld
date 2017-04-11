@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -78,7 +79,57 @@ public class SkillFormulaLoader {
 	 * @param skill
 	 */
 	public void loadFormula(SkillReleasePackage pack, SkillRelease skill) {
-		JsonValue[] vals = skill.getAdditions();
+		loadFormula(pack, skill, null);
+	}
+	
+	/**
+	 * 为技能选择技能计算公式, 使用其它选项, 来修改最终得到的计算公式.
+	 * @param pack
+	 * @param skill
+	 * @param param
+	 *   选项, 可以为 null<br>
+	 *   正确格式: object_type
+	 *   <li> mode: default(默认) cover(在默认的基础上覆盖) set(直接设置)
+	 *   <li> value: list, formula 参数列表
+	 */
+	public void loadFormula(SkillReleasePackage pack, SkillRelease skill, JsonValue param) {
+		String mode = "default";
+		if (param != null) {
+			JsonValue json = param.getMap().get("mode");
+			if (json != null) {
+				mode = json.getString();
+			}
+		}
+		
+		JsonValue[] vals;
+		if (mode.equals("set")) {
+			// 设置
+			JsonValue json = param.getMap().get("value");
+			if (json != null) {
+				List<JsonValue> vs = json.getArray();
+				vals = new JsonValue[vs.size()];
+				vals = vs.toArray(vals);
+			} else {
+				vals = null;
+			}
+		} else if (mode.equals("cover")) {
+			// 覆盖
+			JsonValue json = param.getMap().get("value");
+			if (json != null) {
+				List<JsonValue> vs = json.getArray();
+				JsonValue[] arrs = skill.getAdditions();
+				vals = new JsonValue[vs.size() + arrs.length];
+				System.arraycopy(vals, 0, arrs, 0, arrs.length);
+				
+				for (int i = 0; i < vs.size(); i++) {
+					arrs[i + arrs.length] = vs.get(i);
+				}
+			} else {
+				vals = null;
+			}
+		} else {
+			vals = skill.getAdditions();
+		}
 		
 		if (vals != null) {
 			IAdditionFormula[] as = new IAdditionFormula[vals.length];
@@ -87,8 +138,7 @@ public class SkillFormulaLoader {
 			for (int i = 0; i < vals.length; i++) {
 				try {
 					JsonValue val = vals[i];
-					String name = val.getMap().get("n").getString();
-					String tag = name.substring(0, name.indexOf(".") + 1);
+					String tag = formulaParamTag(val);
 					switch (tag) {
 					case TAG_MOVABLE: {
 						IMoveableFormula f = loadFormula(val);
@@ -108,8 +158,6 @@ public class SkillFormulaLoader {
 					}  break;
 					case TAG_ADDITION: {
 						IAdditionFormula f = loadFormula(val);
-						f.restore();
-						f.set(val);
 						as[aidx ++] = f;
 					} break;
 
@@ -137,7 +185,7 @@ public class SkillFormulaLoader {
 			pack.setAdditionFormulas(new IAdditionFormula[]
 					{loadFormula(TAG_ADDITION + "default")});
 		}
-
+		
 		// other
 		if (pack.getMovableFormula() == null) {
 			pack.setMovableFormula(loadFormula(TAG_MOVABLE + "default"));
@@ -179,6 +227,10 @@ public class SkillFormulaLoader {
 		loadDefault();
 	}
 	
+	private String formulaParamTag(JsonValue param) {
+		String name = param.getMap().get("n").getString();
+		return name.substring(0, name.indexOf(".") + 1);
+	}
 	
 	/* ************
 	 *	工具方法  *
@@ -216,7 +268,9 @@ public class SkillFormulaLoader {
 				loadFormula(key);
 			}
 		}
-	}@SuppressWarnings("unchecked")
+	}
+	
+	@SuppressWarnings("unchecked")
 	/**
 	 * 寻找相应的公式（附加）
 	 * @param key
@@ -282,7 +336,10 @@ public class SkillFormulaLoader {
 	private <I extends IFormula> I loadFormula(JsonValue value) {
 		try {
 			String key = value.getMap().get("n").getString();
-			return loadFormula(key);
+			I f = loadFormula(key);
+			f.restore();
+			f.set(value);
+			return f;
 		} catch (RuntimeException e) {
 			e.printStackTrace();
 			em.logPrintf(IPrintLevel.PRINT_LEVEL_WARN, e);

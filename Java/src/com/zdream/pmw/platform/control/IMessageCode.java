@@ -26,6 +26,11 @@ public interface IMessageCode {
 	public static final String CODE_REQUEST_MOVE = "request-move";
 	
 	/**
+	 * 请求行动全部结束消息头
+	 */
+	public static final String CODE_REQUEST_COMMIT = "request-commit";
+	
+	/**
 	 * 由于攻击方发动技能而扣 pp 的消息头
 	 */
 	public static final String CODE_PP_SUB = "ppSub";

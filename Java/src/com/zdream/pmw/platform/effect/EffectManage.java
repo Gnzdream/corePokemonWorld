@@ -1,10 +1,12 @@
 package com.zdream.pmw.platform.effect;
 
+import java.util.Map;
+
 import com.zdream.pmw.monster.prototype.EPokemonAbnormal;
 import com.zdream.pmw.monster.prototype.EPokemonType;
 import com.zdream.pmw.platform.attend.AttendManager;
-import com.zdream.pmw.platform.attend.IState;
 import com.zdream.pmw.platform.attend.SkillRelease;
+import com.zdream.pmw.platform.attend.StateHandler;
 import com.zdream.pmw.platform.control.IPrintLevel;
 import com.zdream.pmw.platform.effect.type.TypeRestraint;
 import com.zdream.pmw.platform.prototype.BattlePlatform;
@@ -17,7 +19,13 @@ import com.zdream.pmw.util.json.JsonValue;
  * 战斗结果、效果处理中心，行动数据处理模块<br>
  * 从属于 <code>BattlePlatform</code> 的一个模块，作为每一次行动的结果记录者<br>
  * <code>EffectValueRecorder</code> 作为一个数据包供 EffectManage 处理<br>
- * <br>
+ * 
+ * <p>当整个系统运行主动模式时, 系统将自己计算伤害、附加效果等数据, 此时
+ * {@code EffectManage} 为处理中心;<br>
+ * 当系统运行被动模式时, 系统的处理方式更像一个监听器, 监听远端服务器的数据结果,
+ * 因此这时的计算伤害、附加效果等数据是在对应的服务器端, 而本地的
+ * {@code EffectManage} 将不进行计算.</p>
+ * 
  * <b>v0.1</b><br>
  *   修改了部分注释<br>
  * <br>
@@ -26,14 +34,19 @@ import com.zdream.pmw.util.json.JsonValue;
  * <br>
  * <b>v0.2</b><br>
  *   添加 BattlePlatform 的变量引用<br>
- * <br>
- * <b>v0.2.1</b>
- * <p>添加计算怪兽实时能力值的方法. 该方法原本在 {@code AttendManage} 中实现<p>
+ * 
+ * <p><b>v0.2.1</b><br>
+ * 添加计算怪兽实时能力值的方法. 该方法原本在 {@code AttendManage} 中实现<p>
+ * 
+ * <p><b>v0.2.2</b><br>
+ * 在运行被动模式 (客户端模式) 时, {@code EffectManage} 将不会初始化
+ * 任何与计算相关的对象.<p>
  * 
  * @since v0.1
+ *   [2016-04-19]
  * @author Zdream
- * @date 2016年4月19日
- * @version v0.2.1
+ * @version v0.2.2
+ *   [2017-04-09]
  */
 public class EffectManage implements IPlatformComponent {
 	
@@ -120,7 +133,15 @@ public class EffectManage implements IPlatformComponent {
 	public void loadFormula(SkillReleasePackage pack, SkillRelease skill) {
 		skillLoader.loadFormula(pack, skill);
 	}
-	
+
+	/**
+	 * 为技能选择技能计算公式, 使用其它选项, 来修改最终得到的计算公式.
+	 * @see SkillFormulaLoader#loadFormula(SkillReleasePackage, SkillRelease, JsonValue)
+	 */
+	public void loadFormula(SkillReleasePackage pack, SkillRelease skill, JsonValue param) {
+		skillLoader.loadFormula(pack, skill, param);
+	}
+
 	/**
 	 * 技能行动释放
 	 * @param no
@@ -135,6 +156,14 @@ public class EffectManage implements IPlatformComponent {
 		box.moveAct(no, skillNum, originTarget);
 	}
 	
+	/**
+	 * 技能行动释放, 并加入选项参数, 来修改该技能的计算方式
+	 * @see SkillReleaseBox#moveAct(byte, byte, byte, JsonValue)
+	 */
+	public void moveAct(byte no, byte skillNum, byte originTarget, JsonValue param) {
+		box.moveAct(no, skillNum, originTarget, param);
+	}
+
 	/**
 	 * 怪兽交换
 	 * @param noOut
@@ -159,10 +188,6 @@ public class EffectManage implements IPlatformComponent {
 	 */
 	public void enteranceAct(byte seat, byte noIn) {
 		act.enteranceAct(seat, noIn);
-	}
-
-	public void ppSubForRelease(SkillReleasePackage pack) {
-		box.ppSubForRelease(pack);
 	}
 
 	public boolean judgeMoveable(SkillReleasePackage pack) {
@@ -213,8 +238,8 @@ public class EffectManage implements IPlatformComponent {
 	 * 计算会心一击等级
 	 * @param pack
 	 * @return
-	 *   当数值大于零, 表示会心一击等级;<br>
-	 *   当数值为 0, 表示绝对回避会心;<br>
+	 *   当数值大于等于零, 表示会心一击等级;<br>
+	 *   当数值为 -2, 表示绝对回避会心;<br>
 	 *   当数值为 -1, 表示绝对会心;<br>
 	 */
 	public byte calcCt(SkillReleasePackage pack) {
@@ -311,20 +336,23 @@ public class EffectManage implements IPlatformComponent {
 	}
 
 	/**
-	 * 施加状态
-	 * @param pack
+	 * 施加状态 (技能施加)
+	 * @param atseat
+	 *   攻击方
+	 * @param dfseat
+	 *   防御方, 就是确定要施加状态的一方
 	 * @param abnormal
-	 *   #{@link com.zdream.pmw.platform.common.AbnormalMethods#toBytes(EPokemonAbnormal, int)}
+	 *   #{@link com.zdream.pmw.core.tools.AbnormalMethods#toBytes(EPokemonAbnormal, int)}
 	 */
-	public void forceAbnormal(SkillReleasePackage pack, byte abnormal) {
-		box.forceAbnormal(pack, abnormal);
+	public void forceAbnormal(byte atseat, byte dfseat, byte abnormal) {
+		box.forceAbnormal(atseat, dfseat, abnormal);
 	}
 	
 	/**
 	 * 施加状态 (系统施加)
 	 * @param pack
 	 * @param abnormal
-	 *   #{@link com.zdream.pmw.platform.common.AbnormalMethods#toBytes(EPokemonAbnormal, int)}
+	 *   #{@link com.zdream.pmw.core.tools.AbnormalMethods#toBytes(EPokemonAbnormal, int)}
 	 */
 	public void forceAbnormal(byte seat, byte abnormal) {
 		box.forceAbnormal(seat, abnormal);
@@ -340,17 +368,8 @@ public class EffectManage implements IPlatformComponent {
 	}
 
 	/**
-	 * 工厂方式创建状态类
-	 * @param args
-	 * @return
-	 * @since v0.2.1
-	 */
-	public IState buildState(JsonValue args) {
-		return stateBuilder.buildState(args);
-	}
-
-	/**
-	 * 发送施加状态拦截前消息
+	 * <p>发送施加状态拦截前消息, 控制层</p>
+	 * <p>该方法为攻击方释放技能后, 为防御方施加状态.</p>
 	 * @param args
 	 *   原本存放于 skill 中的状态启动需要的静态数据
 	 * @param pack
@@ -359,7 +378,20 @@ public class EffectManage implements IPlatformComponent {
 	public void sendForceStateMessage(JsonValue args, SkillReleasePackage pack) {
 		stateBuilder.sendForceStateMessage(args, pack);
 	}
-	
+
+	/**
+	 * <p>发送施加状态拦截前消息, 控制层</p>
+	 * @see StateBuilder#sendForceStateMessage(String, byte, byte, short, Map)
+	 * @since v0.2.2
+	 */
+	public void sendForceStateMessage(String stateName,
+			byte atseat,
+			byte dfseat,
+			short skillID,
+			Map<String, Object> param) {
+		stateBuilder.sendForceStateMessage(stateName, atseat, dfseat, skillID, param);
+	}
+
 	/**
 	 * 获得施加状态的命令行类型消息<br>
 	 * 调用方是 {@code com.zdream.pmw.platform.control.codeStateCodeRealizer}
@@ -369,16 +401,6 @@ public class EffectManage implements IPlatformComponent {
 	 */
 	public String forceStateCommandLine(JsonValue value) {
 		return stateBuilder.forceStateCommandLine(value);
-	}
-	
-	/**
-	 * 按照施加状态的命令行数据, 完成施加状态的任务<br>
-	 * 调用方是 {@code com.zdream.pmw.platform.control.codeStateCodeRealizer}<br>
-	 * @param codes
-	 * @since v0.2.1
-	 */
-	public void forceStateRealize(String[] codes) {
-		stateBuilder.forceStateRealize(codes);
 	}
 
 	/**
@@ -394,10 +416,25 @@ public class EffectManage implements IPlatformComponent {
 		stateBuilder.sendRemoveParticipantStateMessage(stateName, no);
 	}
 	
+	/**
+	 * <p>替换 {@code SkillReleasePackage}.</p>
+	 * <p>用新建的 package 的替换现在正在使用的 package.
+	 * 会将旧有的 package 存入仓库, 然后将初始化一个新的 packge 返回.</p>
+	 * <p>一般在多段攻击时, 每一轮攻击需要生成一个 package, 需要再此替换 package.</p>
+	 * @param oldPack
+	 *   原有的 package
+	 * @return
+	 *   新建的 package
+	 * @since v0.2.2
+	 */
+	public SkillReleasePackage replacePackage(SkillReleasePackage oldPack) {
+		return box.replacePackage(oldPack);
+	}
+	
 	/* ************
 	 *	 拦截器   *
 	 ************ */
-	
+
 	/**
 	 * 获得新的开胃酒 (拦截前) 消息
 	 * @param head
@@ -454,11 +491,14 @@ public class EffectManage implements IPlatformComponent {
 	 */
 	public void init(Fuse msg, RuleConductor referee, BattlePlatform pf) {
 		this.pf = pf;
-		box = new SkillReleaseBox(this);
-		target = new TargetCounter(this);
-		skillLoader = new SkillFormulaLoader(this);
-		stateBuilder = new StateBuilder(this);
-		act = new ActBox(this);
+		
+		if (!msg.isPassive()) {
+			box = new SkillReleaseBox(this);
+			target = new TargetCounter(this);
+			skillLoader = new SkillFormulaLoader(this);
+			stateBuilder = new StateBuilder(this, (StateHandler) msg.getDeliver("stateHandler"));
+			act = new ActBox(this);
+		}
 	}
 	
 	@Override

@@ -2,10 +2,10 @@ package com.zdream.pmw.platform.translate.translater;
 
 import java.util.Map;
 
+import com.zdream.pmw.core.tools.AbnormalMethods;
 import com.zdream.pmw.monster.prototype.EPokemonAbnormal;
 import com.zdream.pmw.platform.attend.Attendant;
 import com.zdream.pmw.platform.attend.Participant;
-import com.zdream.pmw.platform.common.AbnormalMethods;
 import com.zdream.pmw.platform.prototype.BattlePlatform;
 import com.zdream.pmw.platform.translate.MessageRepository;
 

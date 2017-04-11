@@ -15,7 +15,7 @@ import com.zdream.pmw.util.json.JsonValue;
  * @date 2016年4月17日
  * @version v0.1.1
  */
-public interface IStateHandler {
+public interface IStateContainer {
 
 	public List<IState> getStates();
 	

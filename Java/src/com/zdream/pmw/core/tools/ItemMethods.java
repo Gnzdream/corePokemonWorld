@@ -1,4 +1,4 @@
-package com.zdream.pmw.platform.common;
+package com.zdream.pmw.core.tools;
 
 import com.zdream.pmw.monster.skill.ESkillCategory;
 

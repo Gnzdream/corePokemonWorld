@@ -1,7 +1,6 @@
 package com.zdream.pmw.platform.control.multithread;
 
 import com.zdream.pmw.platform.control.ControlManager;
-import com.zdream.pmw.platform.control.IPrintLevel;
 
 /**
  * 玩家控制类 (多线程模式)<br>
@@ -23,20 +22,9 @@ import com.zdream.pmw.platform.control.IPrintLevel;
  * @since v0.1
  * @author Zdream
  * @date 2016年4月1日
- * @version v0.2
+ * @version v0.2.2
  */
 public class MultiPlayerControl extends MultiModeControl {
-
-	@Override
-	public void nextActionRequest() {
-		synchronized (this) {
-			cm.logPrintf(IPrintLevel.PRINT_LEVEL_DEBUG,
-					"MultiPlayerControl.nextActionRequest() wait");
-			notify();
-			cm.logPrintf(IPrintLevel.PRINT_LEVEL_DEBUG,
-					"MultiPlayerControl.nextActionRequest() be notified");
-		}
-	}
 
 	public MultiPlayerControl(ControlManager cm) {
 		super(cm);

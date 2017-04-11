@@ -175,7 +175,7 @@ public class PokemonHandler {
 		// 等级
 		short level = pm.getLevel();
 		// 性格
-		EPokemonNature nature = pm.getNaturn();
+		EPokemonNature nature = pm.getNature();
 		int value = 0;
 		
 		// 计算 HP

@@ -15,7 +15,7 @@ import com.zdream.pmw.platform.control.ControlManager;
  * @since v0.2
  * @author Zdream
  * @date 2017年2月25日
- * @version v0.2
+ * @version v0.2.2
  */
 public class AIControl extends SingleModeControl {
 
@@ -23,10 +23,4 @@ public class AIControl extends SingleModeControl {
 		super(cm);
 		this.setType(TYPE_AUTO);
 	}
-
-	@Override
-	public void nextActionRequest() {
-		callback.onRequest(cm.getRoot(), this);
-	}
-
 }

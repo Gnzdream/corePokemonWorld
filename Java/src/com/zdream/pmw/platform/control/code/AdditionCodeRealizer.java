@@ -69,7 +69,7 @@ public class AdditionCodeRealizer implements ICodeRealizer {
 		}
 		
 		byte seat = (((int) ap.get("side")) == 1) ?
-				(byte) ap.get("atseat") : (byte) ap.get("dfseat");
+				(byte) ap.get("atseat") : (byte) ap.get("target");
 		boolean actualRecover = (value > 0);
 		value = Math.abs(value); // value is positive now
 		if (value < 1) {

@@ -1,2 +1,5 @@
 {
+"439":{"val":{"sd":90,"df":45,"at":25,"hp":20,"sp":60,"sa":70},"species_id":439,"form":0,"species_name":"魔尼尼","root":439,"ability":[0,0,0],"type":["psychic","fairy"],"wt":13.0},
+"440":{"val":{"sd":65,"df":5,"at":5,"hp":100,"sp":30,"sa":15},"species_id":440,"form":0,"species_name":"小福蛋","root":440,"ability":[0,0,0],"type":["normal"],"wt":24.4},
+"446":{"val":{"sd":85,"df":40,"at":85,"hp":135,"sp":5,"sa":40},"species_id":446,"form":0,"species_name":"小卡比兽","root":446,"ability":[0,0,0],"type":["normal"],"wt":105.0}
 }

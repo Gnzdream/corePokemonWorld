@@ -1,8 +1,12 @@
 package com.zdream.pmw.monster.skill;
 
-import java.io.Serializable;
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 
 import com.zdream.pmw.monster.prototype.EPokemonType;
+import com.zdream.pmw.util.json.JsonBuilder;
 import com.zdream.pmw.util.json.JsonValue;
 
 /**
@@ -10,13 +14,16 @@ import com.zdream.pmw.util.json.JsonValue;
  * <br>
  * <b>v0.2</b><br>
  *   添加释放数据属性<br>
+ * <br>
+ * <p><b>v0.2.2</b><br>
+ * 该模型支持自定义序列化方法</p>
  * 
  * @since v0.1
  * @author Zdream
  * @date 2016年3月15日
- * @version v0.2
+ * @version v0.2.2
  */
-public class Skill implements Serializable{
+public class Skill implements Externalizable {
 	
 	private static final long serialVersionUID = -5821245942421547302L;
 
@@ -194,5 +201,81 @@ public class Skill implements Serializable{
 	 */
 	public void setRelease(JsonValue release) {
 		this.release = release;
+	}
+
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		// 版本
+		out.writeByte(1);
+		
+		out.writeShort(id);
+		int i = type.ordinal();
+		i += (category.ordinal() << 5);
+		out.writeByte(i);
+		out.writeByte(power);
+		out.writeByte(accuracy);
+		out.writeByte(ppMax);
+		
+		byte[] bs = title.getBytes("UTF-8");
+		out.writeByte(bs.length);
+		out.write(bs);
+		
+		if (description == null) {
+			out.writeByte(0);
+		} else {
+			bs = description.getBytes("UTF-8");
+			out.writeByte(bs.length);
+			out.write(bs);
+		}
+		
+		if (release == null) {
+			out.writeByte(0);
+		} else {
+			JsonBuilder bd = new JsonBuilder();
+			String s = bd.getJson(release);
+			bs = s.getBytes("UTF-8");
+			out.writeByte(bs.length);
+			out.write(bs);
+		}
+	}
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		// 检查版本
+		byte version = in.readByte();
+		if (version != 1) {
+			throw new ClassNotFoundException("the version of the pokemon data is not accept.");
+		}
+		
+		id = in.readShort();
+		
+		int i = in.readUnsignedByte();
+		type = EPokemonType.parseEnum(i & 0x1F);
+		category = ESkillCategory.parseEnum(i >> 5);
+		power = (short) in.readUnsignedByte();
+		accuracy = in.readByte();
+		ppMax = in.readByte();
+		
+		i = in.readUnsignedByte();
+		byte[] bs = new byte[i];
+		in.read(bs);
+		title = new String(bs, "UTF-8");
+		
+		i = in.readUnsignedByte();
+		if (i != 0) {
+			bs = new byte[i];
+			in.read(bs);
+			description = new String(bs, "UTF-8");
+		}
+		
+		i = in.readUnsignedByte();
+		if (i != 0) {
+			bs = new byte[i];
+			in.read(bs);
+			String s = new String(bs, "UTF-8");
+			
+			JsonBuilder bd = new JsonBuilder();
+			release = bd.parseJson(s);
+		}
 	}
 }
