@@ -27,10 +27,10 @@ public class TestPlatform extends SimplePlatformHandler {
 		pm1.setNickname("我的小火龙");
 		pm1.setLevel((byte) 15);
 		pm1.setStatIV(15, 15, 15, 15, 15, 15);
-		pm1.getSkill()[0] = (short) 7;
-		pm1.getSkill()[1] = (short) 13; // 35 舞剑14 吸血141 巴掌3 龙之怒82
-		pm1.getSkill()[2] = (short) 47;
-		pm1.getSkill()[3] = (short) 261;
+		pm1.getSkill()[0] = (short) 19; // 7
+		pm1.getSkill()[1] = (short) 141; // 35 舞剑14 吸血141 巴掌3 龙之怒82
+		pm1.getSkill()[2] = (short) 49;
+		pm1.getSkill()[3] = (short) 37;
 		pm1.getSkillPP()[0] = (byte) 35;
 		pm1.getSkillPP()[1] = (byte) 15;
 		pm1.getSkillPP()[2] = (byte) 35;
@@ -72,6 +72,17 @@ public class TestPlatform extends SimplePlatformHandler {
 		pm2.getSkill()[0] = (short) 10;
 		pm2.getSkillPP()[0] = (byte) 35;
 		
+		Pokemon pm4 = new Pokemon(); // 敌方
+		pm4.setSpeciesID((short) 92);
+		pm4.setForm((byte) 0);
+		pm4.setGender(EPokemonGender.M);
+		pm4.setNature(EPokemonNature.CALM);
+		pm4.setNickname("别人鬼斯");
+		pm4.setLevel((byte) 15);
+		pm4.setStatIV(21, 9, 21, 9, 21, 9);
+		pm4.getSkill()[0] = (short) 55;
+		pm4.getSkillPP()[0] = (byte) 25;
+		
 		PokemonHandler service = PokemonHandler.getInstance();
 		service.countStatValue(pm1);
 		service.recoverPokemon(pm1);
@@ -79,6 +90,8 @@ public class TestPlatform extends SimplePlatformHandler {
 		service.recoverPokemon(pm2);
 		service.countStatValue(pm3);
 		service.recoverPokemon(pm3);
+		service.countStatValue(pm4);
+		service.recoverPokemon(pm4);
 		
 		Trainer trainer = Trainer.getThizPlayer();
 		trainer.getPokemons()[0] = pm1;
@@ -97,7 +110,7 @@ public class TestPlatform extends SimplePlatformHandler {
 		translator.setPrint(true);
 		
 		fuse.putTeams(trainer, new Pokemon[]{pm1, pm3}, callback, new IMessageCallback[]{translator.getMessageCallback()});
-		fuse.putTeams(null, new Pokemon[]{pm2});
+		fuse.putTeams(null, new Pokemon[]{pm2, pm4});
 		translator.setTeam((byte) 0);
 		scanner = new Scanner(System.in);
 		

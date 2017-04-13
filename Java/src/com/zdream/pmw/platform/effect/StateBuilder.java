@@ -43,6 +43,7 @@ public class StateBuilder {
 	 *   原本存放于 skill 中的状态启动需要的静态数据
 	 * @param pack
 	 */
+	@Deprecated
 	public void sendForceStateMessage(final JsonValue args, SkillReleasePackage pack) {
 		// 导入 pack 数据
 		Aperitif value = pipePackage(pack);
@@ -73,7 +74,7 @@ public class StateBuilder {
 			final byte atseat,
 			final byte dfseat,
 			final short skillID,
-			final Map<String, Object> param) {
+			final JsonValue param) {
 		
 		Aperitif ap = em.newAperitif(Aperitif.CODE_CALC_ADDITION_RATE, atseat, dfseat);
 		ap.append("atseat", atseat).append("dfseat", dfseat).append("target", dfseat)
@@ -96,11 +97,11 @@ public class StateBuilder {
 				.append("source", EStateSource.SKILL.name())
 				.append("skillID", skillID);
 		
-		for (Iterator<Entry<String, Object>> it = param.entrySet().iterator(); it.hasNext();) {
-			Entry<String, Object> entry = it.next();
+		for (Iterator<Entry<String, JsonValue>> it = param.getMap().entrySet().iterator(); it.hasNext();) {
+			Entry<String, JsonValue> entry = it.next();
 			String key = entry.getKey();
 			if (key.startsWith("-") && !Character.isDigit(key.charAt(1))) {
-				ap.append(key, entry.getValue());
+				ap.add(key, entry.getValue());
 			}
 		}
 		

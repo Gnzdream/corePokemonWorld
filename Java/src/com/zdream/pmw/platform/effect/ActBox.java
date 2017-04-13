@@ -1,5 +1,7 @@
 package com.zdream.pmw.platform.effect;
 
+import com.zdream.pmw.monster.prototype.EPokemonAbnormal;
+
 /**
  * 除技能发动外的一切行动的操作层处理平台<br>
  * <p>可以处理技能释放外的操作，如:</p>
@@ -75,6 +77,44 @@ public class ActBox {
 		value.append("team", team);
 		value.append("no", noIn);
 		value.append("seat", seat);
+		em.startCode(value);
+	}
+	
+	/* ************
+	 *	效果施加  *
+	 ************ */
+	
+	/**
+	 * 施加状态 (技能施加)
+	 * @param atseat
+	 *   攻击方
+	 * @param dfseat
+	 *   防御方, 就是确定要施加状态的一方
+	 * @param abnormal
+	 *   {@link com.zdream.pmw.core.tools.AbnormalMethods#toBytes(EPokemonAbnormal, int)}
+	 */
+	public void forceAbnormal(byte atseat, byte dfseat, byte abnormal) {
+		Aperitif ap = em.newAperitif("force-abnormal", atseat, dfseat);
+		
+		ap.append("dfseat", dfseat)
+				.append("atseat", atseat)
+				.append("abnormal", abnormal)
+				.append("result", 0);
+		em.startCode(ap);
+	}
+	
+	/**
+	 * 施加状态 (系统施加)
+	 * @param pack
+	 * @param abnormal
+	 *   {@link com.zdream.pmw.core.tools.AbnormalMethods#toBytes(EPokemonAbnormal, int)}
+	 */
+	public void forceAbnormal(byte seat, byte abnormal) {
+		Aperitif value = em.newAperitif(Aperitif.CODE_FORCE_ABNORMAL, seat);
+		value.append("dfseat", seat);
+		value.append("atseat", (byte) -1);
+		value.append("abnormal", abnormal);
+		value.append("result", 0);
 		em.startCode(value);
 	}
 	

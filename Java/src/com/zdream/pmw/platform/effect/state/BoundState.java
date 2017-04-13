@@ -75,7 +75,7 @@ public class BoundState extends ParticipantState
 		case CODE_ROUND_END:
 			return true;
 		}
-		return false;
+		return IParticipantSubStateCreater.super.canExecute(msg);
 	}
 	
 	@Override
@@ -90,7 +90,7 @@ public class BoundState extends ParticipantState
 		default:
 			break;
 		}
-		return interceptor.nextState();
+		return IParticipantSubStateCreater.super.execute(value, interceptor, pf);
 	}
 
 	@Override

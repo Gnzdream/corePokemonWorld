@@ -67,22 +67,6 @@ public class AbilityLevelAdditionFormula extends AAdditionFormula implements IPo
 	private int[] values;
 	
 	/**
-	 * 目标，设置向谁施加能力等级变化（默认对方）<br>
-	 * 该参数具有给定值<br>
-	 */
-	private String target;
-	
-	/**
-	 * target 值的给定项，（全体）对方
-	 */
-	public static final String TARGET_ENEMY = "e";
-	
-	/**
-	 * target 值的给定项，自己
-	 */
-	public static final String TARGET_SELF = "s";
-	
-	/**
 	 * target 值的给定项，对方和自己
 	 */
 	public static final String TARGET_SELF_AND_ENEMY = "se";
@@ -158,14 +142,6 @@ public class AbilityLevelAdditionFormula extends AAdditionFormula implements IPo
 		this.param = param;
 	}
 	
-	public String getTarget() {
-		return target;
-	}
-	
-	public void setTarget(String target) {
-		this.target = target;
-	}
-	
 	public int getRate() {
 		return rate;
 	}
@@ -197,12 +173,7 @@ public class AbilityLevelAdditionFormula extends AAdditionFormula implements IPo
 	
 	// v0.2.2
 	/**
-	 * 施加效果的目标<br>
-	 * 缓存<br>
-	 */
-	byte[] seats;
-	/**
-	 * 对应上面的 seats, 每个目标是否触发
+	 * 对应父类的 seats, 每个目标是否触发
 	 */
 	boolean[] forces;
 
@@ -221,16 +192,7 @@ public class AbilityLevelAdditionFormula extends AAdditionFormula implements IPo
 	}
 	
 	@Override
-	protected void onStart() {
-		seats = targetSeats();
-		forces = new boolean[seats.length];
-		titems = new int[seats.length][];
-		tvalues = new int[seats.length][];
-	}
-	
-	@Override
 	protected void onFinish() {
-		seats = null;
 		forces = null;
 		titems = null;
 		tvalues = null;
@@ -253,6 +215,7 @@ public class AbilityLevelAdditionFormula extends AAdditionFormula implements IPo
 	 * @param value
 	 */
 	public void set(JsonValue value) {
+		super.set(value);
 		Set<Entry<String, JsonValue>> set = value.getMap().entrySet();
 
 		String k;
@@ -270,9 +233,6 @@ public class AbilityLevelAdditionFormula extends AAdditionFormula implements IPo
 				switch (k) {
 				case "i": // items
 					is = parseItems(v);
-					break;
-				case "tg": // target
-					setTarget(v.getString());
 					break;
 				case "r": // rate
 					setRate((Integer) v.getValue());
@@ -311,9 +271,9 @@ public class AbilityLevelAdditionFormula extends AAdditionFormula implements IPo
 			values[i] = 0;
 		}
 		setParam(PARAM_CHANGE);
-		setTarget(TARGET_ENEMY);
 		setMode(MODE_AND);
 		setRate(100);
+		super.restore();
 	}
 	
 	/* ************
@@ -410,40 +370,18 @@ public class AbilityLevelAdditionFormula extends AAdditionFormula implements IPo
 	}
 	
 	/**
-	 * 施加对象的 seat 数组
-	 * <p>已经除去了没有命中的对象</p>
-	 * @return
-	 */
-	@Override
-	protected byte[] targetSeats() {
-		if (TARGET_ENEMY.equals(target)) {
-			return super.targetSeats();
-		} else if (TARGET_SELF.equals(target)) {
-			return new byte[]{atseat()};
-		} else if (TARGET_SELF_AND_ENEMY.equals(target)) {
-			byte[] bs = super.targetSeats();
-			if (bs.length == 0) {
-				// 如果没有击中防御方, 那么攻击方也不会施加效果
-				return bs;
-			}
-			byte[] results = new byte[bs.length + 1];
-			System.arraycopy(bs, 0, results, 1, bs.length);
-			results[0] = pack.getAtStaff().getSeat();
-			return results;
-		}
-		
-		return null;
-	}
-	
-	/**
 	 * 按随机数，计算异常状态是否能够触发
 	 * @return
 	 *   如果所有目标都不能发动, 为 false
 	 */
 	protected boolean canTrigger() {
+		forces = new boolean[seatLen];
+		titems = new int[seatLen][];
+		tvalues = new int[seatLen][];
+		
 		// 计算附加状态真实释放几率
 		byte atseat = pack.getAtStaff().getSeat();
-		byte[] dfseats = seats;
+		byte[] dfseats = pack.dfSeats();
 		
 		// item
 		int itemLen = size();
@@ -457,15 +395,15 @@ public class AbilityLevelAdditionFormula extends AAdditionFormula implements IPo
 		 */
 		boolean exist = false;
 		
-		for (int i = 0; i < dfseats.length; i++) {
-			byte dfseat = dfseats[i];
+		for (int i = 0; i < seatLen; i++) {
+			byte target = seats[i];
 			
 			Aperitif value = pack.getEffects().newAperitif(
-					Aperitif.CODE_CALC_ADDITION_RATE, atseat, dfseat);
+					Aperitif.CODE_CALC_ADDITION_RATE, atseat, target);
 			
 			value.append("atseat", atseat)
 				.append("dfseats", dfseats)
-				.append("target", dfseat)
+				.append("target", target)
 				.append("type", "abilityLevel")
 				.append("param", param)
 				.append("items", items)
@@ -502,7 +440,7 @@ public class AbilityLevelAdditionFormula extends AAdditionFormula implements IPo
 			return;
 		}
 		
-		for (int i = 0; i < seats.length; i++) {
+		for (int i = 0; i < seatLen; i++) {
 			if (forces[i] == false) {
 				continue;
 			}
@@ -524,14 +462,6 @@ public class AbilityLevelAdditionFormula extends AAdditionFormula implements IPo
 			pack.getEffects().startCode(value);
 		}
 		
-	}
-
-	/**
-	 * 攻击方的 seat
-	 * @return
-	 */
-	private byte atseat() {
-		return pack.getAtStaff().getSeat();
 	}
 	
 	/**

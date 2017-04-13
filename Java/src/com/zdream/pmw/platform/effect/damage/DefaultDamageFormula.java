@@ -9,6 +9,8 @@ import com.zdream.pmw.platform.effect.Aperitif;
 import com.zdream.pmw.platform.effect.EffectManage;
 import com.zdream.pmw.platform.effect.SkillReleasePackage;
 import com.zdream.pmw.platform.effect.addition.IAdditionFormula;
+import com.zdream.pmw.util.json.JsonValue;
+import com.zdream.pmw.util.json.JsonValue.JsonType;
 import com.zdream.pmw.util.random.RanValue;
 
 /**
@@ -20,9 +22,10 @@ import com.zdream.pmw.util.random.RanValue;
  *   取消了对 pf.instance 的直接引用<br>
  * 
  * @since v0.1
+ *   [2016-04-09]
  * @author Zdream
- * @date 2016年4月9日
- * @version v0.2
+ * @version v0.2.2
+ *   [2017-04-13]
  */
 public class DefaultDamageFormula implements IDamageFormula {
 
@@ -38,23 +41,21 @@ public class DefaultDamageFormula implements IDamageFormula {
 		// 属性判定
 		writeType();
 		
+		// v0.2.2 技能判定: 是否发动失败
+		if (!judgeValid()) {
+			sendInvalid();
+			return;
+		}
+		
 		int length = package1.dfStaffLength();
 		
 		// 命中判定
 		// v0.2 中将这部分从 onDamage 方法中移到了这里
-		boolean hit = false;
 		for (int index = 0; index < length; index++) {
 			pack.setThiz(index);
-			if (writeHitable(index)) {
-				hit = true;
-			} else {
+			if (!writeHitable(index)) {
 				sendMiss(index);
 			}
-		}
-		
-		if (hit == false) {
-			// 没有命中任何怪兽: 攻击终止
-			return;
 		}
 		
 		eachRound();
@@ -62,7 +63,8 @@ public class DefaultDamageFormula implements IDamageFormula {
 	
 	/**
 	 * <p>每一轮进攻的实施</p>
-	 * <p>每次进行攻击时, 都会计算伤害和触发效果</p>
+	 * <p>每次进行攻击时, 都会计算伤害和触发效果<br>
+	 * 就算攻击没有命中, 也将进入该方法</p>
 	 * @since v0.2.2
 	 */
 	protected void eachRound() {
@@ -210,6 +212,14 @@ public class DefaultDamageFormula implements IDamageFormula {
 	}
 	
 	/**
+	 * 判断是否会导致技能发动失败
+	 * @return
+	 */
+	protected boolean judgeValid() {
+		return true;
+	}
+	
+	/**
 	 * 判定释放技能的属性并写入释放数据包<br>
 	 * 该方法的结果是释放数据包中的属性（type）被写入
 	 */
@@ -279,6 +289,17 @@ public class DefaultDamageFormula implements IDamageFormula {
 		Aperitif ap = pack.getEffects().newAperitif(Aperitif.CODE_BROADCAST);
 		ap.append("type", "immune").append("-atseat", pack.getAtStaff().getSeat())
 			.append("-dfseat", pack.getDfStaff(index).getSeat());
+		pack.getEffects().startCode(ap);
+	}
+	
+	/**
+	 * 攻击失败，发出开胃酒消息
+	 * @param index
+	 */
+	protected void sendInvalid() {
+		Aperitif ap = pack.getEffects().newAperitif(Aperitif.CODE_BROADCAST);
+		ap.append("type", "invalid").append("-atseat", pack.getAtStaff().getSeat())
+			.append("-skill", pack.getSkill().getId());
 		pack.getEffects().startCode(ap);
 	}
 	
@@ -491,9 +512,26 @@ public class DefaultDamageFormula implements IDamageFormula {
 	 * 附加状态 / 附加效果实现
 	 */
 	protected void executeAddition() {
+		this.executeAddition(false);
+	}
+	
+	/**
+	 * 附加状态 / 附加效果实现<br>
+	 * 判断附加状态时, 忽略是否命中的参数, 一样必须执行
+	 * @param ignoreHit
+	 *   在判断附加状态时是否忽略是否命中的参数
+	 * @since v0.2.2
+	 */
+	protected void executeAddition(boolean ignoreHit) {
 		IAdditionFormula[] formulas = pack.getAdditionFormulas();
 		for (int i = 0; i < formulas.length; i++) {
-			formulas[i].addition(pack);
+			IAdditionFormula f = formulas[i];
+			if (ignoreHit) {
+				JsonValue v = new JsonValue(JsonType.ObjectType);
+				v.add("ignoreHit", new JsonValue(true));
+				f.set(v);
+			}
+			f.addition(pack);
 		}
 	}
 	

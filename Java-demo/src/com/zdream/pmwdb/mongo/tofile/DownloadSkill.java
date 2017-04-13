@@ -45,7 +45,14 @@ public class DownloadSkill {
 			EJson ej = new EJson();
 			ej.id = id;
 			ej.value = v;
-			list[id / 50].add(ej);
+			int idx = id / 50;
+			
+			// new condition
+			if (idx != 0) {
+				continue;
+			}
+			
+			list[idx].add(ej);
 		}
 		
 		// sort

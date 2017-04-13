@@ -230,6 +230,14 @@ public class ExistState extends ParticipantState implements IPokemonDataType {
 			return interceptor.nextState();
 		}
 		
+		// 如果是删除状态, 则不处理 v0.2.2
+		Object rm = value.get("remove");
+		if (rm != null) {
+			if ((boolean) rm) {
+				return interceptor.nextState();
+			}
+		}
+		
 		// 1 类
 		if ("abnormal".equals(value.get("state-category"))) {
 			if (!value.hasFilter("type") && handleAbnormal(value, pf)) {

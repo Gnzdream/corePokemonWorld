@@ -63,17 +63,17 @@ public class ReplaceEvent extends APreviousEvent {
 	@Override
 	public void action(BattlePlatform pf) {
 		AttendManager am = pf.getAttendManager();
-		if (replaceNo == -1) {
+		if (no == -1) {
+			pf.logPrintf(IPrintLevel.PRINT_LEVEL_DEBUG, 
+					"ReplaceEvent.action(): 怪兽交换上场 %s(no=%d) 到位置 %d",
+					am.getAttendant(replaceNo).getNickname(), replaceNo, seat);
+			pf.getEffectManage().enteranceAct(seat, replaceNo);
+		} else {
 			pf.logPrintf(IPrintLevel.PRINT_LEVEL_DEBUG, 
 					"ReplaceEvent.action(): 怪兽交换上场 %s(no=%d) 下场 %s(no=%d, seat=%d)",
 					am.getAttendant(replaceNo).getNickname(), replaceNo,
 					am.getAttendant(no).getNickname(), no, am.seatForNo(no));
 			pf.getEffectManage().exchangeAct(no, replaceNo);
-		} else {
-			pf.logPrintf(IPrintLevel.PRINT_LEVEL_DEBUG, 
-					"ReplaceEvent.action(): 怪兽交换上场 %s(no=%d) 到位置 %d",
-					am.getAttendant(replaceNo).getNickname(), replaceNo, seat);
-			pf.getEffectManage().enteranceAct(seat, replaceNo);
 		}
 	}
 

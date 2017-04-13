@@ -20,8 +20,9 @@ import com.zdream.pmw.util.json.JsonValue;
  * <p>该状态完成的动作有:
  * <li>屏蔽对该怪兽的行动请求
  * <li>自动进行该怪兽的行动提交
- * <li>TODO 屏蔽该怪兽在除了第一回合时的 pp 值因自己释放技能而减少
- * <li>TODO 指定回合结束后进行回合数计数和自毁</li></p>
+ * <li>指定回合结束后进行回合数计数和自毁
+ * <li>如果出现有一次怪兽因为某种原因不能行动, 状态自动销毁</li></p>
+ * <li>如果出现有一次怪兽因为混乱攻击自己, 状态自动销毁</li></p>
  * 
  * @since v0.2.2
  *   [2017-04-07]
@@ -87,6 +88,8 @@ public class PeriodState extends ParticipantState implements IDuration {
 		case CODE_REQUEST_MOVE:
 		case CODE_REQUEST_COMMIT:
 		case CODE_ROUND_END:
+		case CODE_JUDGE_MOVEABLE:
+		case CODE_CONFIRM_SKILL: // 用于检查混乱
 			return true;
 		}
 		return false;
@@ -101,6 +104,10 @@ public class PeriodState extends ParticipantState implements IDuration {
 			return exeRequestCommit(value, interceptor, pf);
 		case CODE_ROUND_END:
 			return roundEnd(value, interceptor, pf);
+		case CODE_JUDGE_MOVEABLE:
+			return judgeMoveable(value, interceptor, pf);
+		case CODE_CONFIRM_SKILL:
+			return confirmSkill(value, interceptor, pf);
 
 		default:
 			break;
@@ -111,6 +118,9 @@ public class PeriodState extends ParticipantState implements IDuration {
 
 	@Override
 	public int priority(String msg) {
+		if (CODE_JUDGE_MOVEABLE.equals(msg) || CODE_CONFIRM_SKILL.equals(msg)) {
+			return -5;
+		}
 		return 0;
 	}
 	
@@ -212,6 +222,27 @@ public class PeriodState extends ParticipantState implements IDuration {
 		// 如果蓄力状态结束了, 应该去掉该状态
 		if (round <= 0) {
 			pf.getEffectManage().sendRemoveParticipantStateMessage(name(), getNo());
+		}
+		return interceptor.nextState();
+	}
+
+	private String judgeMoveable(Aperitif value, IStateInterceptable interceptor, BattlePlatform pf) {
+		boolean result = (boolean) value.get("result");
+		if (result == false) {
+			// 销毁该状态
+			pf.getEffectManage().sendRemoveParticipantStateMessage(name(), getNo());
+		}
+		return interceptor.nextState();
+	}
+
+	private String confirmSkill(Aperitif value, IStateInterceptable interceptor, BattlePlatform pf) {
+		Object o = value.get("skillID");
+		if (o != null) {
+			if ((short) o == 0) {
+				// 说明触发了混乱攻击自己
+				// 销毁该状态
+				pf.getEffectManage().sendRemoveParticipantStateMessage(name(), getNo());
+			}
 		}
 		return interceptor.nextState();
 	}

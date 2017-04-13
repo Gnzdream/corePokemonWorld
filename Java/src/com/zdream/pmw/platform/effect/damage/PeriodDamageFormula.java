@@ -1,14 +1,15 @@
 package com.zdream.pmw.platform.effect.damage;
 
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
 import com.zdream.pmw.platform.control.IPrintLevel;
 import com.zdream.pmw.platform.effect.EffectManage;
 import com.zdream.pmw.util.json.JsonValue;
+import com.zdream.pmw.util.json.JsonValue.JsonType;
+import com.zdream.pmw.util.random.RanValue;
 
 /**
  * <p>蓄力、反作用类型等, 完全释放技能需要多于 1 个回合的技能</p>
@@ -34,13 +35,28 @@ public class PeriodDamageFormula extends DefaultDamageFormula {
 	/**
 	 * <p>像旋风刀一样一回合不做任何动作, 二回合攻击的是 charge</p>
 	 * <p>默认值</p>
+	 * <p>参数值 "c"</p>
 	 */
 	public static final int MODE_CHARGE = 0;
 	
 	/**
+	 * <p>像大闹一番技能 (暴走) 一样, 2 至 3 回合连续攻击,
+	 * 最后一轮攻击结束后自己混乱</p>
+	 * <p>参数值 "t"</p>
+	 */
+	public static final int MODE_THRASH = 1;
+	
+	/**
+	 * <p>像破坏光线技能一样, 第一回合攻击,
+	 * 第二回合将不能行动</p>
+	 * <p>参数值 "hb"</p>
+	 */
+	public static final int MODE_HYPER_BEAM = 2;
+	
+	/**
 	 * 给予以后回合的公式设置参数, JsonList
 	 */
-	private JsonValue formulaPatam;
+	private JsonValue formulaParam;
 	
 	public int getMode() {
 		return mode;
@@ -52,10 +68,10 @@ public class PeriodDamageFormula extends DefaultDamageFormula {
 	 * 请不要修改 {@code formulaPatam}
 	 */
 	public JsonValue getFormulaPatam() {
-		return formulaPatam;
+		return formulaParam;
 	}
 	public void setFormulaPatam(JsonValue formulaPatam) {
-		this.formulaPatam = formulaPatam;
+		this.formulaParam = formulaPatam;
 	}
 	
 	/* ************
@@ -71,7 +87,13 @@ public class PeriodDamageFormula extends DefaultDamageFormula {
 	protected void eachRound() {
 		switch (mode) {
 		case MODE_CHARGE:
-			// do nothing
+			executeAddition();
+			break;
+		case MODE_THRASH:
+			super.eachRound();
+			break;
+		case MODE_HYPER_BEAM:
+			super.eachRound();
 			break;
 
 		default:
@@ -98,8 +120,14 @@ public class PeriodDamageFormula extends DefaultDamageFormula {
 				case "m": { // mode
 					String mode = v.getString();
 					switch (mode) {
-					case "charge":
+					case "c":
 						this.mode = MODE_CHARGE;
+						break;
+					case "t":
+						this.mode = MODE_THRASH;
+						break;
+					case "hb":
+						this.mode = MODE_HYPER_BEAM;
 						break;
 
 					default:
@@ -107,7 +135,7 @@ public class PeriodDamageFormula extends DefaultDamageFormula {
 					} 
 				} break;
 				case "p": {
-					this.formulaPatam = v;
+					this.formulaParam = v;
 				} break;
 				default:
 					break;
@@ -121,7 +149,7 @@ public class PeriodDamageFormula extends DefaultDamageFormula {
 	@Override
 	public void restore() {
 		mode = MODE_CHARGE;
-		formulaPatam = null;
+		formulaParam = null;
 	}
 	
 	/* ************
@@ -129,9 +157,28 @@ public class PeriodDamageFormula extends DefaultDamageFormula {
 	 ************ */
 	
 	private void createState() {
-		Map<String, Object> v = new HashMap<>();
-		v.put("-param", this.formulaPatam);
-		v.put("-target", pack.getOriginTarget()); // byte
+		JsonValue param = null;
+		if (mode == MODE_THRASH) {
+			int round = RanValue.random(2, 4);
+			if (round == 2) {
+				param = new JsonValue(JsonType.ArrayType);
+				List<JsonValue> l = param.getArray();
+				l.add(formulaParam.getArray().get(1));
+			} else { // 3
+				param = new JsonValue(JsonType.ArrayType);
+				List<JsonValue> l = param.getArray();
+				l.add(formulaParam.getArray().get(0));
+				l.add(formulaParam.getArray().get(1));
+			}
+		}
+		
+		if (param == null) {
+			param = this.formulaParam;
+		}
+		
+		JsonValue v = new JsonValue(JsonType.ObjectType);
+		v.add("-param", param);
+		v.add("-target", new JsonValue(pack.getOriginTarget())); // byte
 		
 		byte atseat = pack.getAtStaff().getSeat();
 		pack.getEffects().sendForceStateMessage("period", atseat, atseat, pack.getSkill().getId(), v);

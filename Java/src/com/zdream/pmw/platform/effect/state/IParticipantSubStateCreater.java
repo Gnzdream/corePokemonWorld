@@ -1,6 +1,9 @@
 package com.zdream.pmw.platform.effect.state;
 
 import com.zdream.pmw.platform.attend.AttendManager;
+import com.zdream.pmw.platform.attend.IState;
+import com.zdream.pmw.platform.attend.IStateInterceptable;
+import com.zdream.pmw.platform.effect.Aperitif;
 import com.zdream.pmw.platform.prototype.BattlePlatform;
 
 /**
@@ -11,7 +14,7 @@ import com.zdream.pmw.platform.prototype.BattlePlatform;
  * @date 2017年3月21日
  * @version v0.2.1
  */
-public interface IParticipantSubStateCreater extends ISubStateCreater {
+public interface IParticipantSubStateCreater extends ISubStateCreater, IState {
 	
 	/**
 	 * 说明这个状态将施加给谁
@@ -20,6 +23,26 @@ public interface IParticipantSubStateCreater extends ISubStateCreater {
 	 *   怪兽的 no 值
 	 */
 	public byte toWhom(ASubState state);
+	
+	@Override
+	default boolean canExecute(String msg) {
+		switch (msg) {
+		case IState.CODE_EXEUNT_EXCHANGE:
+		case IState.CODE_EXEUNT_FAINT:
+			return true;
+		default:
+			return false;
+		}
+	}
+	
+	@Override
+	default String execute(Aperitif value, IStateInterceptable interceptor, BattlePlatform pf) {
+		String head = value.getHead();
+		if (head.equals(IState.CODE_EXEUNT_EXCHANGE) || head.equals(IState.CODE_EXEUNT_FAINT)) {
+			handleDestroySubStates(pf);
+		}
+		return interceptor.nextState();
+	}
 	
 	@Override
 	default void handleCreateSubStates(BattlePlatform pf) {

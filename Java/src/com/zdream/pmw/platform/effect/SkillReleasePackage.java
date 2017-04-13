@@ -124,6 +124,19 @@ public class SkillReleasePackage {
 	public Participant getDfStaff(int index) {
 		return dfStaffs[index];
 	}
+	
+	/**
+	 * 获取所有防御方座位号组成的数组
+	 * @return
+	 * @since v0.2.2
+	 */
+	public byte[] dfSeats() {
+		byte[] bs = new byte[dfStaffs.length];
+		for (int i = 0; i < bs.length; i++) {
+			bs[i] = dfStaffs[i].getSeat();
+		}
+		return bs;
+	}
 
 	public void setDfStaff(Participant dfStaff, int index) {
 		this.dfStaffs[index] = dfStaff;

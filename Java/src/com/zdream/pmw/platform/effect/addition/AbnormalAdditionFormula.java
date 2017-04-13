@@ -41,23 +41,6 @@ public class AbnormalAdditionFormula extends AAdditionFormula {
 	 */
 	private int rate;
 	
-	/**
-	 * 向哪方进行状态的施加<br>
-	 * 是攻击方还是防御方<br>
-	 * 参数 1 为攻击方，0 为防御方（默认）<br>
-	 */
-	private int side;
-	
-	/**
-	 * 向攻击方施加状态
-	 */
-	public static final int SIDE_ATSTAFF = 1;
-	
-	/**
-	 * 向防御方施加状态
-	 */
-	public static final int SIDE_DFSTAFF = 0;
-	
 	public EPokemonAbnormal getAbnormal() {
 		return abnormal;
 	}
@@ -70,19 +53,8 @@ public class AbnormalAdditionFormula extends AAdditionFormula {
 	public void setRate(int rate) {
 		this.rate = rate;
 	}
-	public int getSide() {
-		return side;
-	}
-	public void setSide(int side) {
-		this.side = side;
-	}
 
 	// v0.2.2
-	/**
-	 * 施加效果的目标<br>
-	 * 缓存<br>
-	 */
-	byte[] seats;
 	/**
 	 * 对应上面的 seats, 每个目标是否触发
 	 */
@@ -99,7 +71,6 @@ public class AbnormalAdditionFormula extends AAdditionFormula {
 	
 	@Override
 	protected void onFinish() {
-		seats = null;
 		forces = null;
 	}
 
@@ -111,6 +82,7 @@ public class AbnormalAdditionFormula extends AAdditionFormula {
 	 * tg: 施加对象<br>
 	 */
 	public void set(JsonValue value) { // 暂时没定格式
+		super.set(value);
 		Set<Entry<String, JsonValue>> set = value.getMap().entrySet();
 
 		String k;
@@ -128,17 +100,6 @@ public class AbnormalAdditionFormula extends AAdditionFormula {
 				case "i": // items
 					setAbnormal(EPokemonAbnormal.parseEnum(v.getString()));
 					break;
-				case "tg": { // target
-					String param = v.getString();
-					if ("e".equals(param)) {
-						setSide(SIDE_DFSTAFF);
-					} else if ("s".equals(param)) {
-						setSide(SIDE_ATSTAFF);
-					} else {
-						em.logPrintf(IPrintLevel.PRINT_LEVEL_WARN, 
-								"AbnormalAdditionF.set(1): 施加对象 %s 不符合要求", param);
-					}
-				}break;
 				case "r": // rate
 					setRate((Integer) v.getValue());
 					break;
@@ -157,7 +118,6 @@ public class AbnormalAdditionFormula extends AAdditionFormula {
 	@Override
 	public void restore() {
 		rate = 100;
-		side = SIDE_DFSTAFF;
 	}
 	
 	/* ************
@@ -170,23 +130,27 @@ public class AbnormalAdditionFormula extends AAdditionFormula {
 	 *   如果所有目标都不能发动, 为 false
 	 */
 	protected boolean canTrigger() {
-		// 计算附加状态真实释放几率
+		// 需要计算附加状态真实释放几率
+		
+		if (seatLen == 0) {
+			return false;
+		}
+		
 		if (side == SIDE_ATSTAFF) {
 			if (canTriggerForSelf()) {
-				this.seats = new byte[]{pack.getAtStaff().getSeat()};
 				this.forces = new boolean[]{true};
 				return true;
 			}
 		} else if (side == SIDE_DFSTAFF) {
-			this.seats = targetSeats();
-			this.forces = new boolean[seats.length];
+			this.forces = new boolean[seatLen];
 		} else {
 			throw new IllegalArgumentException("side: " + side + " is illegal.");
 		}
 		
 		boolean exist = false;
-		for (int i = 0; i < this.seats.length; i++) {
-			if (canTriggerForEnemy(i)) {
+		byte[] bs = pack.dfSeats();
+		for (int i = 0; i < this.seatLen; i++) {
+			if (canTriggerForEnemy(i, bs)) {
 				exist = true;
 				this.forces[i] = true;
 			}
@@ -199,19 +163,13 @@ public class AbnormalAdditionFormula extends AAdditionFormula {
 	 * @return
 	 */
 	private boolean canTriggerForSelf() {
-		// 如果没有攻击到人
-		byte[] dfseats = targetSeats();
-		if (dfseats.length == 0) {
-			return false;
-		}
-		
+		final byte[] dfseats = pack.dfSeats();
 		final byte atseat = pack.getAtStaff().getSeat();
-		byte[] scans = new byte[dfseats.length + 1];
-		scans[0] = atseat;
-		System.arraycopy(dfseats, 0, scans, 1, dfseats.length);
 		
-		Aperitif value = pack.getEffects().newAperitif(Aperitif.CODE_CALC_ADDITION_RATE, scans);
-		value.append("type", "abnormal")
+		Aperitif ap = pack.getEffects().newAperitif(Aperitif.CODE_CALC_ADDITION_RATE, dfseats);
+		ap.putScanSeats(atseat);
+		
+		ap.append("type", "abnormal")
 			.append("dfseats", dfseats)
 			.append("atseat", atseat)
 			.append("target", atseat)
@@ -219,11 +177,11 @@ public class AbnormalAdditionFormula extends AAdditionFormula {
 			.append("rate", rate)
 			.append("result", 0)
 			.append("state-category", "abnormal");
-		pack.getEffects().startCode(value);
+		pack.getEffects().startCode(ap);
 		
-		int result = (Integer) value.get("result");
+		int result = (Integer) ap.get("result");
 		if (result == 0) {
-			int instanceRate = (int) value.get("rate");
+			int instanceRate = (int) ap.get("rate");
 			return RanValue.isSmaller(instanceRate);
 		}
 		
@@ -234,26 +192,29 @@ public class AbnormalAdditionFormula extends AAdditionFormula {
 	 * 施加异常状态到防御方身上
 	 * @param i
 	 *   在攻击到的对象列表中的索引, 指向 <code>this.seats</code>
+	 * @param dfseats
+	 *   防御方座位组成的数组, 作为参数因为每次调用该方法时,
+	 *   生成的 dfseats 都一样, 因此作为传入数据可以减少多次重复的方法调用
 	 * @return
 	 */
-	private boolean canTriggerForEnemy(int i) {
+	private boolean canTriggerForEnemy(int i, byte[] dfseats) {
 		byte target = seats[i];
 		byte atseat = pack.getAtStaff().getSeat();
 		
-		Aperitif value = pack.getEffects().newAperitif(Aperitif.CODE_CALC_ADDITION_RATE, atseat, target);
-		value.append("type", "abnormal")
-			.append("dfseats", this.seats)
+		Aperitif ap = pack.getEffects().newAperitif(Aperitif.CODE_CALC_ADDITION_RATE, atseat, target);
+		ap.append("type", "abnormal")
+			.append("dfseats", dfseats)
 			.append("atseat", atseat)
 			.append("target", target)
 			.append("abnormal", AbnormalMethods.toBytes(abnormal)) // 不含参数
 			.append("rate", rate)
 			.append("result", 0)
 			.append("state-category", "abnormal");
-		pack.getEffects().startCode(value);
+		pack.getEffects().startCode(ap);
 		
-		int result = (Integer) value.get("result");
+		int result = (Integer) ap.get("result");
 		if (result == 0) {
-			int instanceRate = (int) value.get("rate");
+			int instanceRate = (int) ap.get("rate");
 			return RanValue.isSmaller(instanceRate);
 		}
 		
@@ -264,10 +225,8 @@ public class AbnormalAdditionFormula extends AAdditionFormula {
 	 * 施加状态
 	 */
 	protected void force() {
-		final int length = seats.length;
-		
 		byte atseat = pack.getAtStaff().getSeat();
-		for (int i = 0; i < length; i++) {
+		for (int i = 0; i < seatLen; i++) {
 			if (forces[i]) {
 				pack.getEffects().forceAbnormal(atseat, seats[i],
 						AbnormalMethods.toBytes(abnormal));

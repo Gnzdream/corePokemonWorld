@@ -42,7 +42,7 @@ public class BsonParser {
 		}
 		
 		if (obj instanceof Integer || obj instanceof Double ||
-				obj instanceof String) {
+				obj instanceof String || obj instanceof Boolean) {
 			return parseValue(obj);
 		} else if (obj instanceof ObjectId) {
 			return parseValue(((ObjectId) obj).toHexString());

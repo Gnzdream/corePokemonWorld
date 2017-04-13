@@ -345,7 +345,7 @@ public class EffectManage implements IPlatformComponent {
 	 *   #{@link com.zdream.pmw.core.tools.AbnormalMethods#toBytes(EPokemonAbnormal, int)}
 	 */
 	public void forceAbnormal(byte atseat, byte dfseat, byte abnormal) {
-		box.forceAbnormal(atseat, dfseat, abnormal);
+		act.forceAbnormal(atseat, dfseat, abnormal);
 	}
 	
 	/**
@@ -355,7 +355,7 @@ public class EffectManage implements IPlatformComponent {
 	 *   #{@link com.zdream.pmw.core.tools.AbnormalMethods#toBytes(EPokemonAbnormal, int)}
 	 */
 	public void forceAbnormal(byte seat, byte abnormal) {
-		box.forceAbnormal(seat, abnormal);
+		act.forceAbnormal(seat, abnormal);
 	}
 
 	/**
@@ -369,18 +369,7 @@ public class EffectManage implements IPlatformComponent {
 
 	/**
 	 * <p>发送施加状态拦截前消息, 控制层</p>
-	 * <p>该方法为攻击方释放技能后, 为防御方施加状态.</p>
-	 * @param args
-	 *   原本存放于 skill 中的状态启动需要的静态数据
-	 * @param pack
-	 * @since v0.2.1
-	 */
-	public void sendForceStateMessage(JsonValue args, SkillReleasePackage pack) {
-		stateBuilder.sendForceStateMessage(args, pack);
-	}
-
-	/**
-	 * <p>发送施加状态拦截前消息, 控制层</p>
+	 * <p>注: 原本有将 {@code SkillReleasePackage} 作为参数的重载方法已经被弃用.</p>
 	 * @see StateBuilder#sendForceStateMessage(String, byte, byte, short, Map)
 	 * @since v0.2.2
 	 */
@@ -388,7 +377,7 @@ public class EffectManage implements IPlatformComponent {
 			byte atseat,
 			byte dfseat,
 			short skillID,
-			Map<String, Object> param) {
+			JsonValue param) {
 		stateBuilder.sendForceStateMessage(stateName, atseat, dfseat, skillID, param);
 	}
 

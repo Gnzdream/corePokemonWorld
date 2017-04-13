@@ -16,33 +16,20 @@ import com.zdream.pmw.util.json.JsonValue;
  * <li>吸血攻击时会回复自己的生命（含自我再生等回复技能）
  * <li>反作用力攻击时, 自己会受到伤害</li></p>
  * 
+ * <p><b>v0.2.2</b><br>
+ * 添加模式字段, 使该类能够完成类似飞踢、飞膝踢等在未命中时才触发的附加效果</p>
+ * 
  * @since v0.2.1
+ *   [2017-03-18]
  * @author Zdream
- * @date 2017年3月18日
- * @version v0.2.1
+ * @version v0.2.2
+ *   [2017-04-13]
  */
 public class AbsorbAdditionFormula extends AAdditionFormula {
 	
 	/* ************
 	 *	  属性    *
 	 ************ */
-	
-	/**
-	 * 向哪方进行操作<br>
-	 * <li>{@link #SIDE_ATSTAFF} 为攻击方（默认）
-	 * <li>{@link #SIDE_DFSTAFF} 为防御方</li>
-	 */
-	private int side;
-	
-	/**
-	 * 向攻击方操作
-	 */
-	public static final int SIDE_ATSTAFF = 1;
-	
-	/**
-	 * 向防御方操作
-	 */
-	public static final int SIDE_DFSTAFF = 0;
 	
 	/**
 	 * 参考方<br>
@@ -66,13 +53,23 @@ public class AbsorbAdditionFormula extends AAdditionFormula {
 	 * <p>吸血为正数, 受伤为负数</p>
 	 */
 	private float rate;
-
-	public int getSide() {
-		return side;
-	}
-	public void setSide(int side) {
-		this.side = side;
-	}
+	
+	/**
+	 * 模式
+	 */
+	private int mode;
+	
+	/**
+	 * 默认模式  参数: "d"
+	 */
+	public static final int MODE_DEFAULT = 0;
+	
+	/**
+	 * 飞踢模式 (Jump Kick)  参数: "j"
+	 * <p>在该模式下, 参考方将设置为攻击方的生命上限, 目标为攻击方, 并且无视修改</p>
+	 */
+	public static final int MODE_JUMP_KICK = 1;
+	
 	public int getReference() {
 		return reference;
 	}
@@ -85,10 +82,24 @@ public class AbsorbAdditionFormula extends AAdditionFormula {
 	public void setRate(float rate) {
 		this.rate = rate;
 	}
+	public int getMode() {
+		return mode;
+	}
+	public void setMode(int mode) {
+		this.mode = mode;
+	}
 	
 	/* ************
 	 *	实现方法  *
 	 ************ */
+	
+	@Override
+	protected void onStart() {
+		if (mode == MODE_JUMP_KICK) {
+			reference = REFERENCE_LIFE;
+			side = SIDE_ATSTAFF;
+		}
+	}
 
 	@Override
 	public String name() {
@@ -97,6 +108,15 @@ public class AbsorbAdditionFormula extends AAdditionFormula {
 	
 	@Override
 	protected boolean canTrigger() {
+		if (mode == MODE_JUMP_KICK) {
+			if (seatLen > 0) {
+				// 飞踢的反伤效果将不会触发
+				return false;
+			} else {
+				// 触发飞踢的反伤效果
+				return true;
+			}
+		}
 		return true;
 	}
 	
@@ -107,7 +127,7 @@ public class AbsorbAdditionFormula extends AAdditionFormula {
 		em.logPrintf(EffectManage.PRINT_LEVEL_VERBOSE, 
 				"AbsorbAdditionF.addition(): %s(seat=%d) 发动 %s, 数值 %f",
 				pack.getAtStaff().getNickname(), pack.getAtStaff().getSeat(),
-				(refer > 0) ? "吸血":"反作用", value);
+				(rate > 0) ? "吸血":"反作用", value);
 		
 		if (side == SIDE_ATSTAFF) {
 			em.logPrintf(EffectManage.PRINT_LEVEL_WARN, 
@@ -115,7 +135,7 @@ public class AbsorbAdditionFormula extends AAdditionFormula {
 		}
 		
 		byte atseat = pack.getAtStaff().getSeat();
-		byte[] dfseats = targetSeats();
+		byte[] dfseats = pack.dfSeats();
 		if (dfseats.length == 0) {
 			em.logPrintf(EffectManage.PRINT_LEVEL_VERBOSE, 
 					"AbsorbAdditionF.addition(): 吸血、反伤技能没有击中任何对象");
@@ -128,7 +148,7 @@ public class AbsorbAdditionFormula extends AAdditionFormula {
 		
 		Aperitif ap = em.newAperitif(Aperitif.CODE_ADDITION_SETTLE, scans);
 		ap.append("atseat", atseat).append("dfseat", dfseats).append("side", side)
-			.append("category", (refer > 0) ? "absorb" : "reaction")
+			.append("category", (rate > 0) ? "absorb" : "reaction")
 			.append("reference", reference).append("refer", refer).append("target", atseat)
 			.append("rate", rate).append("value", value);
 		em.startCode(ap);
@@ -136,6 +156,7 @@ public class AbsorbAdditionFormula extends AAdditionFormula {
 	
 	@Override
 	public void set(JsonValue args) {
+		super.set(args);
 		Set<Entry<String, JsonValue>> set = args.getMap().entrySet();
 
 		String k;
@@ -148,17 +169,6 @@ public class AbsorbAdditionFormula extends AAdditionFormula {
 			
 			try {
 				switch (k) {
-				case "tg": { // target
-					String param = v.getString();
-					if ("e".equals(param)) {
-						setSide(SIDE_DFSTAFF);
-					} else if ("s".equals(param)) {
-						setSide(SIDE_ATSTAFF);
-					} else {
-						em.logPrintf(IPrintLevel.PRINT_LEVEL_WARN, 
-								"AbnormalAdditionF.set(1): 施加对象 %s 不符合要求", param);
-					}
-				} break;
 				case "rf": { // reference
 					String param = v.getString();
 					if ("d".equals(param)) {
@@ -173,6 +183,14 @@ public class AbsorbAdditionFormula extends AAdditionFormula {
 				case "r": { // rate
 					setRate(((Number) v.getValue()).floatValue());
 				} break;
+				case "m": { // mode
+					String param = v.getString();
+					if ("j".equals(param)) {
+						setMode(MODE_JUMP_KICK);
+					} else {
+						setMode(MODE_DEFAULT);
+					}
+				} break;
 
 				default:
 					break;
@@ -186,9 +204,11 @@ public class AbsorbAdditionFormula extends AAdditionFormula {
 	
 	@Override
 	public void restore() {
+		super.restore();
 		side = SIDE_ATSTAFF;
 		reference = REFERENCE_DAMAGE;
 		rate = 0;
+		mode = MODE_DEFAULT;
 	}
 	
 	/* ************

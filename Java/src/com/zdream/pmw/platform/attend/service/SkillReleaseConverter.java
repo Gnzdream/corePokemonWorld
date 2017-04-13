@@ -112,7 +112,7 @@ public class SkillReleaseConverter {
 		
 		Map<String, JsonValue> map = data.getMap();
 		switch (map.get("t").getString()) {
-		case "a": case "d": // addition +
+		case "a": case "d": case "m": case "w": case "u": // addition +
 			release.addAddition(data);
 			break;
 		case "c": { // crit

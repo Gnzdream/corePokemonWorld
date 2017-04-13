@@ -65,8 +65,8 @@ public class SkillFormulaLoader {
 	public static final String
 			TAG_MOVABLE = "m.",
 			TAG_DAMAGE = "d.",
-			TAG_ACCURACY = "c.",
-			TAG_POWER = "p.",
+			TAG_ACCURACY = "u.",
+			TAG_POWER = "w.",
 			TAG_ADDITION = "a.";
 	
 	/* ************

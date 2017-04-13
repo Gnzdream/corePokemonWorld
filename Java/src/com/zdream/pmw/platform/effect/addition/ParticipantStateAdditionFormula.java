@@ -9,12 +9,16 @@ import com.zdream.pmw.util.random.RanValue;
 
 /**
  * 添加状态判定实现类<br>
- * 向我方或敌方施加某个座位状态<br>
+ * 向我方或敌方施加或删除某个座位状态<br>
+ * 
+ * <p><b>v0.2.2</b><br>
+ * 该类添加了删除状态的功能</p>
  * 
  * @since v0.2.1
+ *   [2017-03-02]
  * @author Zdream
- * @date 2017年3月2日
- * @version v0.2.1
+ * @version v0.2.2
+ *   [2017-04-13]
  */
 public class ParticipantStateAdditionFormula extends AAdditionFormula {
 	
@@ -34,27 +38,17 @@ public class ParticipantStateAdditionFormula extends AAdditionFormula {
 	private String stateInfo;
 	
 	/**
-	 * 向哪方进行状态的施加<br>
-	 * 是攻击方还是防御方<br>
-	 * 参数 1 为攻击方，0 为防御方（默认）<br>
-	 */
-	private int side;
-	
-	/**
 	 * 从技能原始数据 (数据库中) 传来的技能参数数据<br>
-	 * 里面包含了需要生成状态的构造所需数据<br>
+	 * 里面包含了需要生成状态的构造所需数据
+	 * 或能够说明需要删除的状态的数据<br>
 	 */
 	private JsonValue value;
 	
 	/**
-	 * 向攻击方施加状态
+	 * 是否为删除状态
+	 * @since v0.2.2
 	 */
-	public static final int SIDE_ATSTAFF = 1;
-	
-	/**
-	 * 向防御方施加状态
-	 */
-	public static final int SIDE_DFSTAFF = 0;
+	private boolean remove;
 	
 	public int getRate() {
 		return rate;
@@ -68,19 +62,22 @@ public class ParticipantStateAdditionFormula extends AAdditionFormula {
 	public void setStateInfo(String stateInfo) {
 		this.stateInfo = stateInfo;
 	}
-	public void setSide(int side) {
-		this.side = side;
+	/**
+	 * 询问该类是否为删除状态的附加公式
+	 * @since v0.2.2
+	 */
+	public boolean isRemove() {
+		return remove;
 	}
-	public int getSide() {
-		return side;
+	/**
+	 * 设置该类是否为删除状态的附加公式
+	 * @since v0.2.2
+	 */
+	public void setRemove(boolean remove) {
+		this.remove = remove;
 	}
 	
 	// v0.2.2
-	/**
-	 * 施加效果的目标<br>
-	 * 缓存<br>
-	 */
-	byte[] seats;
 	/**
 	 * 对应上面的 seats, 每个目标是否触发
 	 */
@@ -97,12 +94,13 @@ public class ParticipantStateAdditionFormula extends AAdditionFormula {
 	
 	@Override
 	protected void onFinish() {
-		seats = null;
 		forces = null;
+		remove = false;
 	}
 	
 	@Override
 	public void set(JsonValue args) {
+		super.set(args);
 		/* {
 		 *  "n":"a.state",
 		 *  "t":"a",
@@ -111,16 +109,8 @@ public class ParticipantStateAdditionFormula extends AAdditionFormula {
 		 *  "r":100,
 		 * },*/
 		Map<String, JsonValue> map = args.getMap();
-		// target
-		JsonValue v = map.get("tg");
-		if (v != null) {
-			String str = v.getString();
-			if ("s".equals(str)) {
-				side = SIDE_ATSTAFF;
-			}
-		}
 		// state information, is needed
-		v = map.get("v");
+		JsonValue v = map.get("v");
 		if (v != null) {
 			stateInfo = v.getString();
 		}
@@ -128,6 +118,11 @@ public class ParticipantStateAdditionFormula extends AAdditionFormula {
 		v = map.get("r");
 		if (v != null) {
 			rate = (Integer) v.getValue();
+		}
+		// remove
+		v = map.get("rm");
+		if (v != null) {
+			remove = (Boolean) v.getValue();
 		}
 		
 		this.value = args;
@@ -137,8 +132,8 @@ public class ParticipantStateAdditionFormula extends AAdditionFormula {
 	 * 如果该类进行复用时，会将其中的数据重置
 	 */
 	public void restore() {
+		super.restore();
 		rate = 100;
-		side = SIDE_DFSTAFF;
 	}
 	
 	/* ************
@@ -147,22 +142,25 @@ public class ParticipantStateAdditionFormula extends AAdditionFormula {
 	
 	protected boolean canTrigger() {
 		// 计算附加状态真实释放几率
+		if (seatLen == 0) {
+			return false;
+		}
+		
 		if (side == SIDE_ATSTAFF) {
 			if (canTriggerForSelf()) {
-				this.seats = new byte[]{pack.getAtStaff().getSeat()};
 				this.forces = new boolean[]{true};
 				return true;
 			}
 		} else if (side == SIDE_DFSTAFF) {
-			this.seats = targetSeats();
-			this.forces = new boolean[seats.length];
+			this.forces = new boolean[seatLen];
 		} else {
-			throw new IllegalArgumentException("side: " + side + " is illegal.");
+			throw new IllegalArgumentException("side: " + side + " is not done.");
 		}
 		
 		boolean exist = false;
-		for (int i = 0; i < this.seats.length; i++) {
-			if (canTriggerForEnemy(i)) {
+		byte[] bs = pack.dfSeats();
+		for (int i = 0; i < this.seatLen; i++) {
+			if (canTriggerForEnemy(i, bs)) {
 				exist = true;
 				this.forces[i] = true;
 			}
@@ -173,7 +171,7 @@ public class ParticipantStateAdditionFormula extends AAdditionFormula {
 	
 	private boolean canTriggerForSelf() {
 		// 如果没有攻击到人
-		byte[] dfseats = targetSeats();
+		byte[] dfseats = pack.dfSeats();
 		if (dfseats.length == 0) {
 			return false;
 		}
@@ -191,6 +189,11 @@ public class ParticipantStateAdditionFormula extends AAdditionFormula {
 			.append("rate", rate)
 			.append("state", stateInfo)
 			.append("result", 0);
+		
+		if (remove) {
+			value.append("remove", true);
+		}
+		
 		pack.getEffects().startCode(value);
 		
 		int result = (Integer) value.get("result");
@@ -202,16 +205,24 @@ public class ParticipantStateAdditionFormula extends AAdditionFormula {
 		return false;
 	}
 	
-	private boolean canTriggerForEnemy(int i) {
+	/**
+	 * 施加异常状态到防御方身上
+	 * @param i
+	 *   在攻击到的对象列表中的索引, 指向 <code>this.seats</code>
+	 * @param dfseats
+	 *   防御方座位组成的数组, 作为参数因为每次调用该方法时,
+	 *   生成的 dfseats 都一样, 因此作为传入数据可以减少多次重复的方法调用
+	 * @return
+	 */
+	private boolean canTriggerForEnemy(int i, byte[] dfseats) {
 		byte target = seats[i];
 		byte atseat = pack.getAtStaff().getSeat();
 		
 		Aperitif value = pack.getEffects().newAperitif(Aperitif.CODE_CALC_ADDITION_RATE, atseat, target);
 		value.append("type", "state")
-			.append("dfseats", seats)
+			.append("dfseats", dfseats)
 			.append("target", target)
 			.append("atseat", atseat)
-			.append("target", atseat)
 			.append("rate", rate)
 			.append("state", stateInfo)
 			.append("result", 0);
@@ -230,7 +241,54 @@ public class ParticipantStateAdditionFormula extends AAdditionFormula {
 	 * @param pack
 	 */
 	protected void force() {
-		em.sendForceStateMessage(this.value, pack);
+		if (remove) {
+			if (side == SIDE_ATSTAFF) {
+				em.sendRemoveParticipantStateMessage(stateInfo, pack.getAtStaff().getNo());
+			} else if (side == SIDE_DFSTAFF) {
+				if (pack.dfStaffLength() == 1) {
+					em.sendRemoveParticipantStateMessage(stateInfo, pack.getDfStaff(0).getNo());
+				} else {
+					for (int i = 0; i < forces.length; i++) {
+						if (forces[i]) {
+							em.sendRemoveParticipantStateMessage(stateInfo,
+									pack.getAttends().noForSeat(seats[i]));
+						}
+					}
+				}
+			} else {
+				for (int i = 0; i < forces.length; i++) {
+					if (forces[i]) {
+						em.sendRemoveParticipantStateMessage(stateInfo,
+								pack.getAttends().noForSeat(seats[i]));
+					}
+				}
+			}
+		} else {
+			if (side == SIDE_ATSTAFF) {
+				em.sendForceStateMessage(stateInfo, pack.getAtStaff().getSeat(),
+						pack.getAtStaff().getSeat(), pack.getSkill().getId(), value);
+			} else if (side == SIDE_DFSTAFF) {
+				if (pack.dfStaffLength() == 1) {
+					em.sendForceStateMessage(stateInfo, pack.getAtStaff().getSeat(),
+							pack.getDfStaff(0).getSeat(), pack.getSkill().getId(), value);
+				} else {
+					for (int i = 0; i < forces.length; i++) {
+						if (forces[i]) {
+							em.sendForceStateMessage(stateInfo, pack.getAtStaff().getSeat(),
+									seats[i], pack.getSkill().getId(), value);
+						}
+					}
+				}
+			} else {
+				for (int i = 0; i < forces.length; i++) {
+					if (forces[i]) {
+						em.sendForceStateMessage(stateInfo, pack.getAtStaff().getSeat(),
+								seats[i], pack.getSkill().getId(), value);
+					}
+				}
+			}
+			
+		}
 	}
 	
 	/* ************

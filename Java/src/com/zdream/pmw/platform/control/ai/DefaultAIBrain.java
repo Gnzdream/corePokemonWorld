@@ -2,6 +2,8 @@ package com.zdream.pmw.platform.control.ai;
 
 import java.util.Random;
 
+import com.zdream.pmw.platform.attend.AttendManager;
+import com.zdream.pmw.platform.attend.Attendant;
 import com.zdream.pmw.platform.attend.Participant;
 import com.zdream.pmw.platform.control.ControlBase;
 import com.zdream.pmw.platform.control.ControlManager;
@@ -73,6 +75,8 @@ public class DefaultAIBrain implements IAIRunnable {
 				String content = ctrl.getContent();
 				if (IRequestKey.VALUE_REQ_CONTENT_MOVE.equals(content)) {
 					chooseMove();
+				} else if (IRequestKey.VALUE_REQ_CONTENT_SWITCH.equals(content)) {
+					chooseSwitch();
 				} else if (IRequestKey.VALUE_REQ_CONTENT_END.equals(content)) {
 					return;
 				}
@@ -101,6 +105,29 @@ public class DefaultAIBrain implements IAIRunnable {
 				if (skills[move] != 0) {
 					ctrl.setCommand(seat, ControlBase.COMMAND_MOVES);
 					ctrl.setParam(seat, Integer.toString(move));
+					break;
+				}
+			}
+		}
+		ctrl.commit();
+	}
+	
+	private void chooseSwitch() {
+		byte[] seats = ctrl.getSeats();
+		byte team = ctrl.getTeam();
+		
+		// 下面寻找能上场的怪兽
+		AttendManager am = cm.getRoot().getAttendManager();
+		int length = am.attendantLength();
+		
+		byte no = 0;
+		for (int i = 0; i < seats.length; i++) { // i 指向 seats
+			byte seat = seats[i];
+			
+			for (; no < length; no++) {
+				Attendant at = am.getAttendant(no);
+				if (am.teamForNo(no) == team && am.seatForNo(no) == -1 && at.getHpi() > 0) {
+					ctrl.chooseReplace(seat, no);
 					break;
 				}
 			}

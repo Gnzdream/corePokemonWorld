@@ -42,6 +42,12 @@ public class DoubleDamageFormula extends DefaultDamageFormula {
 	public static final int MODE_FLOAT = 0;
 	
 	/**
+	 * <p>固定连续攻击次数</p>
+	 * <p>param 设置了连续攻击的次数</p>
+	 */
+	public static final int MODE_FIXED = 1;
+	
+	/**
 	 * 连续攻击每次产生的 pack 都放在这里
 	 */
 	SkillReleasePackage[] packs;
@@ -68,6 +74,19 @@ public class DoubleDamageFormula extends DefaultDamageFormula {
 			replacePackage(i);
 			
 			super.eachRound();
+			
+			if (i == 0) CHECK: {
+				// TODO 如果已经判定第一轮攻击免疫, 将不会再执行.
+				int length = pack.dfStaffLength();
+				for (int j = 0; j < length; j++) {
+					if (pack.getRate(j) > 0) {
+						break CHECK;
+					}
+				}
+				
+				// 攻击免疫, 终止执行
+				break;
+			}
 		}
 		
 		// 结束前的处理
@@ -93,9 +112,14 @@ public class DoubleDamageFormula extends DefaultDamageFormula {
 					case "float":
 						mode = MODE_FLOAT;
 						break;
+					case "fixed":
+						mode = MODE_FIXED;
 					default:
 						break;
 					}
+				} break;
+				case "r": { // round
+					round = (int) v.getValue();
 				} break;
 				default:
 					break;
@@ -132,6 +156,14 @@ public class DoubleDamageFormula extends DefaultDamageFormula {
 			calcFloatRound();
 			break;
 
+		case MODE_FIXED:
+			if (round == 0) {
+				throw new IllegalArgumentException(
+					"round: " + round + " 在固定连续攻击次数时是非法的");
+			} else {
+				packs = new SkillReleasePackage[round];
+			}
+			break;
 		default:
 			break;
 		}

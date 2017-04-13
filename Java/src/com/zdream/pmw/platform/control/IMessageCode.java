@@ -141,13 +141,13 @@ public interface IMessageCode {
 		CODE_CALC_TYPE_RATE = "calc-typeRate";
 	
 	/**
-	 * 计算修正率
+	 * 计算附加状态释放几率、能否触发
 	 */
 	public static final String
 		CODE_CALC_ADDITION_RATE = "calc-addition-rate";
 	
 	/**
-	 * 计算附加状态释放几率、能否触发
+	 * 计算修正率
 	 */
 	public static final String
 		CODE_CALC_CORRENT = "calc-corrent";

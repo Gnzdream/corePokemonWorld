@@ -1,6 +1,5 @@
 package com.zdream.pmw.platform.effect;
 
-import com.zdream.pmw.monster.prototype.EPokemonAbnormal;
 import com.zdream.pmw.monster.prototype.EPokemonType;
 import com.zdream.pmw.monster.prototype.IPokemonDataType;
 import com.zdream.pmw.platform.attend.AttendManager;
@@ -494,40 +493,6 @@ public class SkillReleaseBox implements IPokemonDataType {
 		pack.getEffects().startCode(value);
 		
 		return (int) value.get("result");
-	}
-	
-	/**
-	 * 施加状态 (技能施加)
-	 * @param atseat
-	 *   攻击方
-	 * @param dfseat
-	 *   防御方, 就是确定要施加状态的一方
-	 * @param abnormal
-	 *   {@link com.zdream.pmw.core.tools.AbnormalMethods#toBytes(EPokemonAbnormal, int)}
-	 */
-	public void forceAbnormal(byte atseat, byte dfseat, byte abnormal) {
-		Aperitif ap = em.newAperitif("force-abnormal", atseat, dfseat);
-		
-		ap.append("dfseat", dfseat)
-				.append("atseat", atseat)
-				.append("abnormal", abnormal)
-				.append("result", 0);
-		em.startCode(ap);
-	}
-	
-	/**
-	 * 施加状态 (系统施加)
-	 * @param pack
-	 * @param abnormal
-	 *   {@link com.zdream.pmw.core.tools.AbnormalMethods#toBytes(EPokemonAbnormal, int)}
-	 */
-	public void forceAbnormal(byte seat, byte abnormal) {
-		Aperitif value = em.newAperitif(Aperitif.CODE_FORCE_ABNORMAL, seat);
-		value.append("dfseat", seat);
-		value.append("atseat", (byte) -1);
-		value.append("abnormal", abnormal);
-		value.append("result", 0);
-		pack.getEffects().startCode(value);
 	}
 	
 	/**

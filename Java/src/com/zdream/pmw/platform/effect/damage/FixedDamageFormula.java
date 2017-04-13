@@ -4,6 +4,7 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.Map.Entry;
 
+import com.zdream.pmw.platform.attend.Participant;
 import com.zdream.pmw.platform.control.IPrintLevel;
 import com.zdream.pmw.platform.effect.EffectManage;
 import com.zdream.pmw.util.json.JsonValue;
@@ -40,6 +41,11 @@ public class FixedDamageFormula extends DefaultDamageFormula {
 	 * <p>固定伤害值技能模式, 默认值</p>
 	 */
 	public static final int MODE_FIXED_DAMAGE = 0;
+	
+	/**
+	 * <p>一击必杀技模式</p>
+	 */
+	public static final int MODE_ONE_HIT = 1;
 	
 	/**
 	 * 数值
@@ -107,6 +113,17 @@ public class FixedDamageFormula extends DefaultDamageFormula {
 		
 	}
 	
+	@Override
+	protected boolean judgeValid() {
+		switch (mode) {
+		case MODE_ONE_HIT:
+			return pack.getAtStaff().getAttendant().getLevel() >=
+				pack.getDfStaff(pack.getThiz()).getAttendant().getLevel();
+		default:
+			return true;
+		}
+	}
+	
 	protected void writeDamage(int index) {
 		// 按照 mode 来计算伤害
 		int damage = 0;
@@ -114,6 +131,10 @@ public class FixedDamageFormula extends DefaultDamageFormula {
 		switch (mode) {
 		case MODE_FIXED_DAMAGE:
 			damage = param;
+			break;
+		case MODE_ONE_HIT:
+			damage = pack.getDfStaff(pack.getThiz()).getStat(Participant.HP);
+			break;
 
 		default:
 			break;
@@ -157,6 +178,10 @@ public class FixedDamageFormula extends DefaultDamageFormula {
 					switch (mode) {
 					case "fixed":
 						this.mode = MODE_FIXED_DAMAGE;
+						break;
+					case "onehit":
+						this.mode = MODE_ONE_HIT;
+						break;
 
 					default:
 						break;
