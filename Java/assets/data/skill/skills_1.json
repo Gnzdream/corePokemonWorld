@@ -2,6 +2,7 @@
 "51":{"pp_max":30,"effect":[{"r":10,"t":"a","v":-1,"i":"SD","n":"a.ablc"}],"accuracy":100,"skill_id":51,"power":40,"title":"溶解液","type":"poison","category":"special","desc":"将强酸泼向对手进行攻击。有时会降低对手的特防。"},
 "52":{"pp_max":25,"effect":[{"r":10,"t":"a","i":"BURN","n":"a.abn"}],"accuracy":100,"skill_id":52,"power":40,"title":"火花","type":"fire","category":"special","desc":"向对手发射小型火焰进行攻击。有时会让对手陷入灼伤状态。"},
 "53":{"pp_max":15,"effect":[{"r":10,"t":"a","i":"BURN","n":"a.abn"}],"accuracy":100,"skill_id":53,"power":90,"title":"喷射火焰","type":"fire","category":"special","desc":"向对手发射烈焰进行攻击。有时会让对手陷入灼伤状态。"},
+"54":{"pp_max":30,"effect":[{"tg":"s","t":"a","v":"mist","n":"a.state"}],"accuracy":0,"skill_id":54,"power":0,"title":"白雾","type":"ice","category":"status","desc":"用白雾覆盖身体。在５回合内不会让对手降低自己的能力。"},
 "55":{"pp_max":25,"effect":null,"accuracy":100,"skill_id":55,"power":40,"title":"水枪","type":"water","category":"special","desc":"向对手猛烈地喷射水流进行攻击。"},
 "56":{"pp_max":5,"effect":null,"accuracy":80,"skill_id":56,"power":110,"title":"水炮","type":"water","category":"special","desc":"向对手猛烈地喷射大量水流进行攻击。"},
 "57":{"pp_max":15,"effect":[{"t":"r","v":"all"}],"accuracy":100,"skill_id":57,"power":90,"title":"冲浪","type":"water","category":"special","desc":"（未完成）利用大浪攻击自己周围所有的宝可梦。"},

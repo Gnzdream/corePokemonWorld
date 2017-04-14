@@ -1,11 +1,13 @@
 package com.zdream.pmw.platform.effect.addition;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import com.zdream.pmw.monster.skill.ESkillCategory;
+import com.zdream.pmw.platform.control.IPrintLevel;
 import com.zdream.pmw.platform.effect.SkillReleasePackage;
 import com.zdream.pmw.util.json.JsonValue;
 
@@ -220,6 +222,9 @@ public abstract class AAdditionFormula implements IAdditionFormula {
 				}
 			}
 		}
+		
+		pack.getEffects().logPrintf(IPrintLevel.PRINT_LEVEL_DEBUG, "判断附加状态释放的目标为 %s(len=%d)\n\tat %s",
+				Arrays.toString(seats), seatLen, Thread.currentThread().getStackTrace()[1].toString());
 	}
 	
 	private void seatsExpansion() {

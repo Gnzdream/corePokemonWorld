@@ -110,6 +110,10 @@ public class MessageTranslator {
 	}
 	
 	private String handleTemplate(String template, Map<String, String> context) {
+		if (template == null) {
+			return null;
+		}
+		
 		Pattern r = Pattern.compile("\\[(\\S+?)\\]");
 		Matcher m = r.matcher(template);
 		StringBuilder builder = new StringBuilder(template.length() * 2);

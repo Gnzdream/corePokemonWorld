@@ -99,5 +99,10 @@ public class ParalysisState extends AAbnormalState {
 		
 		return interceptor.nextState();
 	}
+	
+	@Override
+	public String toString() {
+		return name();
+	}
 
 }

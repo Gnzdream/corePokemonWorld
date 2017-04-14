@@ -413,13 +413,19 @@ public class AbilityLevelAdditionFormula extends AAdditionFormula implements IPo
 			pack.getEffects().startCode(value);
 			
 			int result = (int) value.get("result");
-			if (result == 0) {
+			if (result != 1) {
 				int instanceRate = (int) value.get("rate");
 				if (RanValue.isSmaller(instanceRate)) {
 					exist = true;
 					forces[i] = true;
 					titems[i] = (int[]) value.get("items");
 					tvalues[i] = (int[]) value.get("values");
+					
+					if (result == 2) {
+						Aperitif ap = pack.getEffects().newAperitif(Aperitif.CODE_BROADCAST);
+						ap.append("type", value.get("reason"));
+						pack.getEffects().startCode(ap);
+					}
 				}
 			}	
 		}
@@ -451,6 +457,9 @@ public class AbilityLevelAdditionFormula extends AAdditionFormula implements IPo
 			int[] items = titems[i];
 			int[] values = tvalues[i];
 			check(items, values, dfseat);
+			if (items.length == 0) {
+				continue;
+			}
 			
 			// 进行修改
 			Aperitif value = pack.getEffects().newAperitif(

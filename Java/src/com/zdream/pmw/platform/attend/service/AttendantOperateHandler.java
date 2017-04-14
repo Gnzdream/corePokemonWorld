@@ -7,6 +7,7 @@ import com.zdream.pmw.monster.prototype.IPokemonDataType;
 import com.zdream.pmw.platform.attend.AttendManager;
 import com.zdream.pmw.platform.attend.Attendant;
 import com.zdream.pmw.platform.attend.IState;
+import com.zdream.pmw.platform.attend.IStateContainer;
 import com.zdream.pmw.platform.attend.Participant;
 import com.zdream.pmw.platform.control.IPrintLevel;
 import com.zdream.pmw.platform.effect.state.AAbnormalState;
@@ -170,7 +171,6 @@ public class AttendantOperateHandler {
 	 */
 	public void forceStateForParticipant(byte no, IState state) {
 		Participant participant = am.getParticipant(am.seatForNo(no));
-		
 		participant.pushState(state, am.getRoot());
 	}
 	
@@ -186,14 +186,7 @@ public class AttendantOperateHandler {
 	 */
 	public void removeStateFromParticipant(byte seat, String stateName) {
 		Participant participant = am.getParticipant(seat);
-		
-		while (true) {
-			IState state = participant.getState(stateName);
-			if (state == null) {
-				break;
-			}
-			participant.removeState(state, am.getRoot());
-		}
+		participant.removeState(stateName, am.getRoot());
 	}
 	
 	/**
@@ -210,8 +203,56 @@ public class AttendantOperateHandler {
 	 */
 	public void setStateFromParticipant(byte seat, String stateName, JsonValue value) {
 		Participant participant = am.getParticipant(seat);
-		
 		participant.setState(stateName, value, am.getRoot());
+	}
+	
+	/**
+	 * 向某个座位施加状态<br>
+	 * 实现层<br>
+	 * <p>这里将不判断任何状态重复、相悖之类的问题, 只是将状态绑定到对应的怪兽上.
+	 * 如果有这类问题, 请确保在调用该函数之前就已经审查完毕. 一般的做法是,
+	 * 发送 {@code count-addition-rate} 这类拦截前消息, 用状态栈拦截后查看效果.</p>
+	 * @param seat
+	 *   座位号
+	 * @param state
+	 *   施加的状态
+	 * @since v0.2.2
+	 */
+	public void forceStateForSeat(byte seat, IState state) {
+		IStateContainer c = am.getSeatStates(seat);
+		c.pushState(state, am.getRoot());
+	}
+	
+	/**
+	 * 删除一位座位上的指定状态<br>
+	 * 实现层<br>
+	 * <p>这里将座位的状态列表中删除<b>所有</b>符合 {@code statename} 的状态</p>
+	 * @param seat
+	 *   怪兽的 seat
+	 * @param stateName
+	 *   所要删除的状态的名称
+	 * @since v0.2.2
+	 */
+	public void removeStateFromSeat(byte seat, String stateName) {
+		IStateContainer c = am.getSeatStates(seat);
+		c.removeState(stateName, am.getRoot());
+	}
+	
+	/**
+	 * 设置一位座位上的指定状态, 为其操作状态使其某些属性变化<br>
+	 * 实现层<br>
+	 * <p>这里将座位的状态列表中删除<b>所有</b>符合 {@code statename} 的状态</p>
+	 * @param seat
+	 *   怪兽的 seat
+	 * @param stateName
+	 *   所要删除的状态的名称
+	 * @param value
+	 *   所要设置给状态的参数
+	 * @since v0.2.2
+	 */
+	public void setStateFromSeat(byte seat, String stateName, JsonValue value) {
+		IStateContainer c = am.getSeatStates(seat);
+		c.setState(stateName, value, am.getRoot());
 	}
 	
 	/* ************

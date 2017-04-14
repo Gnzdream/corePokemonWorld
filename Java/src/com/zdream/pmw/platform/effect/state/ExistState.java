@@ -1,6 +1,7 @@
 package com.zdream.pmw.platform.effect.state;
 
 import com.zdream.pmw.core.tools.AbnormalMethods;
+import com.zdream.pmw.core.tools.ItemMethods;
 import com.zdream.pmw.monster.prototype.EPokemonAbnormal;
 import com.zdream.pmw.monster.prototype.EPokemonType;
 import com.zdream.pmw.monster.prototype.IPokemonDataType;
@@ -19,7 +20,9 @@ import com.zdream.pmw.util.json.JsonValue;
  * 一种最基础的状态, 归属方一定为怪兽<br>
  * 在怪兽上场后, 该状态就会默认添加、一直保留, 直到濒死退场或交换退场;<br>
  * <br>
- * 作用: 技能本系加成能力提升<br>
+ * 作用
+ * <li>技能本系加成能力提升
+ * <li>检查状态, 去除重复的状态</li>
  * <br>
  * <b>v0.2.1</b>
  * <p>将 {@code Participant} 中关于能力等级的属性移到此处</p>
@@ -327,7 +330,23 @@ public class ExistState extends ParticipantState implements IPokemonDataType {
 	
 	@Override
 	public String toString() {
-		return name() + "-no: " + getNo();
+		StringBuilder b = new StringBuilder();
+		b.append(name()).append("-no:").append(getNo());
+		
+		boolean lvs = false;
+		for (int i = 1; i < abiliLvs.length; i++) {
+			if (abiliLvs[i] != 0) {
+				if (!lvs) {
+					b.append("|");
+					lvs = true;
+				} else {
+					b.append("&");
+				}
+				b.append(ItemMethods.parseItemName(i)).append(":").append(abiliLvs[i]);
+			}
+		}
+		
+		return b.toString();
 	}
 
 }

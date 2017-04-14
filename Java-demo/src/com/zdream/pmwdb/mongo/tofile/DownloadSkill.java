@@ -48,7 +48,7 @@ public class DownloadSkill {
 			int idx = id / 50;
 			
 			// new condition
-			if (idx != 0) {
+			if (idx > 1) {
 				continue;
 			}
 			

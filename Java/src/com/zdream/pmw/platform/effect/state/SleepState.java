@@ -54,7 +54,7 @@ public class SleepState extends AAbnormalState implements IDuration {
 	
 	@Override
 	public String toString() {
-		return name() + ": " + round;
+		return name() + ":" + round;
 	}
 
 	/* ************

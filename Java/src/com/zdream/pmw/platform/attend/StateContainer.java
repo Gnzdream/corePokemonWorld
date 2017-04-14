@@ -58,6 +58,16 @@ public class StateContainer implements IStateContainer {
 	}
 	
 	@Override
+	public void removeState(String stateName, BattlePlatform pf) {
+		for (Iterator<IState> it = states.iterator(); it.hasNext();) {
+			IState state = it.next();
+			if (state.name().equals(stateName)) {
+				removeState(state, pf);
+			}
+		}
+	}
+	
+	@Override
 	public IState getState(String stateName) {
 		for (Iterator<IState> it = states.iterator(); it.hasNext();) {
 			IState state = it.next();

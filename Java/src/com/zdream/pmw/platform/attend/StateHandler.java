@@ -8,6 +8,7 @@ import java.util.Properties;
 
 import com.zdream.pmw.platform.control.IPrintLevel;
 import com.zdream.pmw.platform.effect.IStateMessageFormater;
+import com.zdream.pmw.platform.effect.state.ASeatState;
 import com.zdream.pmw.platform.effect.state.ParticipantState;
 import com.zdream.pmw.util.json.JsonBuilder;
 import com.zdream.pmw.util.json.JsonValue;
@@ -108,8 +109,41 @@ public class StateHandler {
 					}
 					argv++;
 				}
+			} else if (ASeatState.class.isAssignableFrom(clazz)) {
+				// force-state mist -seat 1 -source SKILL -skillID 54
+				
+				int argv = 0;
+				String option = null;
+				for (int i = 2; i < codes.length; i++) {
+					String s = codes[i];
+					
+					if (s.startsWith("-") && !Character.isDigit(s.charAt(1))) {
+						option = s.substring(1);
+						argv = 0;
+					} else {
+						switch (option) {
+						case "seat":
+							if (argv == 1) {
+								value.add(option, new JsonValue(Byte.valueOf(s)));
+							}
+							break;
+						case "skillID":
+							if (argv == 1) {
+								value.add(option, new JsonValue(Short.valueOf(s)));
+							}
+							break;
+						case "source": default:
+							if (argv == 1) {
+								value.add(option, new JsonValue(s));
+							}
+							break;
+						}
+					}
+					argv++;
+				}
 			} else {
-				// 对象不是怪兽本体的状态
+				// 其它
+				throw new IllegalArgumentException("对象不是怪兽本体、不是座位的状态现在还没写呢！");
 			}
 		} else {
 			IStateMessageFormater formater;
@@ -162,6 +196,15 @@ public class StateHandler {
 			byte no = pstate.getNo();
 			
 			am.forceStateForParticipant(no, pstate);
+		} else if (state instanceof ASeatState) {
+			// 施加给座位
+			ASeatState sstate = (ASeatState) state;
+			byte seat = sstate.getSeat();
+			
+			am.forceStateForSeat(seat, sstate);
+		} else {
+			// 其它
+			throw new IllegalArgumentException("对象不是怪兽本体、不是座位的状态现在还没写呢！");
 		}
 	}
 	

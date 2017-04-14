@@ -80,6 +80,14 @@ public class PeriodDamageFormula extends DefaultDamageFormula {
 	
 	@Override
 	protected boolean writeHitable(int index) {
+		switch (mode) {
+		case MODE_THRASH:
+		case MODE_HYPER_BEAM:
+			return super.writeHitable(index);
+	
+		default:
+			break;
+		}
 		return true;
 	}
 	

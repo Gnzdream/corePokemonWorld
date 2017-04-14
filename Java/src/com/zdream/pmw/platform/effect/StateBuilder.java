@@ -7,6 +7,7 @@ import java.util.Map.Entry;
 import com.zdream.pmw.platform.attend.IState;
 import com.zdream.pmw.platform.attend.StateHandler;
 import com.zdream.pmw.platform.attend.service.EStateSource;
+import com.zdream.pmw.platform.effect.state.ASeatState;
 import com.zdream.pmw.platform.effect.state.ParticipantState;
 import com.zdream.pmw.util.json.JsonBuilder;
 import com.zdream.pmw.util.json.JsonValue;
@@ -125,6 +126,22 @@ public class StateBuilder {
 		
 		em.startCode(value);
 	}
+
+	/**
+	 * 发送清除状态的拦截前消息<br>
+	 * <p>清除指定怪兽的状态</p>
+	 * @param stateName
+	 *   状态名
+	 * @param seat
+	 *   指定座位号
+	 */
+	public void sendRemoveSeatStateMessage(final String stateName, final byte seat) {
+		// 导入 pack 数据
+		Aperitif value = em.newAperitif(Aperitif.CODE_REMOVE_STATE, seat);
+		value.append("seat", seat).append("state", stateName);
+		
+		em.startCode(value);
+	}
 	
 	/**
 	 * 获得施加状态的命令行类型消息<br>
@@ -132,7 +149,7 @@ public class StateBuilder {
 	 * @param value
 	 * @return
 	 */
-	public String forceStateCommandLine(JsonValue value) {
+	public String forceStateCommandLine(Aperitif value) {
 		Map<String, JsonValue> map = value.getMap();
 		String statestr = map.get("state").getString();
 
@@ -149,8 +166,17 @@ public class StateBuilder {
 						.append(map.get("source").getString()).append(' ')
 						.append("-skillID").append(' ')
 						.append(map.get("skillID").getValue());
+			} else if (ASeatState.class.isAssignableFrom(clazz)) {
+				// force-state mist -seat 1 -source SKILL -skillID 54
+				cmd.append("force-state").append(' ').append(statestr).append(' ')
+						.append("-seat").append(' ').append(map.get("dfseat").getValue()).append(' ')
+						.append("-source").append(' ')
+						.append(map.get("source").getString()).append(' ')
+						.append("-skillID").append(' ')
+						.append(map.get("skillID").getValue());
 			} else {
-				// 对象不是怪兽本体的状态
+				// 其它
+				throw new IllegalArgumentException("对象不是怪兽本体、不是座位的状态现在还没写呢！");
 			}
 			
 			// 将所有以 "-" 开头的参数进行转化

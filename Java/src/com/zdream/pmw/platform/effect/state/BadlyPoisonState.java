@@ -126,7 +126,7 @@ public class BadlyPoisonState extends AAbnormalState {
 	
 	@Override
 	public String toString() {
-		return name() + ": " + count;
+		return name() + ":" + count;
 	}
 
 }

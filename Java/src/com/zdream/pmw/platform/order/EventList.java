@@ -94,8 +94,8 @@ public class EventList {
 		} else {
 			om.logPrintf(IPrintLevel.PRINT_LEVEL_ERROR, 
 					"EventList.nextEvent() 位置：%s 没有任何能够进行的事件", this.getClass().getName());
+			throw new NullPointerException("没有任何能够进行的事件");
 		}
-		return null;
 	}
 	
 	/**

@@ -122,7 +122,7 @@ public class SkillFormulaLoader {
 				System.arraycopy(vals, 0, arrs, 0, arrs.length);
 				
 				for (int i = 0; i < vs.size(); i++) {
-					arrs[i + arrs.length] = vs.get(i);
+					vals[i + arrs.length] = vs.get(i);
 				}
 			} else {
 				vals = null;

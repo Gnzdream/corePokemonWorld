@@ -13,6 +13,7 @@ import com.zdream.pmw.platform.attend.service.ParticipantAbilityHandler;
 import com.zdream.pmw.platform.attend.service.ParticipantConverter;
 import com.zdream.pmw.platform.attend.service.SkillReleaseConverter;
 import com.zdream.pmw.platform.control.IPrintLevel;
+import com.zdream.pmw.platform.effect.state.SeatState;
 import com.zdream.pmw.platform.prototype.BattlePlatform;
 import com.zdream.pmw.platform.prototype.Fuse;
 import com.zdream.pmw.platform.prototype.IPlatformComponent;
@@ -622,6 +623,30 @@ public class AttendManager implements IPlatformComponent {
 	}
 
 	/**
+	 * @see AttendantOperateHandler#forceStateForSeat(byte, IState)
+	 * @since v0.2.2
+	 */
+	public void forceStateForSeat(byte seat, IState state) {
+		attOper.forceStateForSeat(seat, state);
+	}
+
+	/**
+	 * @see AttendantOperateHandler#removeStateFromSeat(byte, String)
+	 * @since v0.2.2
+	 */
+	public void removeStateFromSeat(byte seat, String stateName) {
+		attOper.removeStateFromSeat(seat, stateName);
+	}
+
+	/**
+	 * @see AttendantOperateHandler#setStateFromSeat(byte, String, JsonValue)
+	 * @since v0.2.2
+	 */
+	public void setStateFromSeat(byte seat, String stateName, JsonValue value) {
+		attOper.setStateFromSeat(seat, stateName, value);
+	}
+
+	/**
 	 * 工厂方式创建状态类
 	 * @param args
 	 * @return
@@ -781,6 +806,7 @@ public class AttendManager implements IPlatformComponent {
 		seatStates = new IStateContainer[length];
 		for (byte seat = 0; seat < length; seat++) {
 			seatStates[seat] = new StateContainer();
+			seatStates[seat].pushState(new SeatState(seat), pf);
 		}
 		
 		length = referee.campLength();

@@ -99,5 +99,10 @@ public class FreezeState extends AAbnormalState {
 	public FreezeState() {
 		super(EPokemonAbnormal.FREEZE);
 	}
+	
+	@Override
+	public String toString() {
+		return name();
+	}
 
 }

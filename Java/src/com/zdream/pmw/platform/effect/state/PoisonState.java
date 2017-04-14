@@ -32,6 +32,11 @@ public class PoisonState extends AAbnormalState {
 	public PoisonState() {
 		super(EPokemonAbnormal.POISON);
 	}
+	
+	@Override
+	public String toString() {
+		return name();
+	}
 
 	/* ************
 	 *	实现方法  *

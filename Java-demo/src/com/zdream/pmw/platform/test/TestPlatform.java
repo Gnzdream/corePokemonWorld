@@ -1,23 +1,25 @@
 package com.zdream.pmw.platform.test;
 
+import java.util.Random;
 import java.util.Scanner;
 
-import org.junit.Test;
-
+import com.zdream.pmw.monster.data.PokemonBaseData;
 import com.zdream.pmw.monster.prototype.EPokemonGender;
 import com.zdream.pmw.monster.prototype.EPokemonNature;
 import com.zdream.pmw.monster.prototype.Pokemon;
 import com.zdream.pmw.monster.prototype.PokemonHandler;
+import com.zdream.pmw.monster.skill.Skill;
 import com.zdream.pmw.platform.prototype.Fuse;
 import com.zdream.pmw.platform.prototype.IBattleRule;
 import com.zdream.pmw.platform.prototype.IMessageCallback;
 import com.zdream.pmw.platform.translate.MessageTranslator;
 import com.zdream.pmw.trainer.prototype.Trainer;
 import com.zdream.pmw.trainer.prototype.TrainerData;
+import com.zdream.pmwdb.asset.dao.PokemonDataDaoImpl;
+import com.zdream.pmwdb.asset.dao.SkillDaoImpl;
 
 public class TestPlatform extends SimplePlatformHandler {
 
-	@Test
 	public void test() {
 		Pokemon pm1 = new Pokemon(); // 我方
 		pm1.setSpeciesID((short) 4);
@@ -30,11 +32,11 @@ public class TestPlatform extends SimplePlatformHandler {
 		pm1.getSkill()[0] = (short) 19; // 7
 		pm1.getSkill()[1] = (short) 141; // 35 舞剑14 吸血141 巴掌3 龙之怒82
 		pm1.getSkill()[2] = (short) 49;
-		pm1.getSkill()[3] = (short) 37;
+		pm1.getSkill()[3] = (short) 54;
 		pm1.getSkillPP()[0] = (byte) 35;
 		pm1.getSkillPP()[1] = (byte) 15;
 		pm1.getSkillPP()[2] = (byte) 35;
-		pm1.getSkillPP()[3] = (byte) 20;
+		pm1.getSkillPP()[3] = (byte) 35;
 		pm1.setTrainerName("超级赛亚人");
 		pm1.setTrainerID(66666);
 		pm1.setTrainerSID(23333);
@@ -71,6 +73,8 @@ public class TestPlatform extends SimplePlatformHandler {
 		pm2.setStatIV(21, 9, 21, 9, 21, 9);
 		pm2.getSkill()[0] = (short) 10;
 		pm2.getSkillPP()[0] = (byte) 35;
+		pm2.getSkill()[1] = (short) 45;
+		pm2.getSkillPP()[1] = (byte) 35;
 		
 		Pokemon pm4 = new Pokemon(); // 敌方
 		pm4.setSpeciesID((short) 92);
@@ -120,7 +124,100 @@ public class TestPlatform extends SimplePlatformHandler {
 		scanner.close();
 	}
 	
+	void testRandom() {
+		Random r = new Random();
+		Trainer trainer = Trainer.getThizPlayer();
+		TrainerData trainerdata = trainer.getData();
+		trainerdata.setTrainerName("超级赛亚人");
+		trainerdata.setTrainerID(66666);
+		trainerdata.setTrainerSID(23333);
+		trainerdata.setTrainerGender(EPokemonGender.M);
+		
+		PokemonDataDaoImpl dao = new PokemonDataDaoImpl();
+		SkillDaoImpl sdao = new SkillDaoImpl();
+		PokemonHandler service = PokemonHandler.getInstance();
+		
+		Pokemon[] pms0 = new Pokemon[3], pms1 = new Pokemon[3];
+		
+		// 0-我方 1-敌方
+		for (int camp = 0; camp < 2; camp++) {
+			Pokemon[] pms;
+			if (camp == 0) {
+				pms = pms0;
+			} else {
+				pms = pms1;
+			}
+			
+			for (int i = 0; i < pms.length; i++) {
+				Pokemon pm = new Pokemon();
+				short id;
+				PokemonBaseData data;
+				
+				while (true) {
+					id = (short) r.nextInt(151);
+					try {
+						if ((data = dao.getData(id)) != null)
+							break;
+					} catch (Exception e) {}
+					System.err.println("[怪兽 #" + id + " 不存在]");
+				}
+				pm.setSpeciesID(id);
+				pm.setForm((byte) 0);
+				pm.setGender((r.nextInt(2) == 0) ? EPokemonGender.M : EPokemonGender.F);
+				pm.setNature(EPokemonNature.values()[r.nextInt(25)]);
+				pm.setNickname(((camp == 0) ? "我的" : "敌方") + data.getSpeciesName());
+				pm.setLevel((byte) 15);
+				pm.setStatIV(r.nextInt(32), r.nextInt(32), r.nextInt(32),
+						r.nextInt(32), r.nextInt(32), r.nextInt(32));
+				
+				for (int j = 0; j < 4; j++) {
+					Skill sk;
+					short sid;
+					
+					while (true) {
+						sid = (short) r.nextInt(100);
+						try {
+							if ((sk = sdao.getSkill(sid)) != null)
+								break;
+						} catch (Exception e) {}
+						System.err.println("[技能 #" + sid + " 不存在]");
+					}
+					pm.getSkill()[j] = sid;
+					pm.getSkillPP()[j] = sk.getPpMax();
+				}
+				
+				if (camp == 0) {
+					pm.setTrainerName(trainerdata.getTrainerName());
+					pm.setTrainerID(trainerdata.getTrainerID());
+					pm.setTrainerSID(trainerdata.getTrainerSID());
+					pm.setTrainerGender(EPokemonGender.M);
+				}
+				service.countStatValue(pm);
+				service.recoverPokemon(pm);
+				
+				pms[i] = pm;
+				trainer.getPokemons()[i] = pm;
+			}
+		}
+		
+		// 准备战斗
+		Fuse fuse = new Fuse(IBattleRule.RULE_DEBUG);
+		MessageTranslator translator = new MessageTranslator();
+		translator.setPrint(true);
+		
+		fuse.putTeams(trainer, pms0, callback, new IMessageCallback[]{translator.getMessageCallback()});
+		fuse.putTeams(null, pms1);
+		translator.setTeam((byte) 0);
+		scanner = new Scanner(System.in);
+		
+		bp = fuse.initPlatform();
+		bp.start();
+		
+		scanner.close();
+	}
+	
 	public static void main(String[] args) {
+		// new TestPlatform().testRandom();
 		new TestPlatform().test();
 	}
 

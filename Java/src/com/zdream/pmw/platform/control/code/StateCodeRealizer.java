@@ -16,9 +16,10 @@ import com.zdream.pmw.util.json.JsonValue.JsonType;
  * <p>处理状态施加、销毁等状态改变时的事件</p>
  * 
  * @since v0.2.1
+ *   [2017-03-03]
  * @author Zdream
- * @date 2017年3月3日
- * @version v0.2.1
+ * @version v0.2.2
+ *   [2017-04-14]
  */
 public class StateCodeRealizer implements ICodeRealizer {
 
@@ -73,7 +74,7 @@ public class StateCodeRealizer implements ICodeRealizer {
 		Map<String, JsonValue> map = value.getMap();
 		
 		if (map.containsKey("seat")) {
-			// 是怪兽的状态
+			// 是怪兽或指定座位的状态
 			byte seat = (Byte) map.get("seat").getValue();
 			String cmd = String.format("%s %s -seat %d",
 					CODE_REMOVE_STATE, map.get("state").getValue(), seat);
@@ -89,8 +90,10 @@ public class StateCodeRealizer implements ICodeRealizer {
 		String stateName = codes[1];
 		
 		if ("-seat".equals(codes[2])) {
-			// 是怪兽的状态
-			pf.getAttendManager().removeStateFromParticipant(Byte.parseByte(codes[3]), stateName);
+			byte seat = Byte.parseByte(codes[3]);
+			// 是怪兽或指定座位的状态
+			pf.getAttendManager().removeStateFromParticipant(seat, stateName);
+			pf.getAttendManager().removeStateFromSeat(seat, stateName);
 		}
 		
 		return null;
@@ -131,6 +134,7 @@ public class StateCodeRealizer implements ICodeRealizer {
 			byte seat = Byte.parseByte(codes[3]);
 			JsonValue v = stateSetPutParam(codes);
 			pf.getAttendManager().setStateFromParticipant(seat, stateName, v);
+			pf.getAttendManager().setStateFromSeat(seat, stateName, v);
 		} else {
 			// TODO 不是作为 ParticipantSeat
 		}

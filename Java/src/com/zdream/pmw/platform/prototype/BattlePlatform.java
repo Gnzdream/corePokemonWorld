@@ -42,15 +42,17 @@ public class BattlePlatform implements IPlatformComponent {
 	 */
 	public void start() {
 		logPrintf(IPrintLevel.PRINT_LEVEL_INFO, "战斗开始");
-		int count = 0;
+		int errcount = 0;
 		while (!isFinish()) {
 			try {
 				orderManager.actNextEvent();
+				errcount = 0;
 			} catch (Exception e) {
 				logPrintf(IPrintLevel.PRINT_LEVEL_ERROR, e);
+				errcount++;
 			}
-			count ++;
-			if (count > 48) {
+			if (errcount > 3) {
+				System.err.println("由于错误太多, 系统自动终止");
 				break;
 			}
 		}

@@ -62,7 +62,8 @@ public interface IParticipantSubStateCreater extends ISubStateCreater, IState {
 		
 		for (int i = 0; i < states.length; i++) {
 			ASubState state = states[i];
-			am.removeStateFromParticipant(toWhom(state), state.name());
+			am.removeStateFromParticipant(pf.getAttendManager().seatForNo(toWhom(state)),
+					state.name());
 		}
 	}
 

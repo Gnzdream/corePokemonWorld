@@ -160,7 +160,7 @@ public class StateInterceptor implements IStateInterceptable {
 			return;
 		}
 		// states 列表排序
-		states.sort((a, b) -> a.priority(head) - b.priority(head));
+		states.sort((a, b) -> b.priority(head) - a.priority(head));
 	}
 	
 	@Override

@@ -388,7 +388,7 @@ public class EffectManage implements IPlatformComponent {
 	 * @return
 	 * @since v0.2.1
 	 */
-	public String forceStateCommandLine(JsonValue value) {
+	public String forceStateCommandLine(Aperitif value) {
 		return stateBuilder.forceStateCommandLine(value);
 	}
 
@@ -403,6 +403,14 @@ public class EffectManage implements IPlatformComponent {
 	 */
 	public void sendRemoveParticipantStateMessage(final String stateName, final byte no) {
 		stateBuilder.sendRemoveParticipantStateMessage(stateName, no);
+	}
+	
+	/**
+	 * @see StateBuilder#sendRemoveSeatStateMessage(String, byte)
+	 * @since v0.2.2
+	 */
+	public void sendRemoveSeatStateMessage(final String stateName, final byte seat) {
+		stateBuilder.sendRemoveSeatStateMessage(stateName, seat);
 	}
 	
 	/**

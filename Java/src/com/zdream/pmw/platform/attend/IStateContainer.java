@@ -8,12 +8,17 @@ import com.zdream.pmw.util.json.JsonValue;
 /**
  * 状态列表处理接口<br>
  * <br>
- * v0.1.1 添加利用名称来寻找对应的状态的方法接口<br>
+ * <p><b>v0.1.1</b><br>
+ * 添加利用名称来寻找对应的状态的方法接口<br></p>
+ * 
+ * <p><b>v0.2.2</b><br>
+ * 添加更加便捷的删除状态的方法<br></p>
  * 
  * @since v0.1.1
+ *   [2016-04-17]
  * @author Zdream
- * @date 2016年4月17日
- * @version v0.1.1
+ * @version v0.2.2
+ *   [2017-04-14]
  */
 public interface IStateContainer {
 
@@ -32,6 +37,15 @@ public interface IStateContainer {
 	 * @param pf
 	 */
 	public void removeState(IState state, BattlePlatform pf);
+	
+	/**
+	 * 列表中删除所有指定名称的状态
+	 * @param stateName
+	 *   指定的状态名称, {@link IState#name()}
+	 * @param pf
+	 * @since v0.2.2
+	 */
+	public void removeState(String stateName, BattlePlatform pf);
 	
 	/**
 	 * 设置状态参数

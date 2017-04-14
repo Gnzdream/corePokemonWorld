@@ -139,6 +139,8 @@ public class SimplePlatformHandler {
 		
 		for (byte seat = 0; seat < seatLength; seat++) {
 			System.out.println(String.format("[%d]: %s", seat, bp.getAttendManager().getParticipant(seat)));
+			System.out.println(String.format("\t%s %s", bp.getAttendManager().getParticipant(seat).getStates(),
+					bp.getAttendManager().getSeatStates(seat).getStates()));
 		}
 		System.out.println("============");
 	}

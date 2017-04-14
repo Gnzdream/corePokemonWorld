@@ -269,7 +269,7 @@ public class PeriodState extends ParticipantState implements IDuration {
 	
 	@Override
 	public String toString() {
-		return name();
+		return name() + ":" + round;
 	}
 
 }

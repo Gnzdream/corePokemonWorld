@@ -118,6 +118,7 @@ public class AbnormalAdditionFormula extends AAdditionFormula {
 	@Override
 	public void restore() {
 		rate = 100;
+		super.restore();
 	}
 	
 	/* ************

@@ -204,7 +204,7 @@ public class BoundState extends ParticipantState
 	
 	@Override
 	public String toString() {
-		return name() + ": " + round;
+		return name() + ":" + round;
 	}
 
 }

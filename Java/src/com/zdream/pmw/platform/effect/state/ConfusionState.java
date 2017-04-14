@@ -141,4 +141,9 @@ public class ConfusionState extends ParticipantState implements IDuration {
 		super(no);
 		this.round = RanValue.random(1, 5);
 	}
+	
+	@Override
+	public String toString() {
+		return name() + ":" + round;
+	}
 }
