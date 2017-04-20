@@ -16,7 +16,7 @@ import com.zdream.pmw.platform.prototype.BattlePlatform;
  * @version v0.2.2
  *   [2017-04-12]
  */
-public class FlyState extends ParticipantState {
+public class FlyState extends AParticipantState {
 
 	@Override
 	public String name() {

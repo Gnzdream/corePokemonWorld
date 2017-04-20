@@ -1,8 +1,10 @@
 package com.zdream.pmw.platform.attend;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import com.zdream.pmw.platform.effect.state.ISubStateCreater;
 import com.zdream.pmw.platform.prototype.BattlePlatform;
@@ -59,11 +61,21 @@ public class StateContainer implements IStateContainer {
 	
 	@Override
 	public void removeState(String stateName, BattlePlatform pf) {
+		Set<IState> rms = new HashSet<>();
 		for (Iterator<IState> it = states.iterator(); it.hasNext();) {
 			IState state = it.next();
 			if (state.name().equals(stateName)) {
-				removeState(state, pf);
+				rms.add(state);
 			}
+		}
+		
+		if (rms.isEmpty()) {
+			return;
+		}
+		
+		for (Iterator<IState> it = rms.iterator(); it.hasNext();) {
+			IState state = it.next();
+			removeState(state, pf);
 		}
 	}
 	

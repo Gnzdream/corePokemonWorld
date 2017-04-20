@@ -124,6 +124,14 @@ public class AbsorbAdditionFormula extends AAdditionFormula {
 	protected void force() {
 		int refer = calcRefer();
 		float value = refer * rate;
+		if (Math.abs(value) < 1 && value != 0) {
+			if (value > 0) {
+				value = 1.0f;
+			} else {
+				value = -1.0f;
+			}
+		}
+		
 		em.logPrintf(EffectManage.PRINT_LEVEL_VERBOSE, 
 				"AbsorbAdditionF.addition(): %s(seat=%d) 发动 %s, 数值 %f",
 				pack.getAtStaff().getNickname(), pack.getAtStaff().getSeat(),

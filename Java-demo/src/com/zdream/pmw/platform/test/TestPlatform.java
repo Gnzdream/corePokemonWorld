@@ -31,8 +31,8 @@ public class TestPlatform extends SimplePlatformHandler {
 		pm1.setStatIV(15, 15, 15, 15, 15, 15);
 		pm1.getSkill()[0] = (short) 19; // 7
 		pm1.getSkill()[1] = (short) 141; // 35 舞剑14 吸血141 巴掌3 龙之怒82
-		pm1.getSkill()[2] = (short) 49;
-		pm1.getSkill()[3] = (short) 54;
+		pm1.getSkill()[2] = (short) 67;
+		pm1.getSkill()[3] = (short) 73;
 		pm1.getSkillPP()[0] = (byte) 35;
 		pm1.getSkillPP()[1] = (byte) 15;
 		pm1.getSkillPP()[2] = (byte) 35;
@@ -64,11 +64,11 @@ public class TestPlatform extends SimplePlatformHandler {
 		pm3.setTrainerGender(EPokemonGender.M);
 		
 		Pokemon pm2 = new Pokemon(); // 敌方
-		pm2.setSpeciesID((short) 25);
+		pm2.setSpeciesID((short) 35);
 		pm2.setForm((byte) 0);
 		pm2.setGender(EPokemonGender.F);
 		pm2.setNature(EPokemonNature.RASH);
-		pm2.setNickname("别人皮卡丘");
+		pm2.setNickname("别人皮皮");
 		pm2.setLevel((byte) 15);
 		pm2.setStatIV(21, 9, 21, 9, 21, 9);
 		pm2.getSkill()[0] = (short) 10;
@@ -217,8 +217,8 @@ public class TestPlatform extends SimplePlatformHandler {
 	}
 	
 	public static void main(String[] args) {
-		// new TestPlatform().testRandom();
-		new TestPlatform().test();
+		new TestPlatform().testRandom();
+		// new TestPlatform().test();
 	}
 
 }

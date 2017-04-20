@@ -76,6 +76,9 @@ public final class Aperitif extends JsonValue implements IMessageCode {
 		this.scanLength = scanSeats.length;
 	}
 	public void putScanSeats(byte... scanSeats) {
+		if (scanSeats.length == 0) {
+			return;
+		}
 		int expectLength = scanSeats.length + scanLength;
 		if (this.scanSeats.length < expectLength) {
 			byte[] newArray = new byte[expectLength + 1];
@@ -153,12 +156,12 @@ public final class Aperitif extends JsonValue implements IMessageCode {
 		StringBuilder builder = new StringBuilder(raw.length() + 40);
 		builder.append("Aperitif@").append(head).append(" scan:[");
 		
-		int length = scanLength - 1;
+		final int length = scanLength - 1;
 		if (length >= 0) {
 			for (int i = 0; i < length; i++) {
 				builder.append(scanSeats[i]).append(",");
 			}
-			builder.append(length);
+			builder.append(scanSeats[length]);
 		}
 		builder.append("] ").append(raw);
 		

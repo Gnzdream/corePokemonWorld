@@ -6,9 +6,8 @@ import com.zdream.pmw.monster.prototype.EPokemonAbnormal;
 import com.zdream.pmw.monster.prototype.EPokemonType;
 import com.zdream.pmw.monster.prototype.IPokemonDataType;
 import com.zdream.pmw.platform.attend.AttendManager;
+import com.zdream.pmw.platform.attend.IStateContainer;
 import com.zdream.pmw.platform.attend.IStateInterceptable;
-import com.zdream.pmw.platform.attend.Participant;
-import com.zdream.pmw.platform.attend.service.EStateSource;
 import com.zdream.pmw.platform.control.IMessageCode;
 import com.zdream.pmw.platform.control.IPrintLevel;
 import com.zdream.pmw.platform.effect.Aperitif;
@@ -26,14 +25,18 @@ import com.zdream.pmw.util.json.JsonValue;
  * <br>
  * <b>v0.2.1</b>
  * <p>将 {@code Participant} 中关于能力等级的属性移到此处</p>
+ * 
+ * <p><b>v0.2.2</b><br>
+ * 由于座位、阵营、全场状态的出现, 每个状态容器都将保留一个初始状态,
+ * 因此该类被重新归类到初始状态中( {@link ABaseState} ).</p>
+ * 
  * @see com.zdream.pmw.platform.attend.Participant
  * 
- * @since v0.2.1
+ * @since v0.2.2 [2017-04-17]
  * @author Zdream
- * @date 2017年2月28日
- * @version v0.2
+ * @version v0.2 [2017-02-28]
  */
-public class ExistState extends ParticipantState implements IPokemonDataType {
+public final class ExistState extends ABaseState implements IPokemonDataType {
 
 	/* ************
 	 *	  属性    *
@@ -57,6 +60,15 @@ public class ExistState extends ParticipantState implements IPokemonDataType {
 		return abiliLvs[item];
 	}
 
+	private byte no;
+	
+	/**
+	 * @return 这个状态属于对应哪个怪兽
+	 */
+	public byte getNo() {
+		return no;
+	}
+
 	/* ************
 	 *	实现方法  *
 	 ************ */
@@ -64,14 +76,6 @@ public class ExistState extends ParticipantState implements IPokemonDataType {
 	@Override
 	public String name() {
 		return "exist";
-	}
-
-	/**
-	 * 发动源: 无<br>
-	 * 在怪兽上场后, 该状态就会一直保留, 直到濒死退场或交换退场
-	 */
-	public EStateSource source() {
-		return EStateSource.OTHER;
 	}
 
 	@Override
@@ -216,48 +220,50 @@ public class ExistState extends ParticipantState implements IPokemonDataType {
      *     "repeat"
      * </pre></blockquote>
 	 * </p>
-	 * @param value
+	 * @param ap
 	 * @param interceptor
 	 * @param pf
 	 * @return
 	 */
-	private String calcAdditionRate(Aperitif value, IStateInterceptable interceptor, BattlePlatform pf) {
-		// 防御方限定
-		byte seat = (byte) value.get("target");
-		if (seat != pf.getAttendManager().seatForNo(getNo())) {
-			return interceptor.nextState();
-		}
-		
-		// 只处理状态
-		if (!"state".equals(value.get("type")) && !"abnormal".equals(value.get("type"))) {
-			return interceptor.nextState();
-		}
-		
-		// 如果是删除状态, 则不处理 v0.2.2
-		Object rm = value.get("remove");
-		if (rm != null) {
-			if ((boolean) rm) {
+	protected String calcAdditionRate(Aperitif ap, IStateInterceptable interceptor, BattlePlatform pf) {
+		if ("state".equals(ap.get("type"))) {
+			// 2 类
+			super.calcAdditionRate(ap, interceptor, pf);
+		} else if ("abnormal".equals(ap.get("type"))) {
+			// 1 类
+			if (!confirmTarget(ap, pf)) {
 				return interceptor.nextState();
 			}
-		}
-		
-		// 1 类
-		if ("abnormal".equals(value.get("state-category"))) {
-			if (!value.hasFilter("type") && handleAbnormal(value, pf)) {
-				// 不能施加状态
-				value.append("reason", "type").replace("result", 1);
-				return null;
+
+			byte code = (byte) ap.get("abnormal");
+			AttendManager am = pf.getAttendManager();
+			byte curCode = am.getAttendant(no).getAbnormal();
+			if (curCode == 0) {
+				if (code != 0) {
+					if (!ap.hasFilter("type") && handleAbnormal(ap, pf)) {
+						// 不能施加状态
+						ap.append("reason", "type").replace("result", 1);
+						return null;
+					} else {
+						return interceptor.nextState();
+					}
+				} else {
+					// 原来没有状态, 现在要清除状态
+					// 发动失败
+					ap.append("reason", "none").replace("result", 1);
+					return null;
+				}
+			} else {
+				if (code != 0) {
+					// 原来有状态, 现在还要施加状态
+					// 除了睡眠技能, 其它都忽略, 发动失败
+					ap.append("reason", "already").replace("result", 1);
+					return null;
+				} else {
+					// 清除状态
+					return interceptor.nextState();
+				}
 			}
-		}
-		
-		// 2 类
-		if (!value.hasFilter("repeat") && handleRepeat(value, pf)) {
-			// 不能施加状态
-			value.append("reason", "repeat").replace("result", 1);
-			pf.logPrintf(IPrintLevel.PRINT_LEVEL_INFO,
-					"ExistState.calcAdditionRate(3) 由于怪兽 %s(seat=%d) 已经有 %s 状态, 不能再施加",
-					pf.getAttendManager().getParticipant(seat).getNickname(), seat, name());
-			return null;
 		}
 		
 		return interceptor.nextState();
@@ -267,7 +273,7 @@ public class ExistState extends ParticipantState implements IPokemonDataType {
 		EPokemonAbnormal abnormal = AbnormalMethods.parseAbnormal((byte) value.get("abnormal"));
 		
 		AttendManager am = pf.getAttendManager();
-		byte seat = am.seatForNo(getNo());
+		byte seat = am.seatForNo(no);
 
 		switch (abnormal) {
 		case POISON: case BADLY_POISON: {
@@ -302,20 +308,16 @@ public class ExistState extends ParticipantState implements IPokemonDataType {
 		return false;
 	}
 	
-	private boolean handleRepeat(Aperitif value, BattlePlatform pf) {
-		// 获取状态的分类
-		Object o = value.get("state-category");
-		if (o == null) {
-			o = value.get("state");
-		}
-		String stateCategory = o.toString();
-		
-		Participant p = pf.getAttendManager().getParticipant((byte) value.get("target"));
-		if (p.hasCategoryState(stateCategory)) {
-			return true;
-		}
-		
-		return false;
+	@Override
+	protected IStateContainer stateContainer(BattlePlatform pf) {
+		byte seat = pf.getAttendManager().seatForNo(no);
+		return pf.getAttendManager().getParticipant(seat);
+	}
+	
+	@Override
+	protected boolean confirmTarget(Aperitif ap, BattlePlatform pf) {
+		byte seat = (byte) ap.get("target");
+		return seat == pf.getAttendManager().seatForNo(getNo());
 	}
 
 	/* ************
@@ -325,7 +327,7 @@ public class ExistState extends ParticipantState implements IPokemonDataType {
 	BattlePlatform pf;
 
 	public ExistState(byte no) {
-		super(no);
+		this.no = no;
 	}
 	
 	@Override

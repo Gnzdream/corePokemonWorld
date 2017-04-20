@@ -2,7 +2,6 @@ package com.zdream.pmw.platform.effect.state;
 
 import java.util.Map;
 
-import com.zdream.pmw.monster.prototype.IPokemonDataType;
 import com.zdream.pmw.platform.attend.AttendManager;
 import com.zdream.pmw.platform.attend.IStateInterceptable;
 import com.zdream.pmw.platform.attend.Participant;
@@ -26,7 +25,7 @@ import com.zdream.pmw.util.random.RanValue;
  * @date 2017年3月4日
  * @version v0.2.1
  */
-public class BoundState extends ParticipantState 
+public class BoundState extends AParticipantState 
 		implements IStateMessageFormater, IParticipantSubStateCreater {
 
 	/* ************
@@ -169,10 +168,13 @@ public class BoundState extends ParticipantState
 		byte seat = am.seatForNo(getNo());
 		
 		// 步骤一：计算出扣血的数值
-		// 为最大生命值的 (count)/8，再加扣 1
+		// 为最大生命值的 (count)/8，至少为 1
 		Participant p = am.getParticipant(seat);
-		int hpMax = p.getAttendant().getStat()[IPokemonDataType.HP];
+		int hpMax = p.getAttendant().getStat()[Participant.HP];
 		int hp = (hpMax / 8);
+		if (hp < 1) {
+			hp = 1;
+		}
 		
 		// 步骤二：发送相应拦截前消息
 		Aperitif ap = pf.getEffectManage().newAperitif(CODE_NONMOVES_DAMAGE, seat);

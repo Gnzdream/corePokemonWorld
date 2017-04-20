@@ -190,6 +190,21 @@ public class AttendantOperateHandler {
 	}
 	
 	/**
+	 * 删除一位在场怪兽的指定状态<br>
+	 * 实现层<br>
+	 * <p>这里将怪兽的状态列表中删除指定的状态</p>
+	 * @param seat
+	 *   怪兽的 seat
+	 * @param state
+	 *   指定的状态
+	 * @since v0.2.2
+	 */
+	public void removeStateFromParticipant(byte seat, IState state) {
+		Participant participant = am.getParticipant(seat);
+		participant.removeState(state, am.getRoot());
+	}
+	
+	/**
 	 * 设置一位在场怪兽的指定状态, 为其操作状态使其某些属性变化<br>
 	 * 实现层<br>
 	 * <p>这里将怪兽的状态列表中删除<b>所有</b>符合 {@code statename} 的状态</p>
@@ -236,6 +251,21 @@ public class AttendantOperateHandler {
 	public void removeStateFromSeat(byte seat, String stateName) {
 		IStateContainer c = am.getSeatStates(seat);
 		c.removeState(stateName, am.getRoot());
+	}
+	
+	/**
+	 * 删除一位座位上的指定状态<br>
+	 * 实现层<br>
+	 * <p>这里将座位的状态列表中删除指定的状态</p>
+	 * @param seat
+	 *   怪兽的 seat
+	 * @param state
+	 *   状态实例, 不允许为空
+	 * @since v0.2.2
+	 */
+	public void removeStateFromSeat(byte seat, IState state) {
+		IStateContainer c = am.getSeatStates(seat);
+		c.removeState(state, am.getRoot());
 	}
 	
 	/**

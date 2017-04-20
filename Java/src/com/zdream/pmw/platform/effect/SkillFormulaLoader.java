@@ -18,6 +18,7 @@ import com.zdream.pmw.platform.effect.addition.IAdditionFormula;
 import com.zdream.pmw.platform.effect.damage.IDamageFormula;
 import com.zdream.pmw.platform.effect.moveable.IMoveableFormula;
 import com.zdream.pmw.platform.effect.power.IPowerFormula;
+import com.zdream.pmw.platform.effect.range.IRangeFormula;
 import com.zdream.pmw.util.json.JsonValue;
 
 /**
@@ -30,10 +31,12 @@ import com.zdream.pmw.util.json.JsonValue;
  *   将关于技能的攻击、命中、伤害、附加效果等计算类、判定类都进行缓存<br>
  *   并且全部使用反射的方式创建<br>
  * 
- * @since v0.1
+ * <p><b>v0.2.2</b><br>
+ *   在原有的基础上支持目标判定公式</p>
+ * 
+ * @since v0.1 [2016-04-03]
  * @author Zdream
- * @date 2016年4月3日
- * @version v0.2.1
+ * @version v0.2.2 [2017-04-18]
  */
 public class SkillFormulaLoader {
 	
@@ -67,7 +70,8 @@ public class SkillFormulaLoader {
 			TAG_DAMAGE = "d.",
 			TAG_ACCURACY = "u.",
 			TAG_POWER = "w.",
-			TAG_ADDITION = "a.";
+			TAG_ADDITION = "a.",
+			TAG_RANGE = "r.";
 	
 	/* ************
 	 *	实现方法  *
@@ -160,7 +164,10 @@ public class SkillFormulaLoader {
 						IAdditionFormula f = loadFormula(val);
 						as[aidx ++] = f;
 					} break;
-
+					case TAG_RANGE: {
+						IRangeFormula f = loadFormula(val);
+						pack.setRangeFormula(f);
+					}
 					default:
 						break;
 					}
@@ -202,6 +209,9 @@ public class SkillFormulaLoader {
 		}
 		if (pack.getPowerFormula() == null) {
 			pack.setPowerFormula(loadFormula(TAG_POWER + "default"));
+		}
+		if (pack.getRangeFormula() == null) {
+			pack.setRangeFormula(loadFormula(TAG_RANGE + "default"));
 		}
 	}
 	

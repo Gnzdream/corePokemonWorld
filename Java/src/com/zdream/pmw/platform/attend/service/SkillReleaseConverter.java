@@ -129,7 +129,8 @@ public class SkillReleaseConverter {
 		// v0.2.1 新加
 		case "r": { // range
 			String r = data.getMap().get("v").getString();
-			release.setRange(ESkillRange.parseEnum(r));;
+			release.setRange(ESkillRange.parseEnum(r));
+			release.addAddition(data);
 		} break;
 		
 		default:

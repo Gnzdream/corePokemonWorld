@@ -133,14 +133,22 @@ public class SimplePlatformHandler {
 	}
 	
 	private void screenInfo(BattlePlatform platform, ControlBase ctrl) {
+		AttendManager am = bp.getAttendManager();
+		
 		System.out.println("============");
 		System.out.println("场上的情况：");
-		int seatLength = bp.getAttendManager().seatLength();
+		System.out.print(am.getPlatformStates().getStates());
+		int campLen = bp.getReferee().campLength();
+		for (byte camp = 0; camp < campLen; camp++) {
+			System.out.print(am.getCampStates(camp).getStates());
+		}
+		System.out.println();
 		
+		int seatLength = bp.getAttendManager().seatLength();
 		for (byte seat = 0; seat < seatLength; seat++) {
-			System.out.println(String.format("[%d]: %s", seat, bp.getAttendManager().getParticipant(seat)));
-			System.out.println(String.format("\t%s %s", bp.getAttendManager().getParticipant(seat).getStates(),
-					bp.getAttendManager().getSeatStates(seat).getStates()));
+			System.out.println(String.format("[%d]: %s", seat, am.getParticipant(seat)));
+			System.out.println(String.format("\t%s %s", am.getParticipant(seat).getStates(),
+					am.getSeatStates(seat).getStates()));
 		}
 		System.out.println("============");
 	}

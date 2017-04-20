@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import com.zdream.pmw.monster.data.PokemonBaseData;
 import com.zdream.pmw.monster.prototype.EPokemonAbnormal;
 import com.zdream.pmw.monster.prototype.EPokemonType;
 import com.zdream.pmw.monster.prototype.Pokemon;
@@ -13,6 +14,8 @@ import com.zdream.pmw.platform.attend.service.ParticipantAbilityHandler;
 import com.zdream.pmw.platform.attend.service.ParticipantConverter;
 import com.zdream.pmw.platform.attend.service.SkillReleaseConverter;
 import com.zdream.pmw.platform.control.IPrintLevel;
+import com.zdream.pmw.platform.effect.state.CampState;
+import com.zdream.pmw.platform.effect.state.PlatformState;
 import com.zdream.pmw.platform.effect.state.SeatState;
 import com.zdream.pmw.platform.prototype.BattlePlatform;
 import com.zdream.pmw.platform.prototype.Fuse;
@@ -388,6 +391,41 @@ public class AttendManager implements IPlatformComponent {
 	}
 	
 	/**
+	 * @see AttendantConverter#pokemonBaseData(short, byte)
+	 * @see com.zdream.pmw.monster.data.IPokemonDataContainer#getBaseData(short, byte)
+	 * @since v0.2.2
+	 */
+	public PokemonBaseData pokemonBaseData(short speciesID, byte form) {
+		return attConvert.pokemonBaseData(speciesID, form);
+	}
+	
+	/**
+	 * <p>根据在场怪兽获得其原始静态数据</p>
+	 * @param p
+	 *   在场怪兽
+	 * @return
+	 *   对应的原始数据
+	 * @see AttendantConverter#pokemonBaseData(short, byte)
+	 * @since v0.2.2
+	 */
+	public PokemonBaseData pokemonBaseData(Participant p) {
+		return pokemonBaseData(p.getSpeciesID(), p.getForm());
+	}
+	
+	/**
+	 * <p>根据参与怪兽获得其原始静态数据</p>
+	 * @param att
+	 *   参与怪兽
+	 * @return
+	 *   对应的原始数据
+	 * @see AttendantConverter#pokemonBaseData(short, byte)
+	 * @since v0.2.2
+	 */
+	public PokemonBaseData pokemonBaseData(Attendant att) {
+		return pokemonBaseData(att.getSpeciesID(), att.getForm());
+	}
+	
+	/**
 	 * Attendant 转化到 Participant
 	 * @param attendant
 	 * @return
@@ -607,6 +645,14 @@ public class AttendManager implements IPlatformComponent {
 	}
 	
 	/**
+	 * @see AttendantOperateHandler#removeStateFromParticipant(byte, IState)
+	 * @since v0.2.2
+	 */
+	public void removeStateFromParticipant(byte seat, IState state) {
+		attOper.removeStateFromParticipant(seat, state);
+	}
+	
+	/**
 	 * 设置一位在场怪兽的指定状态, 为其操作状态使其某些属性变化<br>
 	 * 实现层<br>
 	 * <p>这里将怪兽的状态列表中删除<b>所有</b>符合 {@code statename} 的状态</p>
@@ -636,6 +682,14 @@ public class AttendManager implements IPlatformComponent {
 	 */
 	public void removeStateFromSeat(byte seat, String stateName) {
 		attOper.removeStateFromSeat(seat, stateName);
+	}
+
+	/**
+	 * @see AttendantOperateHandler#removeStateFromSeat(byte, IState)
+	 * @since v0.2.2
+	 */
+	public void removeStateFromSeat(byte seat, IState state) {
+		attOper.removeStateFromSeat(seat, state);
 	}
 
 	/**
@@ -813,9 +867,11 @@ public class AttendManager implements IPlatformComponent {
 		campStates = new IStateContainer[length];
 		for (byte camp = 0; camp < length; camp++) {
 			campStates[camp] = new StateContainer();
+			campStates[camp].pushState(new CampState(camp), pf);
 		}
 		
 		platformStates = new StateContainer();
+		platformStates.pushState(new PlatformState(), pf);
 		// TODO 全场状态列表放入初始参数
 		
 	}

@@ -9,7 +9,7 @@ import java.util.Properties;
 import com.zdream.pmw.platform.control.IPrintLevel;
 import com.zdream.pmw.platform.effect.IStateMessageFormater;
 import com.zdream.pmw.platform.effect.state.ASeatState;
-import com.zdream.pmw.platform.effect.state.ParticipantState;
+import com.zdream.pmw.platform.effect.state.AParticipantState;
 import com.zdream.pmw.util.json.JsonBuilder;
 import com.zdream.pmw.util.json.JsonValue;
 import com.zdream.pmw.util.json.JsonValue.JsonType;
@@ -77,7 +77,7 @@ public class StateHandler {
 		
 		if (!IStateMessageFormater.class.isAssignableFrom(clazz)) {
 			// 默认的生成方式
-			if (ParticipantState.class.isAssignableFrom(clazz)) {
+			if (AParticipantState.class.isAssignableFrom(clazz)) {
 				// force-state confusion -no 1 -source SKILL -skillID 60
 				
 				int argv = 0;
@@ -190,9 +190,9 @@ public class StateHandler {
 	 * @param state
 	 */
 	private void forceState(IState state) {
-		if (state instanceof ParticipantState) {
+		if (state instanceof AParticipantState) {
 			// 施加给怪兽
-			ParticipantState pstate = (ParticipantState) state;
+			AParticipantState pstate = (AParticipantState) state;
 			byte no = pstate.getNo();
 			
 			am.forceStateForParticipant(no, pstate);

@@ -198,7 +198,7 @@ public class SkillReleaseBox implements IPokemonDataType {
 	 * 该方法的结果是释放数据包中的目标列表被写入
 	 */
 	private void writeRange() {
-		AttendManager am = em.getAttends();
+		/*AttendManager am = em.getAttends();
 		
 		byte[] defaultSeats = em.defaultSkillRange(
 				pack.getAtStaff().getSeat(), 
@@ -223,7 +223,9 @@ public class SkillReleaseBox implements IPokemonDataType {
 			}
 		} else {
 			seats = defaultSeats;
-		}
+		}*/
+		
+		byte[] seats = pack.getRangeFormula().range(pack);
 
 		Aperitif value = em.newAperitif(Aperitif.CODE_JUDGE_RANGE);
 		value.append("seat", pack.getAtStaff().getSeat());

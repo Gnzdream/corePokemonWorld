@@ -157,7 +157,8 @@ public class SystemCodeRealizer implements ICodeRealizer{
 		// 所有 map 中以 '-' 开头的 key 都是要的
 		for (Iterator<Entry<String, JsonValue>> it = map.entrySet().iterator(); it.hasNext();) {
 			Entry<String, JsonValue> entry = it.next();
-			if (entry.getKey().startsWith("-")) {
+			String key = entry.getKey();
+			if (key.startsWith("-") && !Character.isDigit(key.charAt(1))) {
 				builder.append(' ').append(entry.getKey()).append(' ').append(entry.getValue().getValue());
 			}
 		}

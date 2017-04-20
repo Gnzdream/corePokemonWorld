@@ -8,7 +8,7 @@ import com.zdream.pmw.platform.attend.IState;
 import com.zdream.pmw.platform.attend.StateHandler;
 import com.zdream.pmw.platform.attend.service.EStateSource;
 import com.zdream.pmw.platform.effect.state.ASeatState;
-import com.zdream.pmw.platform.effect.state.ParticipantState;
+import com.zdream.pmw.platform.effect.state.AParticipantState;
 import com.zdream.pmw.util.json.JsonBuilder;
 import com.zdream.pmw.util.json.JsonValue;
 
@@ -57,7 +57,7 @@ public class StateBuilder {
 
 	/**
 	 * <p>发送施加状态拦截前消息, 控制层</p>
-	 * <p>此为由于技能释放的需要而的施加参与怪兽附属的状态 ({@link ParticipantState}) 方法</p>
+	 * <p>此为由于技能释放的需要而的施加参与怪兽附属的状态 ({@link AParticipantState}) 方法</p>
 	 * <p>该方法在进入实现层之前先要进行能否产生状态的判断</p>
 	 * @param stateName
 	 *   指定的状态名, {@link IState#name()}
@@ -158,7 +158,7 @@ public class StateBuilder {
 		if (!IStateMessageFormater.class.isAssignableFrom(clazz)) {
 			// 默认的生成方式
 			StringBuilder cmd = new StringBuilder(40);
-			if (ParticipantState.class.isAssignableFrom(clazz)) {
+			if (AParticipantState.class.isAssignableFrom(clazz)) {
 				// force-state confusion -no 1 -source SKILL -skillID 60
 				cmd.append("force-state").append(' ').append(statestr).append(' ')
 						.append("-no").append(' ').append(map.get("no").getValue()).append(' ')
@@ -255,7 +255,7 @@ public class StateBuilder {
 		
 		if (!IStateMessageFormater.class.isAssignableFrom(clazz)) {
 			// 默认的生成方式
-			if (ParticipantState.class.isAssignableFrom(clazz)) {
+			if (AParticipantState.class.isAssignableFrom(clazz)) {
 				// no
 				byte dfseat = (Byte) map.get("dfseat").getValue();
 				map.put("no", new JsonValue(em.getRoot().getAttendManager().noForSeat(dfseat)));

@@ -8,16 +8,14 @@ import com.zdream.pmw.platform.prototype.BattlePlatform;
 import com.zdream.pmw.util.json.JsonValue;
 
 /**
- * <p>归属方为指定座位的状态</p>
- * <p>这类状态被限制归属方为座位, 它与某个怪兽所在的位置绑定.</p>
+ * <p>归属方为指定阵营的状态</p>
+ * <p>这类状态被限制归属方为阵营, 它与某个阵营进行了绑定. 该类状态多半为场地状态</p>
  * 
- * @since v0.2.2
- *   [2017-04-14]
+ * @since v0.2.2 [2017-04-17]
  * @author Zdream
- * @version v0.2.2
- *   [2017-04-14]
+ * @version v0.2.2 [2017-04-17]
  */
-public abstract class ASeatState implements IState {
+public abstract class ACampState implements IState {
 
 	/* ************
 	 *	  属性    *
@@ -25,7 +23,7 @@ public abstract class ASeatState implements IState {
 	
 	protected EStateSource source;
 
-	protected byte seat;
+	protected byte camp;
 	
 	public void setSource(EStateSource source) {
 		this.source = source;
@@ -33,11 +31,11 @@ public abstract class ASeatState implements IState {
 	public void setSource(String source) {
 		this.source = EStateSource.parseEnum(source);
 	}
-	public byte getSeat() {
-		return seat;
+	public byte getCamp() {
+		return camp;
 	}
-	public void setSeat(byte seat) {
-		this.seat = seat;
+	public void setCamp(byte camp) {
+		this.camp = camp;
 	}
 
 	/* ************
@@ -52,9 +50,9 @@ public abstract class ASeatState implements IState {
 	@Override
 	public void set(JsonValue v, BattlePlatform pf) {
 		Map<String, JsonValue> map = v.getMap();
-		// init: seat
-		if (map.containsKey("seat")) {
-			seat = (Byte) map.get("seat").getValue();
+		// init: camp
+		if (map.containsKey("camp")) {
+			camp = (Byte) map.get("camp").getValue();
 		}
 		// init: source
 		if (map.containsKey("source")) {
@@ -66,10 +64,10 @@ public abstract class ASeatState implements IState {
 	 *	 初始化   *
 	 ************ */
 	
-	protected ASeatState(byte seat) {
-		this.seat = seat;
+	protected ACampState(byte camp) {
+		this.camp = camp;
 	}
 	
-	protected ASeatState() {}
+	protected ACampState() {}
 
 }

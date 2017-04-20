@@ -30,7 +30,7 @@ import com.zdream.pmw.util.json.JsonValue;
  * @version v0.2.2
  *   [2017-04-07]
  */
-public class PeriodState extends ParticipantState implements IDuration {
+public class PeriodState extends AParticipantState implements IDuration {
 
 	/* ************
 	 *	  属性    *

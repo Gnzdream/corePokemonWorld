@@ -71,6 +71,18 @@ public class AttendantConverter {
 	}
 	
 	/* ************
+	 *	代理方法  *
+	 ************ */
+	
+	/**
+	 * @see IPokemonDataContainer#getBaseData(short, byte)
+	 * @since v0.2.2
+	 */
+	public PokemonBaseData pokemonBaseData(short speciesID, byte form) {
+		return buffer.getBaseData(speciesID, form);
+	}
+	
+	/* ************
 	 *	调用结构  *
 	 ************ */
 	
@@ -78,7 +90,7 @@ public class AttendantConverter {
 	 * 精灵静态数据的缓存池
 	 */
 	private IPokemonDataContainer buffer = PokemonDataBuffer.getInstance();
-	
+
 	/**
 	 * 精灵相关服务
 	 */

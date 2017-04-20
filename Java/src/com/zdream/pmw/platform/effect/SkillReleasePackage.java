@@ -9,6 +9,7 @@ import com.zdream.pmw.platform.effect.addition.IAdditionFormula;
 import com.zdream.pmw.platform.effect.damage.IDamageFormula;
 import com.zdream.pmw.platform.effect.moveable.IMoveableFormula;
 import com.zdream.pmw.platform.effect.power.IPowerFormula;
+import com.zdream.pmw.platform.effect.range.IRangeFormula;
 import com.zdream.pmw.platform.prototype.BattlePlatform;
 
 /**
@@ -426,6 +427,7 @@ public class SkillReleasePackage {
 	 */
 	
 	IMoveableFormula movableFormula;
+	IRangeFormula rangeFormula;
 	IDamageFormula damageFormula;
 	IAccuracyFormula accuracyFormula;
 	IPowerFormula powerFormula;
@@ -437,6 +439,14 @@ public class SkillReleasePackage {
 
 	public void setMovableFormula(IMoveableFormula movableFormula) {
 		this.movableFormula = movableFormula;
+	}
+
+	public IRangeFormula getRangeFormula() {
+		return rangeFormula;
+	}
+
+	public void setRangeFormula(IRangeFormula rangeFormula) {
+		this.rangeFormula = rangeFormula;
 	}
 
 	public IDamageFormula getDamageFormula() {
@@ -477,6 +487,7 @@ public class SkillReleasePackage {
 	 */
 	public void clearFormulas() {
 		movableFormula = null;
+		rangeFormula = null;
 		damageFormula = null;
 		accuracyFormula = null;
 		powerFormula = null;

@@ -96,19 +96,22 @@ public class PeriodDamageFormula extends DefaultDamageFormula {
 		switch (mode) {
 		case MODE_CHARGE:
 			executeAddition();
+			createState();
 			break;
 		case MODE_THRASH:
 			super.eachRound();
+			createState();
 			break;
 		case MODE_HYPER_BEAM:
 			super.eachRound();
+			if (pack.isHitable(0)) {
+				createState();
+			}
 			break;
 
 		default:
 			break;
 		}
-		
-		createState();
 	}
 	
 	@Override
@@ -178,6 +181,8 @@ public class PeriodDamageFormula extends DefaultDamageFormula {
 				l.add(formulaParam.getArray().get(0));
 				l.add(formulaParam.getArray().get(1));
 			}
+		} else if (mode == MODE_HYPER_BEAM) {
+			param = hesitantParam();
 		}
 		
 		if (param == null) {
@@ -190,6 +195,30 @@ public class PeriodDamageFormula extends DefaultDamageFormula {
 		
 		byte atseat = pack.getAtStaff().getSeat();
 		pack.getEffects().sendForceStateMessage("period", atseat, atseat, pack.getSkill().getId(), v);
+	}
+	
+	/**
+	 * <p>使用僵直类技能时, 在第二回合不动的情况,
+	 * 创造默认的下回合的公式设置参数</p>
+	 * @return
+	 */
+	private JsonValue hesitantParam() {
+		JsonValue root = new JsonValue(JsonType.ArrayType);
+		JsonValue root0 = new JsonValue(JsonType.ObjectType);
+		JsonValue formula = new JsonValue(JsonType.ObjectType);
+		formula.add("mode", new JsonValue("set"));
+		
+		JsonValue values = new JsonValue(JsonType.ArrayType);
+		JsonValue value0 = new JsonValue(JsonType.ObjectType);
+		value0.add("n", new JsonValue("m.hesitant"));
+		value0.add("t", new JsonValue("m"));
+		values.add(value0);
+		
+		formula.add("value", values);
+		root.add(root0);
+		root0.add("formula", formula);
+		root0.add("ppSub", new JsonValue(0));
+		return root;
 	}
 	
 	/* ************

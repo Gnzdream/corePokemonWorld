@@ -17,7 +17,7 @@ import com.zdream.pmw.util.random.RanValue;
  * @date 2017年3月2日
  * @version v0.2.1
  */
-public class ConfusionState extends ParticipantState implements IDuration {
+public class ConfusionState extends AParticipantState implements IDuration {
 
 	/* ************
 	 *	  属性    *

@@ -15,7 +15,7 @@ import com.zdream.pmw.monster.prototype.EPokemonAbnormal;
  * @date 2016年4月17日
  * @version v0.2
  */
-public abstract class AAbnormalState extends ParticipantState {
+public abstract class AAbnormalState extends AParticipantState {
 
 	/* ************
 	 *	  属性    *

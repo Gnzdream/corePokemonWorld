@@ -87,7 +87,7 @@ public class LeaveSubState extends ASubState {
 	 *	 初始化   *
 	 ************ */
 
-	public LeaveSubState(ParticipantState mainState, byte no) {
+	public LeaveSubState(AParticipantState mainState, byte no) {
 		super(mainState);
 		this.no = no;
 		this.mainNo = mainState.getNo();

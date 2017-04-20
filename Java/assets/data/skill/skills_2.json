@@ -20,7 +20,7 @@
 "133":{"pp_max":20,"effect":[{"tg":"s","t":"a","v":2,"i":"SD","n":"a.ablc"}],"accuracy":0,"skill_id":133,"power":0,"title":"瞬间失忆","type":"psychic","category":"status","desc":"将头脑清空，瞬间忘记某事，从而大幅提高自己的特防。"},
 "134":{"pp_max":15,"effect":[{"t":"a","v":-1,"i":"HD","n":"a.ablc"}],"accuracy":80,"skill_id":134,"power":0,"title":"折弯汤匙","type":"psychic","category":"status","desc":"折弯汤匙引开注意，从而降低对手的命中率。"},
 "137":{"pp_max":30,"effect":[{"t":"a","i":"PARALYSIS","n":"a.abn"}],"accuracy":100,"skill_id":137,"power":0,"title":"大蛇瞪眼","type":"normal","category":"status","desc":"用腹部的花纹使对手害怕，从而让其陷入麻痹状态。"},
-"139":{"pp_max":40,"effect":[{"t":"a","i":"POISON","n":"a.abn"},{"t":"r","v":"team"}],"accuracy":90,"skill_id":139,"power":0,"title":"毒瓦斯","type":"poison","category":"status","desc":"将毒瓦斯吹到对手的脸上，从而让对手陷入中毒状态。"},
+"139":{"pp_max":40,"effect":[{"t":"a","i":"POISON","n":"a.abn"},{"t":"r","v":"team","n":"r.team"}],"accuracy":90,"skill_id":139,"power":0,"title":"毒瓦斯","type":"poison","category":"status","desc":"将毒瓦斯吹到对手的脸上，从而让对手陷入中毒状态。"},
 "141":{"pp_max":10,"effect":[{"r":0.5,"t":"a","n":"a.absorb"}],"accuracy":100,"skill_id":141,"power":80,"title":"吸血","type":"bug","category":"physical","desc":"吸取血液攻击对手。可以回复给予对手伤害的一半ＨＰ。"},
 "142":{"pp_max":10,"effect":[{"t":"a","i":"SLEEP","n":"a.abn"}],"accuracy":75,"skill_id":142,"power":0,"title":"恶魔之吻","type":"normal","category":"status","desc":"用恐怖的脸强吻对手。让对手陷入睡眠状态。"},
 "145":{"pp_max":30,"effect":[{"r":10,"t":"a","v":-1,"i":"SP","n":"a.ablc"}],"accuracy":100,"skill_id":145,"power":40,"title":"泡沫","type":"water","category":"special","desc":"向对手用力吹起无数泡泡进行攻击。有时会降低对手的速度。"},

@@ -16,7 +16,7 @@ import com.zdream.pmw.util.json.JsonValue;
  * @date 2017年3月2日
  * @version v0.2.1
  */
-public class FlinchState extends ParticipantState {
+public class FlinchState extends AParticipantState {
 
 	/* ************
 	 *	实现方法  *
