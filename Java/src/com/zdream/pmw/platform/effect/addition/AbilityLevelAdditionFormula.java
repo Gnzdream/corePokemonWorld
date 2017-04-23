@@ -67,11 +67,6 @@ public class AbilityLevelAdditionFormula extends AAdditionFormula implements IPo
 	private int[] values;
 	
 	/**
-	 * target 值的给定项，对方和自己
-	 */
-	public static final String TARGET_SELF_AND_ENEMY = "se";
-	
-	/**
 	 * 触发几率（百分比）
 	 */
 	private int rate;
@@ -229,7 +224,6 @@ public class AbilityLevelAdditionFormula extends AAdditionFormula implements IPo
 			v = entry.getValue();
 			
 			try {
-
 				switch (k) {
 				case "i": // items
 					is = parseItems(v);
@@ -240,6 +234,11 @@ public class AbilityLevelAdditionFormula extends AAdditionFormula implements IPo
 				case "v": // values
 					vs = parseValues(v);
 					break;
+				case "p": // param
+					if ("s".equals(v.getString())) {
+						param = PARAM_SET;
+					}
+					break;
 
 				default:
 					break;
@@ -249,7 +248,9 @@ public class AbilityLevelAdditionFormula extends AAdditionFormula implements IPo
 				e.printStackTrace(); // warn
 			}
 		}
-		
+
+		items = new int[is.length];
+		values = new int[is.length];
 		if (vs.length > 1) {
 			for (int i = 0; i < is.length; i++) {
 				put(is[i], vs[i]);
@@ -263,13 +264,8 @@ public class AbilityLevelAdditionFormula extends AAdditionFormula implements IPo
 	
 	@Override
 	public void restore() {
-		for (int i = 0; i < items.length; i++) {
-			if (items[i] == 0) {
-				break;
-			}
-			items[i] = 0;
-			values[i] = 0;
-		}
+		items = null;
+		values = null;
 		setParam(PARAM_CHANGE);
 		setMode(MODE_AND);
 		setRate(100);
@@ -441,7 +437,7 @@ public class AbilityLevelAdditionFormula extends AAdditionFormula implements IPo
 		int itemLen = size();
 		
 		if (itemLen == 0) {
-			em.logPrintf(IPrintLevel.PRINT_LEVEL_WARN, 
+			em.logPrintf(IPrintLevel.PRINT_LEVEL_INFO, 
 					"AbilityLevelAdditionF.force(): 无能力变化数值");
 			return;
 		}
@@ -463,7 +459,7 @@ public class AbilityLevelAdditionFormula extends AAdditionFormula implements IPo
 			
 			// 进行修改
 			Aperitif value = pack.getEffects().newAperitif(
-					Aperitif.CODE_ABILITY_LEVEL, seats);
+					Aperitif.CODE_ABILITY_LEVEL, dfseat);
 			value.append("param", param)
 				.append("dfseat", dfseat)
 				.append("items", items)
@@ -479,18 +475,30 @@ public class AbilityLevelAdditionFormula extends AAdditionFormula implements IPo
 	 * @param values
 	 */
 	private void check(final int[] items, final int[] values, byte dfseat) {
-		int length = items.length;
-		Participant participant = 
-				this.pack.getAttends().getParticipant(dfseat);
-		
-		for (int i = 0; i < length; i++) {
-			int item = items[i];
+		if (PARAM_CHANGE.equals(param)) {
+			final int length = items.length;
+			Participant participant = 
+					this.pack.getAttends().getParticipant(dfseat);
 			
-			int c = participant.getAbilityLevel(item) + values[i];
-			if (c > LEVEL_UPPER_LIMIT) {
-				values[i] = LEVEL_UPPER_LIMIT - participant.getAbilityLevel(item);
-			} else if (c < LEVEL_LOWER_LIMIT) {
-				values[i] = LEVEL_LOWER_LIMIT - participant.getAbilityLevel(item);
+			for (int i = 0; i < length; i++) {
+				int item = items[i];
+				
+				int c = participant.getAbilityLevel(item) + values[i];
+				if (c > LEVEL_UPPER_LIMIT) {
+					values[i] = LEVEL_UPPER_LIMIT - participant.getAbilityLevel(item);
+				} else if (c < LEVEL_LOWER_LIMIT) {
+					values[i] = LEVEL_LOWER_LIMIT - participant.getAbilityLevel(item);
+				}
+			}
+		} else {
+			final int length = items.length;
+			for (int i = 0; i < length; i++) {
+				int v = values[i];
+				if (v > LEVEL_UPPER_LIMIT) {
+					values[i] = LEVEL_UPPER_LIMIT;
+				} else if (v < LEVEL_LOWER_LIMIT) {
+					values[i] = LEVEL_LOWER_LIMIT;
+				}
 			}
 		}
 	}

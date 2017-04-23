@@ -46,6 +46,12 @@ public abstract class AAdditionFormula implements IAdditionFormula {
 	public static final int SIDE_BOTH_STAFF = 2;
 	
 	/**
+	 * <p>target 值的给定项, 跟随系统指定</p>
+	 * <p>选择该项时, 将使用 <code>pack</code> 中指定的范围, 而自己不再单独计算</p>
+	 */
+	public static final int SIDE_AUTO = 3;
+	
+	/**
 	 * 是否忽略命中判定, 让该状态仍然触发
 	 */
 	protected boolean ignoreHit;
@@ -83,6 +89,8 @@ public abstract class AAdditionFormula implements IAdditionFormula {
 				side = SIDE_DFSTAFF;
 			} else if ("se".equals(str)) {
 				side = SIDE_BOTH_STAFF;
+			} else if ("a".equals(str)) {
+				side = SIDE_AUTO;
 			}
 		}
 		
@@ -221,6 +229,15 @@ public abstract class AAdditionFormula implements IAdditionFormula {
 					seats[seatLen++] = pack.getAtStaff().getSeat();
 				}
 			}
+		}
+		
+		if (side == SIDE_AUTO) {
+			byte[] raw = pack.dfSeats();
+			if (seats.length < raw.length) {
+				seatsExpansion();
+			}
+			seatLen = raw.length;
+			System.arraycopy(raw, 0, seats, 0, seatLen);
 		}
 		
 		pack.getEffects().logPrintf(IPrintLevel.PRINT_LEVEL_DEBUG, "判断附加状态释放的目标为 %s(len=%d)\n\tat %s",

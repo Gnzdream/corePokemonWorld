@@ -1,8 +1,8 @@
 package com.zdream.pmw.platform.attend;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -30,7 +30,7 @@ public class StateContainer implements IStateContainer {
 	 *	数据结构  *
 	 ************ */
 	
-	protected final List<IState> states;
+	protected final LinkedList<IState> states;
 	
 	/* ************
 	 *	实现方法  *
@@ -116,7 +116,7 @@ public class StateContainer implements IStateContainer {
 	 ************ */
 
 	public StateContainer() {
-		states = new ArrayList<IState>();
+		states = new LinkedList<IState>();
 	}
 
 }

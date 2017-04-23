@@ -1,8 +1,12 @@
 package com.zdream.pmw.platform.attend;
 
+import java.util.ListIterator;
+
 import com.zdream.pmw.monster.prototype.EPokemonType;
 import com.zdream.pmw.monster.prototype.IPokemonDataType;
 import com.zdream.pmw.platform.effect.state.ExistState;
+import com.zdream.pmw.platform.effect.state.ISubStateCreater;
+import com.zdream.pmw.platform.prototype.BattlePlatform;
 
 /**
  * 在场精灵的数据模型<br>
@@ -118,6 +122,30 @@ public class Participant extends StateContainer implements IPokemonDataType{
 	
 	public int getStat(int item) {
 		return attendant.getStat()[item];
+	}
+
+	/* ************
+	 *	实用方法  *
+	 ************ */
+	
+	/**
+	 * 删除一位在场怪兽的全部状态, 不包括 {@link ExistState}.<br>
+	 * 实现层<br>
+	 * @since v0.2.2
+	 */
+	void removeAllStates(BattlePlatform pf) {
+		for (ListIterator<IState> it = states.listIterator(); it.hasNext();) {
+			IState s = it.next();
+			if (exist == s) {
+				continue;
+			}
+			if (s instanceof ISubStateCreater) {
+				((ISubStateCreater) s).handleDestroySubStates(pf);
+			}
+			s.onDestroy();
+		}
+		states.clear();
+		states.add(exist);
 	}
 
 	/* ************

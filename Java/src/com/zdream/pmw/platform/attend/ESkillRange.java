@@ -30,7 +30,13 @@ public enum ESkillRange {
 	/**
 	 * 自身
 	 */
-	SELF;
+	SELF,
+	
+	/**
+	 * 全场场地
+	 * @since v0.2.2
+	 */
+	PLATFORM;
 	
 	public static ESkillRange parseEnum(String value) {
 		for (ESkillRange s : ESkillRange.values()) {

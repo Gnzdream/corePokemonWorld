@@ -31,8 +31,8 @@ public class TestPlatform extends SimplePlatformHandler {
 		pm1.setStatIV(15, 15, 15, 15, 15, 15);
 		pm1.getSkill()[0] = (short) 19; // 7
 		pm1.getSkill()[1] = (short) 141; // 35 舞剑14 吸血141 巴掌3 龙之怒82
-		pm1.getSkill()[2] = (short) 67;
-		pm1.getSkill()[3] = (short) 73;
+		pm1.getSkill()[2] = (short) 105;
+		pm1.getSkill()[3] = (short) 114;
 		pm1.getSkillPP()[0] = (byte) 35;
 		pm1.getSkillPP()[1] = (byte) 15;
 		pm1.getSkillPP()[2] = (byte) 35;
@@ -154,7 +154,7 @@ public class TestPlatform extends SimplePlatformHandler {
 				PokemonBaseData data;
 				
 				while (true) {
-					id = (short) r.nextInt(151);
+					id = (short) (r.nextInt(151) + 1);
 					try {
 						if ((data = dao.getData(id)) != null)
 							break;
@@ -175,7 +175,7 @@ public class TestPlatform extends SimplePlatformHandler {
 					short sid;
 					
 					while (true) {
-						sid = (short) r.nextInt(100);
+						sid = (short) (r.nextInt(165) + 1);
 						try {
 							if ((sk = sdao.getSkill(sid)) != null)
 								break;
@@ -217,8 +217,8 @@ public class TestPlatform extends SimplePlatformHandler {
 	}
 	
 	public static void main(String[] args) {
-		new TestPlatform().testRandom();
-		// new TestPlatform().test();
+		// new TestPlatform().testRandom();
+		new TestPlatform().test();
 	}
 
 }

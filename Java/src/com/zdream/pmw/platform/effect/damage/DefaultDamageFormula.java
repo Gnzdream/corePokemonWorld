@@ -500,9 +500,17 @@ public class DefaultDamageFormula implements IDamageFormula {
 			effect = 1;
 		}
 		
+		// 伤害刷新: 最高到防御方的 hpi v0.2.2
+		int damage = pack.getDamage(index);
+		int hpi = pack.getDfStaff(index).getHpi();
+		if (damage > hpi) {
+			damage = hpi;
+			pack.setDamage(hpi, index);
+		}
+		
 		Aperitif value = pack.getEffects().newAperitif(Aperitif.CODE_SKILL_DAMAGE, seat);
 		value.append("seat", seat);
-		value.append("value", pack.getDamage(index));
+		value.append("value", damage);
 		value.append("ctable", pack.isCtable(index));
 		value.append("effect", effect);
 		pack.getEffects().startCode(value);

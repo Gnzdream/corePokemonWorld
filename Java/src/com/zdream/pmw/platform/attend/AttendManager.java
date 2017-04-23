@@ -296,16 +296,19 @@ public class AttendManager implements IPlatformComponent {
 	}
 	
 	/**
-	 * 精灵上场
+	 * 怪兽入场
+	 * @throws IllegalStateException
+	 *   当该座位存在怪兽时
 	 */
 	public void entrance(byte no, byte seat) {
 		pf.logPrintf(IPrintLevel.PRINT_LEVEL_INFO, 
 				"队伍 %d 的精灵 %s no = %d 入场 seat = %d", teamForNo(no), attendants[no].getNickname(), no, seat);
 		
 		if (participants[seat] != null) {
-			pf.logPrintf(IPrintLevel.PRINT_LEVEL_WARN, 
+			pf.logPrintf(IPrintLevel.PRINT_LEVEL_ERROR, 
 					"座位 seat = %d 的精灵 no = %d 还存在在场，但新精灵 no = %d 仍然上场",
 					seat, participants[seat].getNo(), no);
+			throw new IllegalStateException("seat = " + seat + " 的座位不为空, 无法完成入场");
 		}
 		participants[seat] = partConvert.convertToParticipant(getAttendant(no));
 		participants[seat].setSeat(seat);
@@ -315,8 +318,11 @@ public class AttendManager implements IPlatformComponent {
 	}
 	
 	/**
-	 * 精灵退场（实现部分）
+	 * 怪兽退场（实现部分）
+	 * <p>怪兽退场时将其的所有状态全部清除. 全部在实现层实现, 不需要回到操作层.</p>
 	 * @param seat
+	 * @throws IllegalStateException
+	 *   当该座位为空时
 	 */
 	public void exeunt(byte seat) {
 		pf.logPrintf(IPrintLevel.PRINT_LEVEL_INFO, 
@@ -324,9 +330,15 @@ public class AttendManager implements IPlatformComponent {
 		byte no = noForSeat(seat);
 		
 		if (participants[seat] == null) {
-			pf.logPrintf(IPrintLevel.PRINT_LEVEL_WARN, 
+			pf.logPrintf(IPrintLevel.PRINT_LEVEL_ERROR, 
 					"AM.exeunt(1) 座位 seat=%d 的精灵不在场，但请求退场", seat);
+			throw new IllegalStateException("seat = " + seat + " 的座位为空, 无法退场");
 		} else {
+			// TODO 将异常状态等数据反向保存到 Attendant 中
+			
+			// 删状态
+			participants[seat].removeAllStates(pf);
+			
 			participants[seat].setSeat((byte) 0);
 			participants[seat] = null;
 		}

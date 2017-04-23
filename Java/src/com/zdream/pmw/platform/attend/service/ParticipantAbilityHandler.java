@@ -204,7 +204,7 @@ public class ParticipantAbilityHandler implements IPokemonDataType {
 			} else if (level > 0) {
 				return (3 + level) / 3.0f;
 			} else {
-				return 3.0f / (3 + level);
+				return 3.0f / (3 - level);
 			}
 		}
 		}

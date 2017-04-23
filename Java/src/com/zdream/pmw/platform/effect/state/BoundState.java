@@ -26,7 +26,7 @@ import com.zdream.pmw.util.random.RanValue;
  * @version v0.2.1
  */
 public class BoundState extends AParticipantState 
-		implements IStateMessageFormater, IParticipantSubStateCreater {
+		implements IStateMessageFormater, IParticipantSubStateCreater, IDuration {
 
 	/* ************
 	 *	  属性    *
@@ -47,6 +47,7 @@ public class BoundState extends AParticipantState
 	 */
 	private LeaveSubState subState;
 	
+	@Override
 	public int getRound() {
 		return round;
 	}
@@ -126,7 +127,11 @@ public class BoundState extends AParticipantState
 		super.set(v, pf);
 		Map<String, JsonValue> map = v.getMap();
 		
-		this.atno = (Byte) map.get("atno").getValue();
+		if (map.containsKey("atno")) {
+			this.atno = (byte) map.get("atno").getValue();
+		}
+		
+		IDuration.super.set(v, pf);
 	}
 	
 	@Override
@@ -145,8 +150,13 @@ public class BoundState extends AParticipantState
 		return (byte) -1;
 	}
 	
+	@Override
+	public void reduceRound(int num) {
+		round -= num;
+	}
+	
 	/* ************
-	 *	触发状态  *
+	 *	状态触发  *
 	 ************ */
 	
 	/**

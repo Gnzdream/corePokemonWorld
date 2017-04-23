@@ -3,7 +3,7 @@ package com.zdream.pmw.platform.effect.range;
 import com.zdream.pmw.platform.attend.AttendManager;
 
 /**
- * <p>将处自己外所有能击中的怪兽作为目标的目标判定公式</p>
+ * <p>将除自己外所有能击中的怪兽作为目标的目标判定公式</p>
  * <p>TODO 由于在 3 on 3 模式的战斗中, 处在对角线上的敌人能不能相互打中,
  * 应该作为变量进行设置. 默认不能打中.<br>
  * 该变量将在以后进行补充</p>
