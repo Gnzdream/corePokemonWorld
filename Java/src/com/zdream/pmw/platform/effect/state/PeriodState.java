@@ -1,6 +1,5 @@
 package com.zdream.pmw.platform.effect.state;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -8,9 +7,9 @@ import com.zdream.pmw.platform.attend.AttendManager;
 import com.zdream.pmw.platform.attend.IStateInterceptable;
 import com.zdream.pmw.platform.effect.Aperitif;
 import com.zdream.pmw.platform.order.OrderManager;
-import com.zdream.pmw.platform.order.event.AEvent;
 import com.zdream.pmw.platform.prototype.BattlePlatform;
 import com.zdream.pmw.util.json.JsonBuilder;
+import com.zdream.pmw.util.json.JsonObject;
 import com.zdream.pmw.util.json.JsonValue;
 
 /**
@@ -39,7 +38,7 @@ public class PeriodState extends AParticipantState implements IDuration {
 	byte team;
 	
 	JsonValue param;
-	int round;
+	int round, maxRound;
 	short skillId;
 	byte target;
 	
@@ -125,15 +124,16 @@ public class PeriodState extends AParticipantState implements IDuration {
 	}
 	
 	@Override
-	public void set(JsonValue v, BattlePlatform pf) {
+	public void set(JsonObject v, BattlePlatform pf) {
 		super.set(v, pf);
 		IDuration.super.set(v, pf);
 		
-		Map<String, JsonValue> map = v.getMap();
+		Map<String, JsonValue> map = v.asMap();
 		if (map.containsKey("param")) {
-			JsonBuilder b = new JsonBuilder();
+			JsonBuilder b = JsonBuilder.getDefaultInstance();
 			param = b.parseJson(map.get("param").getString());
-			round = param.getArray().size();
+			round = param.asArray().asList().size();
+			maxRound = round;
 		}
 		if (map.containsKey("skillID")) {
 			skillId = ((Number) map.get("skillID").getValue()).shortValue();
@@ -183,8 +183,6 @@ public class PeriodState extends AParticipantState implements IDuration {
 	}
 	
 	private String exeRequestCommit(Aperitif value, IStateInterceptable interceptor, BattlePlatform pf) {
-		List<AEvent> events = new ArrayList<>();
-		
 		AttendManager am = pf.getAttendManager();
 		byte skillNum = -1;
 		short[] skills = am.getAttendant(getNo()).getSkill();
@@ -205,9 +203,14 @@ public class PeriodState extends AParticipantState implements IDuration {
 		}
 		
 		OrderManager om = pf.getOrderManager();
-		List<JsonValue> list = param.getArray();
-		om.buildMoveEvent(getNo(), skillNum, target, list.get(list.size() - round), events);
-		om.pushEvents(events);
+		List<JsonValue> list = param.asArray().asList();
+		
+		// 将现在的回合数写进去
+		JsonObject jo0 = list.get(list.size() - round).asObject(), jo1 = new JsonObject();
+		jo1.put("period_count", maxRound - round + 2);
+		jo0.put("_data", jo1);
+		
+		om.buildMoveEvent(getNo(), skillNum, target, jo0);
 		
 		// 然后回合计数 --
 		byte seat = pf.getAttendManager().seatForNo(getNo());

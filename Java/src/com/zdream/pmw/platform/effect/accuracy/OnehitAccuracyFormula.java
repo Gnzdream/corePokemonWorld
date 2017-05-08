@@ -22,12 +22,17 @@ public class OnehitAccuracyFormula implements IAccuracyFormula {
 	@Override
 	public int accuracy(SkillReleasePackage pack) {
 		int a = pack.getAtStaff().getAttendant().getLevel() -
-				pack.getDfStaff(pack.getThiz()).getAttendant().getLevel();
+				pack.getDfStaff(0).getAttendant().getLevel(); // TODO pack.getThiz() -> 0
 		if (a < 0) {
 			return 0;
 		} else {
 			return (a > 70) ? 100 : a + 30;
 		}
+	}
+	
+	@Override
+	public String toString() {
+		return name();
 	}
 
 }

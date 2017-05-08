@@ -1,7 +1,6 @@
 package com.zdream.pmw.platform.control.code;
 
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Map.Entry;
 
 import com.zdream.pmw.platform.attend.AttendManager;
@@ -11,7 +10,6 @@ import com.zdream.pmw.platform.effect.state.FaintingProtectedState;
 import com.zdream.pmw.platform.order.OrderManager;
 import com.zdream.pmw.platform.order.event.FaintingExeuntEvent;
 import com.zdream.pmw.platform.prototype.BattlePlatform;
-import com.zdream.pmw.util.json.JsonValue;
 
 /**
  * 系统的实现消息编辑与行动实现类<br>
@@ -110,15 +108,14 @@ public class SystemCodeRealizer implements ICodeRealizer{
 	
 	/**
 	 * 入场指令
-	 * @param value
+	 * @param ap
 	 * @return
 	 */
-	private String entranceCommandLine(JsonValue value) {
-		Map<String, JsonValue> map = value.getMap();
+	private String entranceCommandLine(Aperitif ap) {
 		return String.format("%s %d %d %d", CODE_ENTRANCE, 
-				map.get("team").getValue(),
-				map.get("no").getValue(),
-				map.get("seat").getValue());
+				ap.get("team"),
+				ap.get("no"),
+				ap.get("seat"));
 	}
 	
 	/**
@@ -136,30 +133,28 @@ public class SystemCodeRealizer implements ICodeRealizer{
 	 * @param value
 	 * @return
 	 */
-	private String ppSubCommandLine(JsonValue value) {
-		Map<String, JsonValue> map = value.getMap();
+	private String ppSubCommandLine(Aperitif ap) {
 		return String.format("%s %d %d %d", CODE_PP_SUB, 
-				map.get("seat").getValue(),
-				map.get("skillNum").getValue(),
-				map.get("value").getValue());
+				ap.get("seat"),
+				ap.get("skillNum"),
+				ap.get("value"));
 	}
 	
 	/**
 	 * 广播指令
-	 * @param value
+	 * @param ap
 	 * @return
 	 */
-	private String broadcastCommandLine(Aperitif value) {
+	private String broadcastCommandLine(Aperitif ap) {
 		StringBuilder builder = new StringBuilder(40);
-		builder.append(CODE_BROADCAST).append(' ').append(value.get("type"));
+		builder.append(CODE_BROADCAST).append(' ').append(ap.get("type"));
 		
-		Map<String, JsonValue> map = value.getMap();
 		// 所有 map 中以 '-' 开头的 key 都是要的
-		for (Iterator<Entry<String, JsonValue>> it = map.entrySet().iterator(); it.hasNext();) {
-			Entry<String, JsonValue> entry = it.next();
+		for (Iterator<Entry<String, Object>> it = ap.entrySet().iterator(); it.hasNext();) {
+			Entry<String, Object> entry = it.next();
 			String key = entry.getKey();
 			if (key.startsWith("-") && !Character.isDigit(key.charAt(1))) {
-				builder.append(' ').append(entry.getKey()).append(' ').append(entry.getValue().getValue());
+				builder.append(' ').append(entry.getKey()).append(' ').append(entry.getValue());
 			}
 		}
 		
@@ -179,7 +174,7 @@ public class SystemCodeRealizer implements ICodeRealizer{
 		if (am.getParticipant(seat).getAttendant().getHpi() == 0) {
 			// seat 座位上的精灵已经挂了
 			am.getParticipant(seat).pushState(new FaintingProtectedState(seat), pf);
-			pf.getOrderManager().pushEvent(new FaintingExeuntEvent(seat));
+			pf.getOrderManager().pushEventToNext(new FaintingExeuntEvent(seat));
 		}
 	}
 	
@@ -224,11 +219,10 @@ public class SystemCodeRealizer implements ICodeRealizer{
 	 * @param value
 	 * @return
 	 */
-	private String exeuntFaintCommandLine(JsonValue value) {
-		Map<String, JsonValue> map = value.getMap();
+	private String exeuntFaintCommandLine(Aperitif ap) {
 		return String.format("%s %d %d", CODE_EXEUNT_FAINT,
-				map.get("team").getValue(),
-				map.get("seat").getValue());
+				ap.get("team"),
+				ap.get("seat"));
 	}
 
 	/**
@@ -250,7 +244,7 @@ public class SystemCodeRealizer implements ICodeRealizer{
 	 * @param value
 	 * @return
 	 */
-	private String roundEndCommandLine(JsonValue value) {
+	private String roundEndCommandLine(Aperitif ap) {
 		return String.format("%s %d", CODE_ROUND_END,
 				pf.getOrderManager().getRound() + 1);
 	}
@@ -268,12 +262,11 @@ public class SystemCodeRealizer implements ICodeRealizer{
 	 * @param value
 	 * @return
 	 */
-	private String nonMovesDamageCommandLine(JsonValue value) {
-		Map<String, JsonValue> map = value.getMap();
+	private String nonMovesDamageCommandLine(Aperitif ap) {
 		return String.format("%s %d %d %s", CODE_NONMOVES_DAMAGE,
-				map.get("seat").getValue(),
-				map.get("hp").getValue(),
-				map.get("reason").getValue());
+				ap.get("seat"),
+				ap.get("hp"),
+				ap.get("reason"));
 	}
 
 	/**
@@ -299,22 +292,20 @@ public class SystemCodeRealizer implements ICodeRealizer{
 	 * @param value
 	 * @return
 	 */
-	private String releaseSkillCommandLine(JsonValue value) {
-		Map<String, JsonValue> map = value.getMap();
+	private String releaseSkillCommandLine(Aperitif ap) {
 		return String.format("%s %d %d", CODE_RELEASE_SKILL,
-				map.get("seat").getValue(),
-				map.get("skillID").getValue());
+				ap.get("seat"),
+				ap.get("skillID"));
 	}
 
 	/**
 	 * @param value
 	 * @return
 	 */
-	private String exeuntExchangeCommandLine(JsonValue value) {
-		Map<String, JsonValue> map = value.getMap();
+	private String exeuntExchangeCommandLine(Aperitif ap) {
 		return String.format("%s %d %d", CODE_EXEUNT_EXCHANGE,
-				map.get("team").getValue(),
-				map.get("seat").getValue());
+				ap.get("team"),
+				ap.get("seat"));
 	}
 	
 	/* ************

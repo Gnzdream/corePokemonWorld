@@ -1,7 +1,6 @@
 package com.zdream.pmw.util.json;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -71,6 +70,21 @@ public class JsonBuilder {
 	 * 空标识
 	 */
 	private static final String NULL = "null";
+	
+	private static JsonBuilder instance = new JsonBuilder();
+	
+	/**
+	 * 获得全局唯一实例
+	 * @return
+	 * @since v0.2.3
+	 */
+	public static JsonBuilder getDefaultInstance() {
+		return instance;
+	}
+	
+	public boolean isRootArray() {
+		return rootArray;
+	}
 
 	/**
 	 * 创建一个用于建造 Json 语句的工具<br>
@@ -91,9 +105,9 @@ public class JsonBuilder {
 		super();
 		this.rootArray = rootArray;
 		if (rootArray){
-			values = new JsonValue(JsonValue.JsonType.ArrayType);
+			values = new JsonArray();
 		} else {
-			values = new JsonValue(JsonValue.JsonType.ObjectType);
+			values = new JsonObject();
 		}
 	}
 
@@ -106,10 +120,7 @@ public class JsonBuilder {
 	 *   String 类型的值
 	 */
 	public JsonBuilder addEntry(String key, String value){
-		assert(!rootArray);
-		
-		this.values.add(key, new JsonValue(value));
-		
+		values.asObject().add(key, JsonValue.createJson(value));
 		return this;
 	}
 
@@ -124,8 +135,7 @@ public class JsonBuilder {
 	 *   可用 convertFromObject 方法的结果作为此输入参数
 	 */
 	public JsonBuilder addEntry(String key, JsonValue value){
-		this.values.add(key, value);
-		
+		values.asObject().add(key, value);
 		return this;
 	}
 	
@@ -140,10 +150,7 @@ public class JsonBuilder {
 	 *   所要获取的这个封装类的属性，必须有 public 的 get 方法
 	 */
 	public JsonBuilder addEntry(String key, Object obj){
-		assert(!rootArray);
-		
-		this.values.add(key, new JsonValue(obj));
-		
+		this.values.asObject().add(key, JsonValue.createJson(obj));
 		return this;
 	}
 	
@@ -159,10 +166,8 @@ public class JsonBuilder {
 	 *   所要获取的这个封装类的属性，必须有 public 的 get 方法
 	 */
 	public JsonBuilder addEntry(String key, Object obj, String ... fields){
-		assert(!rootArray);
-		
 		JsonValue value = createObjectValue(obj, fields);
-		this.values.add(key, value);
+		this.values.asObject().add(key, value);
 		
 		return this;
 	}
@@ -176,14 +181,12 @@ public class JsonBuilder {
 	 *   所要获取的这些封装类的共同属性，必须有 public 的 get 方法
 	 */
 	public JsonBuilder addBatchEntry(String[] key, Object[] obj, String ... fields){
-		assert(!rootArray);
-		assert(key != null && key.length == obj.length);
-		
-		int length = key.length;
+		JsonObject root = this.values.asObject();
+		final int length = key.length;
 		for (int i = 0; i < length; i++) {
 			Object value = obj[i];
 			JsonValue value0 = createObjectValue(value, fields);
-			this.values.add(key[i], value0);
+			root.add(key[i], value0);
 		}
 		
 		return this;
@@ -198,107 +201,15 @@ public class JsonBuilder {
 	 *   所要获取的这些封装类的共同属性，必须有 public 的 get 方法
 	 */
 	public JsonBuilder addBatchEntry(String[] key, Collection<?> objs, String ... fields){
-		assert(!rootArray);
-		assert(key != null && key.length == objs.size());
-		
-		int length = key.length;
+		JsonObject root = this.values.asObject();
+		final int length = key.length;
 		Iterator<?> it = objs.iterator();
 		for (int i = 0; i < length; i++) {
 			Object value = it.next();
 			JsonValue value0 = createObjectValue(value, fields);
-			this.values.add(key[i], value0);
+			root.add(key[i], value0);
 		}
-		
 		return this;
-	}
-	
-	/**
-	 * 添加 value 值，数值直接按 toString 方法打印<br>
-	 * @since v0.1.2
-	 * @param obj
-	 *   JsonValue 数组<br>
-	 *   可以用 batchConvertFrom... 方法获得的结果作为输入参数
-	 */
-	public void addBatchEntry(JsonValue[] values){
-		assert(rootArray);
-		this.values.addBatch(values);
-	}
-	
-	/**
-	 * 添加 value 值，数值直接按 toString 方法打印<br>
-	 * @param obj
-	 *   对象数组
-	 */
-	public void addBatchEntry(Object[] objs){
-		assert(rootArray);
-		
-		List<JsonValue> list = createListValue(objs);
-		this.values.addBatch(list);
-		
-		return;
-	}
-	
-	/**
-	 * 添加 value 值<br>
-	 * @param objs
-	 *   对象数组
-	 * @param fields
-	 *   所要获取的这些封装类的共同属性，必须有 public 的 get 方法
-	 */
-	public void addBatchEntry(Object[] objs, String ... fields){
-		assert(rootArray);
-		
-		List<JsonValue> list = createListValue(objs, fields);
-		this.values.addBatch(list);
-		
-		return;
-	}
-	
-	/**
-	 * 添加 value 值<br>
-	 * 当根组织结构为 数组 时有效
-	 * @param obj
-	 *   对象
-	 * @param fields
-	 *   所要获取的这个封装类的共同属性，必须有 public 的 get 方法
-	 */
-	public void addEntry(Object obj, String ... fields){
-		assert(rootArray);
-		
-		JsonValue value = createObjectValue(obj, fields);
-		this.values.add(value);
-		
-		return;
-	}
-	
-	/**
-	 * 添加 value 值，数值直接按 toString 方法打印<br>
-	 * @param obj
-	 *   对象数组
-	 */
-	public void addBatchEntry(Collection<?> objs){
-		assert(rootArray);
-		
-		List<JsonValue> list = createListValue(objs);
-		this.values.addBatch(list);
-		
-		return;
-	}
-	
-	/**
-	 * 添加 value 值<br>
-	 * @param obj
-	 *   对象集合
-	 * @param fields
-	 *   所要获取的这些封装类的共同属性，必须有 public 的 get 方法
-	 */
-	public void addBatchEntry(Collection<?> objs, String ... fields){
-		assert(rootArray);
-		
-		List<JsonValue> list = createListValue(objs, fields);
-		this.values.addBatch(list);
-		
-		return;
 	}
 	
 	/**
@@ -314,24 +225,6 @@ public class JsonBuilder {
 	public JsonValue convertFromObject(Object obj, String ... fields){
 		JsonValue value = createObjectValue(obj, fields);
 		return value;
-	}
-	
-	/**
-	 * 指定一个对象的成员变量，将该对象组成的数组转成对应的 JsonValue[]<br>
-	 * @param objs
-	 *   指定的对象组成的数组
-	 * @param fields
-	 *   该对象的成员变量
-	 * @return
-	 *   返回对应的 JsonValue 变量数组<br>
-	 *   该结果可以作为 addEntry 方法的输入参数 value<br>
-	 */
-	public JsonValue[] batchConvertFromSimple(Object[] objs){
-		JsonValue[] values = new JsonValue[objs.length];
-		for (int i = 0; i < values.length; i++) {
-			values[i] = new JsonValue(objs[i]);
-		}
-		return values;
 	}
 	
 	/**
@@ -381,7 +274,7 @@ public class JsonBuilder {
 	private void writeObject(JsonValue obj, StringBuilder builder){
 		builder.append(LEFT_BRACKET);
 		
-		Map<String, JsonValue> map = obj.getMap();
+		Map<String, JsonValue> map = obj.asObject().asMap();
 		Set<String> set = map.keySet();
 		
 		int borden = set.size() - 1;
@@ -428,7 +321,7 @@ public class JsonBuilder {
 	private void writeArray(JsonValue obj, StringBuilder builder){
 		builder.append(LEFT_ARRAY);
 		
-		List<JsonValue> list = obj.getArray();
+		List<JsonValue> list = obj.asArray().asList();
 		int borden = list.size() - 1;
 		Iterator<JsonValue> it = list.iterator();
 		
@@ -580,76 +473,6 @@ public class JsonBuilder {
 	}
 	
 	/**
-	 * 根据 POJO 对象和指定属性，将 objs 数组转化成 JsonValue 的集合
-	 * @param obj
-	 * @param field
-	 * @return
-	 */
-	private List<JsonValue> createListValue(Object[] objs, String[] fields) {
-		List<JsonValue> values = new ArrayList<JsonValue>(objs.length);
-		
-		for (int i = 0; i < objs.length; i++) {
-			Object obj = objs[i];
-			values.add(this.createObjectValue(obj, fields));
-		}
-		
-		return values;
-	}
-
-	/**
-	 * 将 objs 数组（简单类型）转化成 JsonValue 的集合
-	 * @param obj
-	 * @param field
-	 * @return
-	 */
-	private List<JsonValue> createListValue(Object[] objs) {
-		List<JsonValue> values = new ArrayList<JsonValue>(objs.length);
-		
-		for (int i = 0; i < objs.length; i++) {
-			Object obj = objs[i];
-			values.add(new JsonValue(obj));
-		}
-		
-		return values;
-	}
-	
-	/**
-	 * 根据 POJO 对象和指定属性，将 objs 集合转化成 JsonValue 的集合
-	 * @param obj
-	 * @param field
-	 * @return
-	 */
-	private List<JsonValue> createListValue(Collection<?> objs, String[] fields) {
-		int length = objs.size();
-		List<JsonValue> values = new ArrayList<JsonValue>(length);
-		
-		for (Iterator<?> it = objs.iterator(); it.hasNext();) {
-			Object obj = it.next();
-			values.add(this.createObjectValue(obj, fields));
-		}
-		
-		return values;
-	}
-	
-	/**
-	 * 将 objs 集合（简单类型）转化成 JsonValue 的集合
-	 * @param obj
-	 * @param field
-	 * @return
-	 */
-	private List<JsonValue> createListValue(Collection<?> objs) {
-		int length = objs.size();
-		List<JsonValue> values = new ArrayList<JsonValue>(length);
-		
-		for (Iterator<?> it = objs.iterator(); it.hasNext();) {
-			Object obj = it.next();
-			values.add(new JsonValue(obj));
-		}
-		
-		return values;
-	}
-	
-	/**
 	 * 根据 POJO 对象和指定属性，将单个 obj 转化成 JsonValue 的集合
 	 * @param obj
 	 * @param fields
@@ -657,7 +480,7 @@ public class JsonBuilder {
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private JsonValue createObjectValue(Object obj, String[] fields) {
-		JsonValue mother = new JsonValue(JsonType.ObjectType);
+		JsonObject mother = new JsonObject();
 		if (fields == null || fields.length == 0){
 			return mother;
 		}
@@ -679,7 +502,7 @@ public class JsonBuilder {
 				Method method = cl.getDeclaredMethod(methodName);
 				Object result = method.invoke(obj);
 				
-				mother.add(field, new JsonValue(result));
+				mother.add(field, JsonValue.createJson(result));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -797,11 +620,11 @@ public class JsonBuilder {
 	 * @return
 	 *   根组织形式为数组的 JsonValue
 	 */
-	private JsonValue parseArray() {
+	private JsonArray parseArray() {
 		// 此时 data.index 指向 '['
 		data.index++;
 		
-		JsonValue value = new JsonValue(JsonType.ArrayType);
+		JsonArray value = new JsonArray();
 		final int length = data.str.length();
 		
 		for (; data.index < length;) {
@@ -819,7 +642,7 @@ public class JsonBuilder {
 				value.add(this.parseObject());
 				break;
 			case StringType:
-				value.add(new JsonValue(this.parseString()));
+				value.add(JsonValue.createJson(this.parseString()));
 				break;
 			case ValueType: case NullType:
 				value.add(this.parseValue());
@@ -847,11 +670,11 @@ public class JsonBuilder {
 	 * @return
 	 *   根组织形式为映射的 JsonValue
 	 */
-	private JsonValue parseObject() {
+	private JsonObject parseObject() {
 		// 此时 data.index 指向 '{'
 		data.index++;
 		
-		JsonValue value = new JsonValue(JsonType.ObjectType);
+		JsonObject obj = new JsonObject();
 		
 		String str = data.str;
 		final int length = str.length();
@@ -861,7 +684,7 @@ public class JsonBuilder {
 			int ch = nextChar();
 			if (ch == '}'){
 				data.index++;
-				return value;
+				return obj;
 			}
 			
 			switch (getNextType(ch, data.index)) {
@@ -880,7 +703,7 @@ public class JsonBuilder {
 			if (ch == '}'){
 				data.index ++;
 				System.err.println("can not found value!");
-				return value;
+				return obj;
 			} else if (ch != ':'){
 				System.err.println("can not found \':\' in a object!");
 			}
@@ -888,16 +711,16 @@ public class JsonBuilder {
 			ch = nextChar();
 			switch (getNextType(ch, data.index)) {
 			case StringType:
-				value.add(key, new JsonValue(parseString()));
+				obj.add(key, JsonValue.createJson(parseString()));
 				break;
 			case ArrayType:
-				value.add(key, parseArray());
+				obj.add(key, parseArray());
 				break;
 			case ObjectType:
-				value.add(key, parseObject());
+				obj.add(key, parseObject());
 				break;
 			case ValueType: case NullType:
-				value.add(key, parseValue());
+				obj.add(key, parseValue());
 				break;
 			default:
 				break;
@@ -906,13 +729,13 @@ public class JsonBuilder {
 			ch = nextChar();
 			if (ch == '}'){
 				data.index ++;
-				return value;
+				return obj;
 			} else if (ch != ','){
 				System.err.println("can not found \',\' in a object!");
 			}
 			data.index ++;
 		}
-		return value;
+		return obj;
 	}
 
 	/**
@@ -995,14 +818,14 @@ public class JsonBuilder {
 			switch (flag) {
 			case 1:
 				if (mstr.contains(".")) {
-					value = new JsonValue(Double.parseDouble(mstr));
+					value = JsonValue.createJson(Double.parseDouble(mstr));
 				} else {
-					value = new JsonValue(Integer.parseInt(mstr));
+					value = JsonValue.createJson(Integer.parseInt(mstr));
 				}
 				break;
 				
 			case 2:
-				value = new JsonValue(Boolean.parseBoolean(mstr));
+				value = JsonValue.createJson(Boolean.parseBoolean(mstr));
 				break;
 				
 			case 3:

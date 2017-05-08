@@ -10,7 +10,7 @@ import com.zdream.pmw.platform.translate.parse.DefaultParser;
 import com.zdream.pmw.platform.translate.template.ITemplateChooser;
 import com.zdream.pmw.platform.translate.translater.ITranslate;
 import com.zdream.pmw.util.common.CodeSpliter;
-import com.zdream.pmw.util.json.JsonValue;
+import com.zdream.pmw.util.json.JsonArray;
 
 /**
  * 将战场信息翻译成人们看得懂的语言并显示<br>
@@ -65,7 +65,7 @@ public class MessageTranslator {
 		String cmd = ss[0];
 		
 		// 1. 原消息解析
-		JsonValue dict = repository.getDictionary(cmd);
+		JsonArray dict = repository.getDictionary(cmd);
 		DefaultParser parser = new DefaultParser();
 		Map<String, String> context = parser.parse(ss, dict);
 		

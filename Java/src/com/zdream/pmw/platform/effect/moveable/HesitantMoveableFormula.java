@@ -1,6 +1,7 @@
 package com.zdream.pmw.platform.effect.moveable;
 
 import com.zdream.pmw.platform.effect.Aperitif;
+import com.zdream.pmw.platform.effect.EffectManage;
 import com.zdream.pmw.platform.effect.SkillReleasePackage;
 
 /**
@@ -21,24 +22,29 @@ public class HesitantMoveableFormula implements IMoveableFormula {
 	}
 
 	@Override
-	public boolean canMove(SkillReleasePackage p) {
-		Aperitif ap = p.getEffects().newAperitif(
+	public boolean canMove(SkillReleasePackage p, EffectManage em) {
+		Aperitif ap = em.newAperitif(
 				Aperitif.CODE_JUDGE_MOVEABLE, p.getAtStaff().getSeat());
 		ap.append("seat", p.getAtStaff().getSeat());
 		ap.append("skillNum", p.getSkillNum());
 		ap.append("fail", name());
 		ap.append("result", false);
-		p.getEffects().startCode(ap);
+		em.startCode(ap);
 		
-		boolean result = (boolean) ap.getMap().get("result").getValue();
+		boolean result = (boolean) ap.get("result");
 		
 		if (!result) {
-			ap = p.getEffects().newAperitif(Aperitif.CODE_BROADCAST);
+			ap = em.newAperitif(Aperitif.CODE_BROADCAST);
 			ap.append("type", name());
-			p.getEffects().startCode(ap);
+			em.startCode(ap);
 		}
 		
 		return result;
+	}
+	
+	@Override
+	public String toString() {
+		return name();
 	}
 
 }

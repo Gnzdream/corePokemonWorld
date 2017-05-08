@@ -6,6 +6,7 @@ import com.zdream.pmw.platform.attend.IStateInterceptable;
 import com.zdream.pmw.platform.effect.Aperitif;
 import com.zdream.pmw.platform.effect.IStateMessageFormater;
 import com.zdream.pmw.platform.prototype.BattlePlatform;
+import com.zdream.pmw.util.json.JsonObject;
 import com.zdream.pmw.util.json.JsonValue;
 
 /**
@@ -90,8 +91,8 @@ public class DisableState extends AParticipantState
 	}
 	
 	@Override
-	public void set(JsonValue v, BattlePlatform pf) {
-		Map<String, JsonValue> map = v.getMap();
+	public void set(JsonObject v, BattlePlatform pf) {
+		Map<String, JsonValue> map = v.asMap();
 		if (map.containsKey("lock")) {
 			lock = (int) map.get("lock").getValue();
 		}
@@ -110,25 +111,24 @@ public class DisableState extends AParticipantState
 	}
 	
 	@Override
-	public String forceCommandLine(JsonValue value, BattlePlatform pf) {
+	public String forceCommandLine(Aperitif ap, BattlePlatform pf) {
 		// force-state %s -no %d -source %s -lock %d
-		Map<String, JsonValue> map = value.getMap();
-		String statestr = map.get("state").getString();
+		String statestr = ap.get("state").toString();
 		
-		byte dfseat = (Byte) map.get("dfseat").getValue();
+		byte dfseat = (byte) ap.get("dfseat");
 		byte dfno = pf.getAttendManager().noForSeat(dfseat);
 		
 		String cmd = String.format("force-state %s -no %d -source %s -lock %d",
-				statestr, dfno, map.get("source").getString(),
-				map.get("lock").getValue());
+				statestr, dfno, ap.get("source"),
+				ap.get("lock"));
 		return cmd;
 	}
 	
 	@Override
-	public void forceRealize(String[] codes, JsonValue argv, BattlePlatform pf) {
-		argv.add("no", new JsonValue(Byte.valueOf(codes[3])));
-		argv.add("source", new JsonValue(codes[5]));
-		argv.add("lock", new JsonValue(Integer.valueOf(codes[7])));
+	public void forceRealize(String[] codes, JsonObject argv, BattlePlatform pf) {
+		argv.add("no", JsonValue.createJson(Byte.valueOf(codes[3])));
+		argv.add("source", JsonValue.createJson(codes[5]));
+		argv.add("lock", JsonValue.createJson(Integer.valueOf(codes[7])));
 	}
 	
 	/* ************

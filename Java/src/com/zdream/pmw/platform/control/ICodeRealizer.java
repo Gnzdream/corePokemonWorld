@@ -26,7 +26,7 @@ public interface ICodeRealizer extends IMessageCode {
 	 * @param pfs
 	 * @return
 	 */
-	public String commandLine(Aperitif value, BattlePlatform pf);
+	public String commandLine(Aperitif ap, BattlePlatform pf);
 	
 	/**
 	 * 处理对应的指令

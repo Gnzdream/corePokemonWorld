@@ -1,0 +1,479 @@
+
+========
+（拦截前消息）消息格式：JsonValue
+{HEAD:?,...}
+    必要参数：
+    HEAD: String 消息头
+    SEATS: String 判断哪方触发状态的 seat 数组
+
+（拦截前消息）消息种类：
+1.  入场（前）: entrance [触发]
+    SEATS 必须为空！
+    team: 队伍, byte
+    no: 精灵 no 号, byte
+    seat: byte
+    注：幻影特性触发的位置就是现在，而且该特性的状态必须为全场的
+    
+2.  入场（后）: after-entrance
+    SEATS
+    team: 队伍, byte
+    no: 精灵 no 号, byte
+    seat: byte
+    注：降雨、威吓特性触发的位置就是现在
+    
+3.  请求行动: request-move
+    SEATS
+    team: 队伍, byte
+    seats: byte 数组
+    已经注册的状态: 蓄力状态
+    
+*   请求选择精灵上场: request-commit
+    SEATS 所有存在怪兽的位置
+    已经注册的状态: 蓄力状态
+    
+4.  扣 PP: ppSub
+    SEATS [攻击方]
+    seat: byte
+    [skillNum]: (由于攻击方释放技能减 PP 时, 该参数存在) byte 第几个技能，不是技能 ID
+    [skillID]: (由于攻击方释放技能减 PP 时, 该参数存在) short 这个才是技能 ID
+    value: int 扣多少 PP
+    已经注册的状态: 混乱, 蓄力状态
+    
+5.  判定技能伤害: skill-damage
+    SEATS: [dfseat]
+    seat: byte 防御方的 seat
+    value: short（伤害）
+    ctable: 布尔值，是否会心
+    effect，int，如果效果拔群 =1，效果一般 =-1，无效果 =-2，否则 x4=0
+    已经注册的状态: 愤怒(后拦截)
+    
+6.  退场（死亡）: exeunt-faint
+    SEATS 退场精灵一只
+    seat: byte 退场精灵的 seat
+    team: 所属队伍号, byte
+    
+7.  请求选择精灵上场: request-pokemon
+    SEATS 必须为空！
+    seats: byte[], 即将上场的精灵站的 seat[]
+    team: byte, 所属队伍号
+    
+8.  该回合结束: round-end
+    SEATS 全员
+    已经注册的状态: 畏缩, 束缚, 寄生种子(主)
+    
+9.  确定怪兽释放的技能 (包括使用道具等): confirm-skill
+    注: 它在 v0.2.2 之前叫 release-skill
+    SEATS [攻击方 seat]
+    seat: byte 攻击方座位号
+    skillID: short 技能 ID (可修改)
+    已经注册的状态: 混乱, 蓄力(period,p=-5), 愤怒(后拦截)
+    
+9.  真 * 释放技能 (可能包括使用道具等): release-skill
+    SEATS [攻击方 seat]
+    seat: byte 攻击方座位号
+    skillID: short 技能 ID
+    
+10. 退场（换下）: exeunt-exchange (v0.2.1)
+    SEATS 退场怪兽一只
+    no: byte 退场怪兽的 no
+    seat: byte 退场怪兽的 seat
+    team: byte 所属队伍号
+    [exchangeNo]: byte 如果有换上的怪兽, 为其 no
+
+101.判定行动: judge-moveable
+    seat: byte
+    skillNum: byte 第几个技能，不是技能 ID
+    result: boolean
+    [fail]: String (可以含 [] 来添加说明性的指令代码)
+        比如，因为麻痹无法行动，fault="PARALYSIS"，得到的 cmd 就是 "judge-moveable fault PARALYSIS"
+    已经注册的状态: 畏缩, 蓄力(period,p=-5), 定身(p=99)
+    
+102.判定范围: judge-range
+    seat: byte
+    skill: short-skillID
+    result: byte[]
+    [fault]: String (可以含 [] 来添加说明性的指令代码)
+    
+*   计算能力 (AT, DF, SA, SD, SP), 包括:
+	calc-at
+	calc-df
+	calc-sa
+	calc-sd
+	calc-sp
+    SEATS [需要计算的精灵 seat]
+    seat (byte)
+    value (int) 原始能力值
+    rate (float) 修正值，开始时为 1.0
+    [ignore] (int) (ExistState 判断时需要)
+    	当参数为 0 时, 不忽略任何能力等级, 默认
+		当参数为 1 时, 忽略提高的能力等级, 当该精灵能力等级大于 0 时忽略能力等级计算
+		当参数为 2 时, 忽略降低的能力等级, 当该精灵能力等级小于 0 时忽略能力等级计算
+		当参数为 3 时, 忽略所有能力等级变化
+    [level] (int) 对应能力等级 (数据由 ExistState 放入)
+    	该参数是计算时判断出来的能力等级, 不是当前怪兽的实际能力等级
+    	像会心一击时不计算防御方防御能力等级提升的效果, 该值就不会大于 0
+    [alter] (boolean) 如果为 false, 可能为混乱, 状态不应该改变修正值 (默认 true)
+    
+    已经注册的状态:
+	*	calc-at
+    存在、烧伤
+	*	calc-df
+    存在、
+	*	calc-sa
+    存在、
+	*	calc-sd
+    存在、
+	*	calc-sp
+    存在、
+    
+202.计算命中率: calc-hitrate
+    seat: byte
+    result: float（原值为 1.0f）
+    abs: boolean (absolute) 是否绝对命中
+    
+203.计算躲避率: calc-hide
+	SEATS: dfseat
+    seat: byte
+    result: float（原值为 1.0f）
+    abs: boolean (absolute) 是否绝对躲藏
+    [reason]: string 当 abs=true 时, 就会出现该项, 说明绝对躲藏的原因
+        飞翔: "absent:fly"
+    
+    已经注册的状态: 飞翔, 挖洞
+    
+204.计算技能命中率: calc-accuracy
+    atseat: byte 攻击方的 seat
+    dfseat: byte 防御方的 seat
+    skill: short-skillID
+    result: float（原值为 1.0f）
+    abs: byte (absolute) 绝对命中->1 绝对躲藏->2 无特别效果->0
+
+205.计算属性: calc-type
+	SEATS: [atseat]
+    seat: byte, atseat
+    skill: short, skillId
+    result: int 为属性枚举的 ordinal() 方法, 默认为技能属性代号
+
+*	计算免疫情况, 包括属性免疫和特殊技能免疫(比如蘑菇孢子对草系怪兽): judge-immuse
+	SEATS: [atseat, dfseat]
+	atseat: byte
+	dfseat: byte
+	atType: int 技能属性代号
+	typeImmuses: boolean[] 对于每一个防御方属性的免疫状况
+	skillId: short, skillId
+
+206.计算属性克制倍率: calc-typeRate
+	SEATS: [atseat, dfseat]
+    atseat: byte 攻击方的 seat
+    dfseat: byte 防御方的 seat
+    atType: int 技能属性代号
+    dfType: int 技能属性代号
+    result: float（rate）
+    [fault]: String (可以含 [] 来添加说明性的指令代码)
+207.计算会心一击发动等级: calc-ct
+	SEATS: [atseat, dfseat]
+    atseat: byte 攻击方的 seat
+    dfseat: byte 防御方的 seat
+    result: byte（会心等级，大于 0）
+    abs: int (absolute) 绝对会心->1 绝对回避会心->2 无特别效果->0
+    
+208.计算技能威力: calc-power
+	SEATS: atseat
+    atseat: byte 攻击方的 seat
+    skillId: short 技能 ID
+    result: float（默认原值为 1.0f）
+    已经注册的状态: 存在状态(本系加成)
+
+209.计算伤害修正(防方限定): count-corrent
+	SEATS: string 这样子的字符串"[防御方的 seat]"
+    atseat: byte 攻击方的 seat
+    dfseat: byte 防御方的 seat
+    skillId: short
+    result: float（原值为 1.0f）
+
+210.计算伤害: count-damage
+	SEATS: [dfseat]
+    atseat: byte 攻击方的 seat
+    dfseat: byte 防御方的 seat
+    skill: short skillID
+    result: int（伤害）
+    
+211.计算附加状态释放几率、能否触发 （这里用来计算几率）: calc-addition-rate
+    SEATS 攻击方和防御方
+    dfseats: byte[] 本次攻击所有防御方 seats
+    target: byte 本次判定的对象 seat, 不是 camp 和 team
+    [camp]: byte 如果该状态指定目标是一个阵营的话, 存在该参数
+    atseat: byte 施加方（谁施加的，【注意】可能和 dfseat 相同） seat
+    type: String 类型，什么 addition
+        可以为 abnormal, abilityLevel, state
+    [abnormal]: （abnormal 特有）byte 异常状态码（【注意】不是 enum.ordinal()
+        请注意 Pokemon 类的 abnormal 说明）
+    [param]: （abilityLevel 特有）String，-c 为能力等级变化，-s 为能力等级设置
+    [items]: （abilityLevel 特有）int[]，能力等级变化/设置的能力项
+    [values]: （abilityLevel 特有）int[]，能力等级变化/设置的等级数
+    [remove]: （state 特有, 选用, 默认 false）boolean 是否为删除该状态, 
+    [state]: （state 特有）String，是哪个状态, 见 IState.name()
+    [state-category]: （state 特有, 选用）String，是状态分类, 见 IState.ofCategory()
+        @version v0.2.1
+        ExistState 默认处理时, 如果该对象如果已经存在该状态, 则设置不能触发 (reason="repeat"),
+        除非 value.filters 中含元素 "repeat"
+    [reason]: （选用）String 引起施加失败的原因
+        @version v0.2.1
+    rate: int 释放几率 rate
+	result: int 0-施加成功 1-施加失败 默认为 0
+		@version v0.2.2 （abilityLevel） 如果数据被改变, 该参数为 2
+    [fault](已经弃用): String (可以含 [] 来添加说明性的指令代码)
+    [source]: String 触发源, 默认为当前技能. 如果像愤怒状态, 是状态触发, 则写入:
+    	"state:rage"
+    已经注册的状态: 存在(去重), 白雾(p:5)
+    注意： 后面如果写到“穿透”特性时, 要它在白雾前触发, 并用 Aperitif.filter 的方式跳过白雾状态触发
+
+301.施加异常状态: force-abnormal
+    SEATS 施加对象
+    dfseat: byte 施加对象 seat
+    atseat: byte 施加方（谁施加的，【注意】可能和 dfseat 相同，为 -1 是系统行为） seat
+    abnormal: byte 异常状态码（【注意】不是 enum.ordinal()
+        请注意 Pokemon 类的 abnormal 说明）
+    result: int 0-施加成功 1-施加失败(已经弃用) 默认为 0
+    [fault]: String (可以含 [] 来添加说明性的指令代码，一般而言这里是不会有的，
+             如果要阻挡在 count-addition-rate 时已经触发)
+    [param]: String，参数为 -m 时，在实现代码时会加上 -m 参数
+    
+*   施加状态: force-state
+    SEATS 施加对象（施加从状态时可以为空）
+    dfseat: byte 施加对象 seat
+    atseat: byte 施加方（谁施加的，【注意】可能和 dfseat 相同，为 -1 是系统行为） seat
+    state: string 状态名称
+    [main]: string 主状态产生从状态时限定, 为主状态名称
+    [main-seat]: byte 主状态产生从状态时限定, 为主状态所在位置
+    [?]: 未知 type 视状态而定
+    
+*   状态删除: remove-state
+    SEATS 状态涉及的怪兽的座位, 如果状态是施加在怪兽上的, 就只有该怪兽座位
+    [seat]: byte
+    state: String 状态名称
+    
+*   状态修改: state-set
+    SEATS 状态的拥有者座位
+    [seat]: byte
+    [-?] Object 会原封不动放到命令行中
+    state: String 状态名称
+    
+*   除状态变化、能力等级变化外, 所有技能附加效果的判断和结算
+    addition-settle
+    注: 吸血、反伤类技能(含回复技) / 多次攻击技能(判断攻击次数)
+    SEATS 攻方和防方
+    category: String
+        吸血类技能 absorb
+        反伤类技能 reaction
+        多次连续攻击技能 double
+        交换上下场 switch
+        ...待补充
+    [dfseats]
+    	吸血、反伤类技能: byte[] 防方 seat
+    	交换上下场技能: byte[] 防方 seat
+    [atseat]
+    	吸血、反伤类技能: byte 攻方（谁施加的，【注意】可能和 dfseat 相同，为 -1 是系统行为） seat
+    	交换上下场技能: byte 攻方（谁施加的，【注意】可能和 dfseat 相同，为 -1 是系统行为） seat
+    [target]
+    	吸血、反伤类技能: 目标 seat, 吸血技谁吸血, 反伤技谁反伤, 所以 target 可能等于 atseat
+    	交换上下场技能: 目标 seat, 谁交换写谁 seat
+    [side]
+        吸血、反伤类技能: int 执行吸血、反伤反馈的是(吸血谁加血), 1-攻击方, 0-防御方, 2-双方
+    	交换上下场技能: 交换本体设置为攻方还是防方, 参数同上
+    [reference]
+        吸血、反伤类技能: int 数值计算的参考方, 0-伤害值为参考方, 1-攻击方的生命上限为参考方
+    [refer]
+        吸血、反伤类技能: int 数值计算的参考值, 参考方的数值
+    [rate]
+        吸血、反伤类技能: float 对敌方进行攻击时, 自己回复/受伤占参考方的倍数, 
+        	正数吸血, 负数反伤(原值, 不要修改)
+    [value]
+        吸血、反伤类技能: float 实际吸血/受伤值, 正数吸血, 负数反伤
+    [abs] (absolute)
+        吸血、反伤类技能: int 绝对成功->1 绝对失败->2(回复封印、石脑) 无特别效果->0或null
+    [reason]
+        吸血、反伤类技能: string 绝对成功、失败(高优先度),
+            以及原本吸血变反伤, 原本反伤变加血(低优先度)的理由, 即 state.name()
+
+    [mode]
+        吸血、反伤类技能: int 模式
+        多次连续攻击技能: int 模式, 见 DoubleDamageFormula 中 mode 的说明
+    [round]
+        多次连续攻击技能: int, 计算得到的攻击次数, 允许修改
+
+302.在非使用技能的情况下扣生命值: nonMoves-damage
+    SEATS 扣生命值的对象
+    seat: byte 扣生命值的对象
+    hp: int 扣生命值的数值（正数为扣, 负数为加, 比如寄生种子的吸血效果）
+    reason: 扣生命值的原因。比如中毒那么就是 POISON
+        如果遇到毒疗那就把 hp 的值乘个 -1，剧毒要重新算
+        可能是 absorb&LiquidOoze (两个原因用 & 连接), 表示吸取技能受到污泥浆特性影响减血
+    
+303.能力等级变化/设置（强制）: ability-level
+    SEAT: 变化等级的精灵的 seat(s)
+    param: String，-c 为能力等级变化，-s 为能力等级设置
+    dfseat: byte，能力等级变化/设置的精灵 seat
+    items: int[]，能力等级变化/设置的能力项
+    values: int[]，能力等级变化/设置的等级数
+    [fault]: String (可以含 [] 来添加说明性的指令代码，一般而言这里是不会有的，
+             如果要阻挡在 count-addition-rate 时已经触发)
+    
+*   广播 broadcast
+    SEAT: 空
+    type: string 类型.
+    其它随意
+    所有带 - 开头的参数都将放到命令当中
+
+--------------- v0.2.3 中因为 addition 部分的分化而产生的消息
+
+*	多轮攻击次数  multi-strike-count  v0.2.3
+	#  从 addition-settle 中分化, 仅在 2-5 次等攻击次数浮动时触发的消息
+	SEAT: 攻击方
+	seat: byte 攻击方座位
+	round: int 暂时确定的攻击次数
+	mode: int 见 MultiStrikeInstruction 中 mode 的说明
+    
+计算其它效果
+
+当受到伤害
+当能力变化
+形态变化
+
+========
+skill.ReleaseData 的 key:
+
+技能范围 range:
+暴击率 crit:
+优先度 priority:
+威力公式 power:
+命中公式 accuracy:
+伤害公式 damage:
+附加状态 addition:
+反作用效果 reaction:
+
+========
+发送到消息中心的消息格式：（实现消息）
+1.  精灵入场（系统）：entrance x1 x2 x3
+    x1 队伍号，整数
+    x2 精灵 no 号，整数
+    x3 seat，整数
+
+2.  请求行动（系统）：request-move x1 x2
+    x1 队伍号，整数
+    x2 seats，数组形式（例：[0,1]，无空格）
+
+3.  扣 PP：ppSub x1 x2 x3
+    x1 seat，整数
+    x2 skillNum，整数（是精灵第几个技能，不是技能 ID）
+    x3 value，整数，扣多少 PP
+
+4.  技能伤害: skill-damage x1 x2 x3 x4
+    x1 seat，整数
+    x2 value，整数，扣多少 HP
+    x3 ctable，布尔值，如果会心的话 x3=true，否则 x3=false
+    x4 effect，整数，如果效果拔群 x4=1，效果一般 x4=-1，无效果 x4=-2，否则 x4=0
+    
+5.  濒死退场: exeunt-faint x1 x2
+    x1 队伍号，整数
+    x2 seat，整数
+
+6.  施加异常状态: force-abnormal x1 x2 [-m]
+    x1 seat，整数
+    x2 abnormal，整数，异常状态加参数的复合数据
+    [-m]: mute，固定字符串，如果由于剧毒、睡眠这些异常状态参数会随回合数改变的，
+            它的改变不会给玩家显示
+    
+    如果施加失败, 使用 broadcast
+    (未实现) broadcast fail-to-force-abnormal -seat <seat> -abnormal <abnormal> -reason <reason>
+    
+7.  由于麻痹无法行动: judge-movable fault PARALYSIS
+    由于睡眠无法行动: judge-movable fault SLEEP
+    由于害怕 (畏缩) 无法行动: judge-movable fault flinch
+
+8.  回合结束: round-end x1
+    x1 round，整数，指下一个回合的回合数，注意是下一个回合的
+    
+9.  非技能伤害: nonMoves-damage x1 x2 x3
+    x1 seat，整数
+    x2 hp，整数，扣多少 HP
+    x3 reason，字符串，原因
+
+10. 能力等级变化: ability-level -c x1 x2 x3 [x2 x3 ...]
+    -c (change)
+    x1 seat，整数
+    x2 item，字符串，能力项，比如 [1](AT) [1,2](AT,DF)
+    x3 value，整数，可为负，能力等级变化数
+
+11. 能力等级设置: ability-level -s x1 x2 x3 [x2 x3 ...]
+    -s (set)
+    x1 seat，整数
+    x2 item，字符串，能力项，比如 [1](AT) [1,2](AT,DF)
+    x3 value，整数，可为负，能力等级设置成该的数值
+
+12. 技能释放: release-skill x1 x2
+    x1 seat，整数
+    x2 skillId，整数，技能编号
+    
+13. 状态施加: force-state [...]
+    这是一个状态施加的例子:
+        force-state confusion -no 1 -source SKILL -skillID 60
+    参数:
+    <String> confusion 是混乱状态.
+    -no <Integer> 如果该状态归属方是在场怪兽的话, 为它的 no 号
+    -source <String> 该状态由什么源所触发的, 见 EStateSource
+    -skillID <Integer> 如果该状态是技能触发的 (源为技能), 报告技能的 ID
+    
+14. 状态清除: remove-state [...]
+    这是一个状态施加的例子:
+        remove-state confusion -seat 1
+    参数:
+    <String> confusion 是混乱状态.
+    -seat <Integer> 如果该状态归属方是在场怪兽的话, 为它的 seat 号
+    
+15. 状态变化: state-set [...]
+    这是一个状态变化的例子:
+        state-set SLEEP -seat 1 -reduce 1
+    参数:
+    <String> SLEEP 是睡眠异常状态
+    -seat <Integer> 如果该状态归属方是在场怪兽的话, 为它的 seat 号
+    <String> <Object> 其它参数
+    
+16. 交换退场: exeunt-exchange x1 x2
+    x1 队伍号，整数
+    x2 seat，整数
+    
+17. 恢复体力:(为在场怪兽) recover x1 x2 x3
+    x1 seat，整数
+    x2 hp，整数，加多少 HP，正数
+    x3 reason，字符串，原因
+    (非在场怪兽, 未实现) recover -no x1 x2 x3
+    x1 no，整数
+    x2 hp，整数，加多少 HP，正数
+    x3 reason，字符串，原因
+
+18. 广播:(未完成) broadcast <x1> [...]
+    x1 type，字符串，原因
+    
+    (带 "-" 的数据位置互换没有影响)
+    
+    miss: 未命中
+    	broadcast miss -atseat <atseat> -dfseat <dfseat>
+    immune: 属性免疫, 攻击无效
+    	broadcast immune -atseat <atseat> -dfseat <dfseat>
+    invalid: 技能发动失败
+    	broadcast immune -atseat <atseat>
+	
+	多轮攻击中:
+	连击开始
+		broadcast multi -tag start
+	连击结束
+		broadcast multi -tag end -round <连击总次数, int>
+
+======== 灵感
+欺骗空间的效果是，所有精灵的速度 x -1
+
+压力特性的触发将后移到行动范围确定时，这样和一般释放技能耗 PP 区分了开来
+因为在一般释放技能扣 PP 时，行动范围没有确定，这时还不能确定压力特性是否触发
+
+ISkillReleaseService 的 movableFormula 方法需要入参

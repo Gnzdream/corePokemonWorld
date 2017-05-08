@@ -7,6 +7,7 @@ import com.zdream.pmw.monster.skill.ESkillCategory;
 import com.zdream.pmw.monster.skill.Skill;
 import com.zdream.pmw.platform.attend.SkillRelease;
 import com.zdream.pmw.util.json.JsonBuilder;
+import com.zdream.pmw.util.json.JsonObject;
 import com.zdream.pmw.util.json.JsonValue;
 import com.zdream.pmwdb.mysql.model.SkillModel;
 
@@ -28,9 +29,9 @@ public class SkillBuilder {
 	 * @param value
 	 * @return
 	 */
-	public static Skill build(JsonValue value) {
+	public static Skill build(JsonObject value) {
 		Skill skill = new Skill();
-		Map<String, JsonValue> map = value.getMap();
+		Map<String, JsonValue> map = value.asMap();
 		
 		skill.setId(((Integer)(map.get("id").getValue())).shortValue());
 		skill.setTitle((String)(map.get("title").getValue()));
@@ -80,8 +81,10 @@ public class SkillBuilder {
 		skill.setDescription(model.getDescription());
 		
 		JsonValue value = new JsonBuilder().parseJson(model.getReleaseEffect());
+		if (value != null) {
+			skill.setRelease(value.asArray());
+		}
 		
-		skill.setRelease(value);
 		return skill;
 	}
 	

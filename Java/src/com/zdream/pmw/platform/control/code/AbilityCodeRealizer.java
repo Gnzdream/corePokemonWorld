@@ -1,13 +1,10 @@
 package com.zdream.pmw.platform.control.code;
 
-import java.util.Map;
-
 import com.zdream.pmw.platform.control.ICodeRealizer;
 import com.zdream.pmw.platform.control.IPrintLevel;
 import com.zdream.pmw.platform.effect.Aperitif;
 import com.zdream.pmw.platform.effect.addition.AbilityLevelAdditionFormula;
 import com.zdream.pmw.platform.prototype.BattlePlatform;
-import com.zdream.pmw.util.json.JsonValue;
 
 /**
  * 能力变化消息行动实现<br>
@@ -31,11 +28,11 @@ public class AbilityCodeRealizer implements ICodeRealizer {
 	}
 
 	@Override
-	public String commandLine(Aperitif value, BattlePlatform pf) {
+	public String commandLine(Aperitif ap, BattlePlatform pf) {
 		this.pf = pf;
-		String head = value.getHead();
+		String head = ap.getHead();
 		if (CODE_ABILITY_LEVEL.equals(head)) {
-			return abilityLevelCommandLine(value);
+			return abilityLevelCommandLine(ap);
 		}
 		return null;
 	}
@@ -58,17 +55,16 @@ public class AbilityCodeRealizer implements ICodeRealizer {
 	 * @param value
 	 * @return
 	 */
-	private String abilityLevelCommandLine(JsonValue value) {
-		Map<String, JsonValue> map = value.getMap();
+	private String abilityLevelCommandLine(Aperitif ap) {
 		StringBuilder builder = new StringBuilder(25);
 		
-		byte dfseat = (Byte) map.get("dfseat").getValue();
+		byte dfseat = (byte) ap.get("dfseat");
 		
-		builder.append("ability-level ").append(map.get("param").getString()).append(' ');
+		builder.append("ability-level ").append(ap.get("param")).append(' ');
 		builder.append(dfseat).append(' ');
 
-		int[] items = (int[]) map.get("items").getValue();
-		int[] values = (int[]) map.get("values").getValue();
+		int[] items = (int[]) ap.get("items");
+		int[] values = (int[]) ap.get("values");
 		int length = items.length;
 		for (int i = 0; i < length; i++) {
 			builder.append(items[i]).append(' ').append(values[i]).append(' ');

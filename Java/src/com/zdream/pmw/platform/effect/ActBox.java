@@ -35,11 +35,11 @@ public class ActBox {
 		// 下场部分
 		// 这里需要特殊考虑的情况是技能 接力棒
 		Aperitif value = em.newAperitif(Aperitif.CODE_EXEUNT_EXCHANGE, seat);
-		value.append("no", noOut);
-		value.append("seat", seat);
-		value.append("team", team);
+		value.put("no", noOut);
+		value.put("seat", seat);
+		value.put("team", team);
 		if (noIn != -1) {
-			value.append("exchangeNo", noIn);
+			value.put("exchangeNo", noIn);
 		}
 		em.startCode(value);
 		
@@ -67,16 +67,16 @@ public class ActBox {
 	private void enteranceAct(byte seat, byte noIn, byte team) {
 		// 入场（前）
 		Aperitif value = em.newAperitif(Aperitif.CODE_ENTRANCE, seat);
-		value.append("team", team);
-		value.append("no", noIn);
-		value.append("seat", seat);
+		value.put("team", team);
+		value.put("no", noIn);
+		value.put("seat", seat);
 		em.startCode(value);
 		
 		// 入场（后）
 		value = em.newAperitif(Aperitif.CODE_AFTER_ENTRANCE, seat);
-		value.append("team", team);
-		value.append("no", noIn);
-		value.append("seat", seat);
+		value.put("team", team);
+		value.put("no", noIn);
+		value.put("seat", seat);
 		em.startCode(value);
 	}
 	
@@ -111,10 +111,10 @@ public class ActBox {
 	 */
 	public void forceAbnormal(byte seat, byte abnormal) {
 		Aperitif value = em.newAperitif(Aperitif.CODE_FORCE_ABNORMAL, seat);
-		value.append("dfseat", seat);
-		value.append("atseat", (byte) -1);
-		value.append("abnormal", abnormal);
-		value.append("result", 0);
+		value.put("dfseat", seat);
+		value.put("atseat", (byte) -1);
+		value.put("abnormal", abnormal);
+		value.put("result", 0);
 		em.startCode(value);
 	}
 	

@@ -26,18 +26,6 @@ import com.zdream.pmwdb.mongo.MongoBase;
 public class SkillDaoImpl implements ISkillDao {
 
 	@Override
-	public int addSkill(Skill skill) {
-		// TODO 暂不实现
-		return 0;
-	}
-
-	@Override
-	public int[] addBatchSkills(List<Skill> skills) {
-		// TODO 暂不实现
-		return null;
-	}
-
-	@Override
 	public Skill getSkill(short id) {
 		Document document = new Document("skill_id", id);
 		FindIterable<Document> it = MongoBase.getCollection("skill").find(document);
@@ -63,30 +51,6 @@ public class SkillDaoImpl implements ISkillDao {
 		FindIterable<Document> it = MongoBase.getCollection("skill").find(document);
 		return toModels(it);
 	}
-
-	@Override
-	public int deleteSkill(short id) {
-		// TODO 暂不实现
-		return 0;
-	}
-
-	@Override
-	public int updateSkill(Skill model) {
-		// TODO 暂不实现
-		return 0;
-	}
-
-	@Override
-	public int[] updateBatchSkills(List<Skill> skills) {
-		// TODO 暂不实现
-		return null;
-	}
-
-	@Override
-	public List<Integer> allId() {
-		// TODO 暂不实现
-		return null;
-	}
 	
 	/* ************
 	 *	私有方法  *
@@ -108,7 +72,7 @@ public class SkillDaoImpl implements ISkillDao {
 		// effect
 		Object obj = doc.get("effect");
 		if (obj != null) {
-			skill.setRelease(new BsonParser().bson2json(obj));
+			skill.setRelease(new BsonParser().bson2json(obj).asArray());
 		}
 		
 		return skill;

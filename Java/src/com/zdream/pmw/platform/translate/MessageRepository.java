@@ -12,7 +12,9 @@ import com.zdream.pmw.platform.translate.template.DefaultTemplateChooser;
 import com.zdream.pmw.platform.translate.template.ITemplateChooser;
 import com.zdream.pmw.platform.translate.translater.ITranslate;
 import com.zdream.pmw.util.io.AssetReader;
+import com.zdream.pmw.util.json.JsonArray;
 import com.zdream.pmw.util.json.JsonBuilder;
+import com.zdream.pmw.util.json.JsonObject;
 import com.zdream.pmw.util.json.JsonValue;
 
 /**
@@ -29,7 +31,7 @@ public class MessageRepository {
 	/*
 	 * Dictionaries
 	 */
-	JsonValue dicts;
+	JsonObject dicts;
 	
 	/*
 	 * translate class
@@ -51,9 +53,12 @@ public class MessageRepository {
 	 */
 	DefaultTemplateChooser dch;
 	
-	public JsonValue getDictionary(String head) {
-		Map<String, JsonValue> v = dicts.getMap();
-		return v.get(head);
+	public JsonArray getDictionary(String head) {
+		JsonValue jv = dicts.asMap().get(head);
+		if (jv != null) {
+			return jv.asArray();
+		}
+		return null;
 	}
 	
 	/**
@@ -136,11 +141,11 @@ public class MessageRepository {
 		
 		JsonBuilder builder = new JsonBuilder();
 		String m = AssetReader.read("data/static/translate-dicts.json", 2000).toString();
-		dicts = builder.parseJson(m);
+		dicts = builder.parseJson(m).asObject();
 		
 		m = AssetReader.read("data/static/translate-templates.json", 2000).toString();
-		JsonValue v = builder.parseJson(m);
-		for (Iterator<Entry<String, JsonValue>> it = v.getMap().entrySet().iterator(); it.hasNext();) {
+		JsonObject v = builder.parseJson(m).asObject();
+		for (Iterator<Entry<String, JsonValue>> it = v.asMap().entrySet().iterator(); it.hasNext();) {
 			Entry<String, JsonValue> entry = it.next();
 			templates.put(entry.getKey(), entry.getValue().getString());
 		}

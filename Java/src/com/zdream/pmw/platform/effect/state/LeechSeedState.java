@@ -8,6 +8,7 @@ import com.zdream.pmw.platform.attend.Participant;
 import com.zdream.pmw.platform.effect.Aperitif;
 import com.zdream.pmw.platform.effect.IStateMessageFormater;
 import com.zdream.pmw.platform.prototype.BattlePlatform;
+import com.zdream.pmw.util.json.JsonObject;
 import com.zdream.pmw.util.json.JsonValue;
 
 /**
@@ -116,38 +117,37 @@ public class LeechSeedState extends AParticipantState
 		
 		for (int i = 0; i < states.length; i++) {
 			ASubState state = states[i];
-			am.removeStateFromParticipant(atseat, state);
+			am.removeStateFromSeat(atseat, state);
 		}
 	}
 	
 	@Override
-	public String forceCommandLine(JsonValue value, BattlePlatform pf) {
+	public String forceCommandLine(Aperitif ap, BattlePlatform pf) {
 		// 施加命令:
 		// force-state %s -no %d -source %s -skillID %d -atseat %d
-		Map<String, JsonValue> map = value.getMap();
-		String statestr = map.get("state").getString();
+		String statestr = ap.get("state").toString();
 		
-		byte atseat = (Byte) map.get("atseat").getValue();
-		byte dfseat = (Byte) map.get("dfseat").getValue();
+		byte atseat = (byte) ap.get("atseat");
+		byte dfseat = (byte) ap.get("dfseat");
 		byte dfno = pf.getAttendManager().noForSeat(dfseat);
 		
 		String cmd = String.format("force-state %s -no %d -source %s -skillID %d -atseat %d",
-				statestr, dfno, map.get("source").getString(),
-				map.get("skillID").getValue(), atseat);
+				statestr, dfno, ap.get("source"),
+				ap.get("skillID"), atseat);
 		return cmd;
 	}
 	
 	@Override
-	public void forceRealize(String[] codes, JsonValue argv, BattlePlatform pf) {
-		argv.add("no", new JsonValue(Byte.valueOf(codes[3])));
-		argv.add("source", new JsonValue(codes[5]));
-		argv.add("skillID", new JsonValue(Short.valueOf(codes[7])));
-		argv.add("atseat", new JsonValue(Byte.valueOf(codes[9])));
+	public void forceRealize(String[] codes, JsonObject argv, BattlePlatform pf) {
+		argv.add("no", JsonValue.createJson(Byte.valueOf(codes[3])));
+		argv.add("source", JsonValue.createJson(codes[5]));
+		argv.add("skillID", JsonValue.createJson(Short.valueOf(codes[7])));
+		argv.add("atseat", JsonValue.createJson(Byte.valueOf(codes[9])));
 	}
 	
 	@Override
-	public void set(JsonValue v, BattlePlatform pf) {
-		Map<String, JsonValue> map = v.getMap();
+	public void set(JsonObject v, BattlePlatform pf) {
+		Map<String, JsonValue> map = v.asMap();
 		
 		if (map.containsKey("atseat")) {
 			atseat = (byte) map.get("atseat").getValue();

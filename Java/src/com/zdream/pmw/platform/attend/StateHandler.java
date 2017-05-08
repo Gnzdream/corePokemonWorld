@@ -8,11 +8,11 @@ import java.util.Properties;
 
 import com.zdream.pmw.platform.control.IPrintLevel;
 import com.zdream.pmw.platform.effect.IStateMessageFormater;
-import com.zdream.pmw.platform.effect.state.ASeatState;
 import com.zdream.pmw.platform.effect.state.AParticipantState;
+import com.zdream.pmw.platform.effect.state.ASeatState;
 import com.zdream.pmw.util.json.JsonBuilder;
+import com.zdream.pmw.util.json.JsonObject;
 import com.zdream.pmw.util.json.JsonValue;
-import com.zdream.pmw.util.json.JsonValue.JsonType;
 
 /**
  * <p>处理状态部分的实现</p>
@@ -50,8 +50,8 @@ public class StateHandler {
 	 * @param args
 	 * @return
 	 */
-	public IState buildState(JsonValue args) {
-		Map<String, JsonValue> map = args.getMap();
+	public IState buildState(JsonObject args) {
+		Map<String, JsonValue> map = args.asMap();
 		String name = map.get("state").getString();
 		
 		IState state = buildState0(name);
@@ -72,8 +72,8 @@ public class StateHandler {
 		String statestr = codes[1];
 
 		Class<?> clazz = stateClass(statestr);
-		JsonValue value = new JsonValue(JsonType.ObjectType);
-		value.add("state", new JsonValue(statestr));
+		JsonObject obj = new JsonObject();
+		obj.add("state", JsonValue.createJson(statestr));
 		
 		if (!IStateMessageFormater.class.isAssignableFrom(clazz)) {
 			// 默认的生成方式
@@ -92,17 +92,17 @@ public class StateHandler {
 						switch (option) {
 						case "no":
 							if (argv == 1) {
-								value.add(option, new JsonValue(Byte.valueOf(s)));
+								obj.add(option, JsonValue.createJson(Byte.valueOf(s)));
 							}
 							break;
 						case "skillID":
 							if (argv == 1) {
-								value.add(option, new JsonValue(Short.valueOf(s)));
+								obj.add(option, JsonValue.createJson(Short.valueOf(s)));
 							}
 							break;
 						case "source": default:
 							if (argv == 1) {
-								value.add(option, new JsonValue(s));
+								obj.add(option, JsonValue.createJson(s));
 							}
 							break;
 						}
@@ -124,17 +124,17 @@ public class StateHandler {
 						switch (option) {
 						case "seat":
 							if (argv == 1) {
-								value.add(option, new JsonValue(Byte.valueOf(s)));
+								obj.add(option, JsonValue.createJson(Byte.valueOf(s)));
 							}
 							break;
 						case "skillID":
 							if (argv == 1) {
-								value.add(option, new JsonValue(Short.valueOf(s)));
+								obj.add(option, JsonValue.createJson(Short.valueOf(s)));
 							}
 							break;
 						case "source": default:
 							if (argv == 1) {
-								value.add(option, new JsonValue(s));
+								obj.add(option, JsonValue.createJson(s));
 							}
 							break;
 						}
@@ -149,14 +149,14 @@ public class StateHandler {
 			IStateMessageFormater formater;
 			try {
 				formater = (IStateMessageFormater) clazz.newInstance();
-				formater.forceRealize(codes, value, am.getRoot());
+				formater.forceRealize(codes, obj, am.getRoot());
 			} catch (InstantiationException | IllegalAccessException e) {
 				e.printStackTrace();
 			}
 		}
 		
 		// 产生 state
-		IState state = buildState(value);
+		IState state = buildState(obj);
 		
 		// 施加 state
 		forceState(state);

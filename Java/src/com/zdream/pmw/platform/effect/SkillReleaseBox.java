@@ -1,15 +1,12 @@
 package com.zdream.pmw.platform.effect;
 
-import com.zdream.pmw.monster.prototype.EPokemonType;
 import com.zdream.pmw.monster.prototype.IPokemonDataType;
 import com.zdream.pmw.platform.attend.AttendManager;
-import com.zdream.pmw.platform.attend.Participant;
-import com.zdream.pmw.platform.attend.SkillRelease;
 import com.zdream.pmw.platform.control.IMessageCode;
 import com.zdream.pmw.platform.control.IPrintLevel;
-import com.zdream.pmw.platform.effect.damage.IDamageFormula;
-import com.zdream.pmw.util.common.ArraysUtils;
-import com.zdream.pmw.util.json.JsonValue;
+import com.zdream.pmw.platform.effect.instruction.ConfirmSkillInstruction;
+import com.zdream.pmw.platform.order.OrderManager;
+import com.zdream.pmw.util.json.JsonObject;
 
 /**
  * 技能发动的释放计算平台<br>
@@ -70,33 +67,22 @@ public class SkillReleaseBox implements IPokemonDataType {
 	 *   选项, 用于修改该技能的计算方式. 默认为空.<br>
 	 *   格式:
 	 */
-	public void moveAct(byte no, byte skillNum, byte originTarget, JsonValue param) {
+	public void moveAct(byte no, byte skillNum, byte originTarget, final JsonObject param) {
 		initMoveAct(no, skillNum, originTarget);
 		
-		// 确定释放技能
-		releaseSkill();
+		AInstruction[] insts = new AInstruction[] {
+			new ConfirmSkillInstruction(),
+		};
 		
-		confirmFormula(param);
+		if (param != null)
+			insts[0].set(param);
 		
-		// v0.2.1 后, 将判断能否行动移到确定释放技能之后
-		if (!canMove()) {
-			return;
+		OrderManager om = em.getRoot().getOrderManager();
+		for (int i = 0; i < insts.length; i++) {
+			AInstruction inst = insts[i];
+			inst.setPackage(pack);
+			om.pushEvent(inst);
 		}
-		
-		// 扣 PP（这里不考虑压力特性）
-		ppSubForRelease(pack, param);
-		
-		// 写入范围
-		writeRange();
-		
-		// 发布将要释放技能的预告
-		sendMessageForRelease();
-		
-		// 伤害判定
-		writeDamage();
-		
-		// v0.2.2
-		em.getRoot().getOrderManager().storeReleasePackage(pack);
 	}
 
 	/**
@@ -109,16 +95,9 @@ public class SkillReleaseBox implements IPokemonDataType {
 	private void initMoveAct(byte no, byte skillNum, byte originTarget) {
 		AttendManager am = em.getAttends();
 		pack = new SkillReleasePackage();
-		pack.initEnvironment(em.getRoot());
-		
-		Participant atStaff = am.getParticipant(am.seatForNo(no));
-		pack.setAtStaff(atStaff);
-		
-		short skillID = atStaff.getAttendant().getSkill()[skillNum];
-		pack.setSkill(am.getSkillRelease(skillID));
-		pack.setSkillNum(skillNum);
-		
-		pack.setOriginTarget(originTarget);
+		// pack.initEnvironment(em.getRoot());
+		pack.setOriginCommand(no, skillNum, originTarget);
+		pack.setAtStaff(am.getParticipant(am.seatForNo(no)));
 	}
 	
 	/**
@@ -126,55 +105,53 @@ public class SkillReleaseBox implements IPokemonDataType {
 	 * @param param
 	 *   选项参数
 	 */
-	private void confirmFormula(JsonValue param) {
+	/*private void confirmFormula(JsonObject param) {
 		SkillRelease skill = pack.getSkill();
 		if (param == null) {
 			em.loadFormula(pack, skill);
 			return;
 		}
-		JsonValue v = param.getMap().get("formula");
+		JsonObject v = param.asMap().get("formula").asObject();
 		em.loadFormula(pack, skill, v);
-	}
+	}*/
 	
-	/**
+	/*
 	 * 行动判定<br>
 	 * @return
-	 */
+	 *
 	private boolean canMove() {
 		boolean moveable = pack.getMovableFormula().canMove(pack);
 		pack.setMoveable(moveable);
 		return moveable;
-	}
+	}*/
 	
-	/**
+	/*
 	 * 确定释放技能
-	 */
+	 *
 	private void releaseSkill() {
 		byte seat = pack.getAtStaff().getSeat();
 		Aperitif value = em.newAperitif(Aperitif.CODE_CONFIRM_SKILL, seat);
 		
 		short skillID = em.getAttends().getParticipant(seat).getAttendant()
 				.getSkill()[pack.getSkillNum()];
-		value.append("seat", seat);
-		value.append("skillID", skillID);
+		value.put("seat", seat);
+		value.put("skillID", skillID);
 		em.getRoot().readyCode(value);
 		
 		// 补充 v0.2.1
 		// 像混乱触发、变身等状态触发时, 能够修改释放的技能
 		short newSkillID = (Short) value.get("skillID");
-		if (newSkillID != skillID) {
-			pack.setSkill(em.getAttends().getSkillRelease(newSkillID));
-		}
-	}
+		//pack.setSkill(em.getAttends().getSkillRelease(newSkillID));
+	}*/
 	
-	/**
+	/*
 	 * 由于释放技能而扣 PP
 	 * @param param
-	 */
-	private void ppSubForRelease(SkillReleasePackage pack, JsonValue param) {
+	 *
+	private void ppSubForRelease(SkillReleasePackage pack, JsonObject param) {
 		int value = 1;
 		if (param != null) {
-			JsonValue v = param.getMap().get("ppSub");
+			JsonValue v = param.asMap().get("ppSub");
 			if (v != null) {
 				value = (int) v.getValue();
 				if (value == 0) {
@@ -186,17 +163,17 @@ public class SkillReleaseBox implements IPokemonDataType {
 		byte seat = pack.getAtStaff().getSeat();
 		Aperitif ap = em.newAperitif(Aperitif.CODE_PP_SUB, seat);
 		
-		ap.append("seat", seat);
-		ap.append("skillNum", pack.getSkillNum());
-		ap.append("skillID", pack.getSkill().getId());
-		ap.append("value", value);
+		ap.put("seat", seat);
+		ap.put("skillNum", pack.getSkillNum());
+		ap.put("skillID", pack.getSkill().getId());
+		ap.put("value", value);
 		em.getRoot().readyCode(ap);
-	}
+	}*/
 
-	/**
+	/*
 	 * 计算范围并写入释放数据包<br>
 	 * 该方法的结果是释放数据包中的目标列表被写入
-	 */
+	 *
 	private void writeRange() {
 		/*AttendManager am = em.getAttends();
 		
@@ -223,44 +200,30 @@ public class SkillReleaseBox implements IPokemonDataType {
 			}
 		} else {
 			seats = defaultSeats;
-		}*/
+		}*
 		
 		byte[] seats = pack.getRangeFormula().range(pack);
 
 		Aperitif value = em.newAperitif(Aperitif.CODE_JUDGE_RANGE);
-		value.append("seat", pack.getAtStaff().getSeat());
-		value.append("skill", pack.getSkill().getId());
-		value.append("result", ArraysUtils.bytesToString(seats));
+		value.put("seat", pack.getAtStaff().getSeat());
+		value.put("skill", pack.getSkill().getId());
+		value.put("result", ArraysUtils.bytesToString(seats));
 		em.getRoot().readyCode(value);
 		
 		seats = ArraysUtils.StringToBytes(
-				value.getMap().get("result").getString());
+				value.get("result").toString());
 		pack.setTargets(seats);
 		
 		for (int i = 0; i < seats.length; i++) {
 			pack.setDfStaff(em.getAttends().getParticipant(seats[i]), i);
 		}
 	}
-
-	/**
-	 * 发布将要释放技能的开胃酒消息
-	 */
-	private void sendMessageForRelease() {
-		byte seat = pack.getAtStaff().getSeat();
-		Aperitif value = em.newAperitif(Aperitif.CODE_RELEASE_SKILL, seat);
-		
-		short skillID = em.getAttends().getParticipant(seat).getAttendant()
-				.getSkill()[pack.getSkillNum()];
-		value.append("seat", seat);
-		value.append("skillID", skillID);
-		em.getRoot().readyCode(value);
-	}
 	
 	/**
 	 * 判定伤害并写入释放数据包<br>
 	 * 该方法的结果是释放数据包中的
 	 * 是否命中、会心、攻击力、防御力、技能威力等均被写入<br>
-	 */
+	 *
 	private void writeDamage() {
 		IDamageFormula formula = pack.getDamageFormula();
 		formula.damage(pack);
@@ -269,28 +232,20 @@ public class SkillReleaseBox implements IPokemonDataType {
 	/**
 	 * 返回释放技能的 ID
 	 * @return
-	 */
+	 *
 	private short getSkillID() {
-		return pack.getSkill().getSkill().getId();
-	}
-	
-	/**
-	 * 返回释放技能的 ID
-	 * @return
-	 */
-	private short getSkillID(SkillReleasePackage pack) {
 		return pack.getSkill().getSkill().getId();
 	}
 	
 	/* ************
 	 *	计算数值  *
-	 ************ */
+	 ************ *
 	/*
 	 * @version 0.2
-	 */
+	 *
 	/**
 	 * 判定行动 (未调用) TODO
-	 */
+	 *
 	public boolean judgeMoveable(SkillReleasePackage pack) {
 		return true;
 	}
@@ -299,14 +254,14 @@ public class SkillReleaseBox implements IPokemonDataType {
 	 * 计算攻击方实时命中率（忽略能力变化）
 	 * @return v0.2.1
 	 *   当返回数值为负数 (-1) 则为必中
-	 */
+	 *
 	public float calcHitrate(SkillReleasePackage pack) {
 		byte atseat = pack.getAtStaff().getSeat();
 		
 		Aperitif value = em.newAperitif(Aperitif.CODE_CALC_HITRATE);
-		value.append("seat", atseat);
-		value.append("result", 1.0f);
-		value.append("abs", false);
+		value.put("seat", atseat);
+		value.put("result", 1.0f);
+		value.put("abs", false);
 		em.startCode(value);
 		
 		boolean abs = (boolean) value.get("abs");
@@ -321,14 +276,14 @@ public class SkillReleaseBox implements IPokemonDataType {
 	 * 计算防御方实时躲避率（忽略能力变化）
 	 * @return v0.2.1
 	 *   当返回数值为负数 (-1) 则为必不中
-	 */
+	 *
 	public float calcHide(SkillReleasePackage pack) {
 		byte dfseat = pack.getDfStaff(pack.getThiz()).getSeat();
 		
 		Aperitif ap = em.newAperitif(Aperitif.CODE_CALC_HIDE, dfseat);
-		ap.append("seat", dfseat);
-		ap.append("result", 1.0f);
-		ap.append("abs", false);
+		ap.put("seat", dfseat);
+		ap.put("result", 1.0f);
+		ap.put("abs", false);
 		em.startCode(ap);
 		
 		boolean abs = (boolean) ap.get("abs");
@@ -342,7 +297,7 @@ public class SkillReleaseBox implements IPokemonDataType {
 	/**
 	 * 计算技能实时命中率
 	 * @return
-	 */
+	 *
 	public float calcAccuracy(SkillReleasePackage pack) {
 		short skillID = getSkillID(pack);
 		byte atseat = pack.getAtStaff().getSeat();
@@ -350,11 +305,11 @@ public class SkillReleaseBox implements IPokemonDataType {
 		float base = pack.getAccuracyFormula().accuracy(pack);
 		
 		Aperitif value = em.newAperitif(Aperitif.CODE_CALC_ACCURACY, atseat, dfseat);
-		value.append("atseat", atseat);
-		value.append("dfseat", dfseat);
-		value.append("skill", skillID);
-		value.append("result", base);
-		value.append("abs", 0);
+		value.put("atseat", atseat);
+		value.put("dfseat", dfseat);
+		value.put("skill", skillID);
+		value.put("result", base);
+		value.put("abs", 0);
 		em.startCode(value);
 		
 		return (float) value.get("result");
@@ -363,15 +318,15 @@ public class SkillReleaseBox implements IPokemonDataType {
 	/**
 	 * 判定释放技能的属性<br>
 	 * @return
-	 */
+	 *
 	public EPokemonType calcSkillType(SkillReleasePackage pack) {
 		String type = pack.getSkill().getSkill().getType().name();
 		byte seat = pack.getAtStaff().getSeat();
 
 		Aperitif value = em.newAperitif(Aperitif.CODE_CALC_TYPE, seat);
-		value.append("seat", seat);
-		value.append("skill", getSkillID());
-		value.append("result", type);
+		value.put("seat", seat);
+		value.put("skill", getSkillID());
+		value.put("result", type);
 		em.startCode(value);
 
 		type = (String) value.get("result");
@@ -383,7 +338,7 @@ public class SkillReleaseBox implements IPokemonDataType {
 	 * @param pack
 	 * @return
 	 *  数组的大小 = 对应敌方怪兽的属性多少
-	 */
+	 *
 	public float[] calcTypeRate(SkillReleasePackage pack) {
 		final EPokemonType[] dfTypes = pack.getDfStaff(pack.getThiz()).getTypes();
 		float[] results = new float[dfTypes.length];
@@ -394,16 +349,16 @@ public class SkillReleaseBox implements IPokemonDataType {
 		for (int j = 0; j < dfTypes.length; j++) {
 			dfType = dfTypes[j];
 
-			rate = pack.getEffects().getRestraintRate(atType, dfType);
+			rate = TypeRestraint.getRestraintRate(atType, dfType);
 			byte atseat = pack.getAtStaff().getSeat(),
 					dfseat = pack.getDfStaff(pack.getThiz()).getSeat();
 
 			Aperitif value = em.newAperitif(Aperitif.CODE_CALC_TYPE_RATE, atseat, dfseat);
-			value.append("atseat", atseat);
-			value.append("dfseat", dfseat);
-			value.append("atType", atType.name());
-			value.append("dfType", dfType.name());
-			value.append("result", rate);
+			value.put("atseat", atseat);
+			value.put("dfseat", dfseat);
+			value.put("atType", atType.name());
+			value.put("dfType", dfType.name());
+			value.put("result", rate);
 			em.startCode(value);
 
 			results[j] = (float) value.get("result");
@@ -418,16 +373,16 @@ public class SkillReleaseBox implements IPokemonDataType {
 	 *   当数值大于等于零, 表示会心一击等级;<br>
 	 *   当数值为 -2, 表示绝对回避会心;<br>
 	 *   当数值为 -1, 表示绝对会心;<br>
-	 */
+	 *
 	public byte calcCt(SkillReleasePackage pack) {
 		byte atseat = pack.getAtStaff().getSeat(),
 				dfseat = pack.getDfStaff(pack.getThiz()).getSeat();
 		
 		Aperitif value = em.newAperitif(Aperitif.CODE_CALC_CT, atseat, dfseat);
-		value.append("atseat", atseat);
-		value.append("dfseat", dfseat);
-		value.append("result", pack.getSkill().getCritLevel());
-		value.append("abs", 0);
+		value.put("atseat", atseat);
+		value.put("dfseat", dfseat);
+		value.put("result", pack.getSkill().getCritLevel());
+		value.put("abs", 0);
 		em.startCode(value);
 		
 		int abs = (int) value.get("abs");
@@ -445,16 +400,16 @@ public class SkillReleaseBox implements IPokemonDataType {
 	 * 计算技能威力
 	 * @param pack
 	 * @return
-	 */
+	 *
 	public int calcPower(SkillReleasePackage pack) {
 		float power = pack.getPowerFormula().power(pack);
 		byte atseat = pack.getAtStaff().getSeat();
 		
 		Aperitif value = em.newAperitif(Aperitif.CODE_CALC_POWER, atseat);
-		value.append("skillID", getSkillID(pack));
-		value.append("atseat", atseat);
-		value.append("dfseat", pack.getDfStaff(pack.getThiz()).getSeat());
-		value.append("result", power);
+		value.put("skillID", getSkillID(pack));
+		value.put("atseat", atseat);
+		value.put("dfseat", pack.getDfStaff(pack.getThiz()).getSeat());
+		value.put("result", power);
 		em.startCode(value);
 		
 		power = (float) value.get("result");
@@ -465,16 +420,16 @@ public class SkillReleaseBox implements IPokemonDataType {
 	 * 计算最后的伤害修正 (状态等修正)<br>
 	 * 这里不包括乱数修正等<br>
 	 * @param pack
-	 */
+	 *
 	public float calcCorrect(SkillReleasePackage pack) {
 		Aperitif value = em.newAperitif(Aperitif.CODE_CALC_CORRENT,
 				pack.getAtStaff().getSeat(), pack.getDfStaff(pack.getThiz()).getSeat());
 		
-		value.append("atseat", pack.getAtStaff().getSeat());
-		value.append("dfseat", pack.getDfStaff(pack.getThiz()).getSeat());
-		value.append("skillID", getSkillID(pack));
-		value.append("result", pack.getCorrect(pack.getThiz()));
-		pack.getEffects().startCode(value);
+		value.put("atseat", pack.getAtStaff().getSeat());
+		value.put("dfseat", pack.getDfStaff(pack.getThiz()).getSeat());
+		value.put("skillID", getSkillID(pack));
+		value.put("result", pack.getCorrect(pack.getThiz()));
+		em.startCode(value);
 		
 		return (float) value.get("result");
 	}
@@ -483,19 +438,19 @@ public class SkillReleaseBox implements IPokemonDataType {
 	 * 计算最后伤害
 	 * @param pack
 	 * @return
-	 */
+	 *
 	public int calcDamage(SkillReleasePackage pack) {
 		byte dfseat = pack.getDfStaff(pack.getThiz()).getSeat();
 		
 		Aperitif value = em.newAperitif(Aperitif.CODE_CALC_DAMAGE, dfseat);
-		value.append("atseat", pack.getAtStaff().getSeat());
-		value.append("dfseat", dfseat);
-		value.append("skillID", getSkillID(pack));
-		value.append("result", pack.getDamage(pack.getThiz()));
-		pack.getEffects().startCode(value);
+		value.put("atseat", pack.getAtStaff().getSeat());
+		value.put("dfseat", dfseat);
+		value.put("skillID", getSkillID(pack));
+		value.put("result", pack.getDamage(pack.getThiz()));
+		em.startCode(value);
 		
 		return (int) value.get("result");
-	}
+	}*/
 	
 	/**
 	 * 获得精灵的实时能力<br>
@@ -509,7 +464,7 @@ public class SkillReleaseBox implements IPokemonDataType {
 	 * @return
 	 *   实时的能力值<br>
 	 */
-	public int calcAbility(byte seat, int item) {
+	public float calcAbility(byte seat, int item) {
 		return calcAbility(seat, item, 0);
 	}
 
@@ -530,7 +485,7 @@ public class SkillReleaseBox implements IPokemonDataType {
 	 * @return
 	 *   实时的能力值<br>
 	 */
-	public int calcAbility(byte seat, int item, int ignore) {
+	public float calcAbility(byte seat, int item, int ignore) {
 		return calcAbility(seat, item, ignore, true);
 	}
 	
@@ -555,7 +510,7 @@ public class SkillReleaseBox implements IPokemonDataType {
 	 * @return
 	 *   实时的能力值<br>
 	 */
-	public int calcAbility(byte seat, int item, int ignore, boolean alter) {
+	public float calcAbility(byte seat, int item, int ignore, boolean alter) {
 		AttendManager am = em.getAttends();
 		
 		int base = am.getParticipant(seat).getStat(item);
@@ -589,13 +544,13 @@ public class SkillReleaseBox implements IPokemonDataType {
 		ap.append("value", base).append("rate", 1.0f).append("seat", seat);
 		
 		if (alter == false) {
-			ap.append("alter", false);
+			ap.put("alter", false);
 		}
 		em.startCode(ap);
 		
 		float result = (Float) ap.get("rate");
 		int v = (Integer) ap.get("value");
-		return (int) (v * result);
+		return v * result;
 	}
 	
 	/* ************
@@ -611,52 +566,8 @@ public class SkillReleaseBox implements IPokemonDataType {
 	 * @return
 	 * @since v0.2.1
 	 */
+	@Deprecated
 	public SkillReleasePackage getCurrentPackage() {
-		return pack;
-	}
-	
-	/**
-	 * <p>替换 {@code SkillReleasePackage}.</p>
-	 * <p>用新建的 package 的替换现在正在使用的 package.
-	 * 会将旧有的 package 存入仓库, 然后将初始化一个新的 packge 返回.</p>
-	 * <p>一般在多段攻击时, 每一轮攻击需要生成一个 package, 需要再此替换 package.</p>
-	 * @param oldPack
-	 *   原有的 package
-	 * @return
-	 *   新建的 package
-	 * @since v0.2.2
-	 */
-	public SkillReleasePackage replacePackage(SkillReleasePackage oldPack) {
-		SkillReleasePackage pack = new SkillReleasePackage();
-		pack.initEnvironment(em.getRoot());
-		
-		pack.setAtStaff(oldPack.getAtStaff());
-		pack.setSkill(oldPack.getSkill());
-		pack.setSkillNum(oldPack.getSkillNum());
-		pack.setOriginTarget(oldPack.getOriginTarget());
-		
-		pack.setAccuracyFormula(oldPack.getAccuracyFormula());
-		pack.setAdditionFormulas(oldPack.getAdditionFormulas());
-		pack.setDamageFormula(oldPack.getDamageFormula());
-		pack.setPowerFormula(oldPack.getPowerFormula());
-		pack.setMovableFormula(oldPack.getMovableFormula());
-		
-		pack.setMoveable(oldPack.isMoveable());
-		
-		final int length = oldPack.dfStaffLength();
-		
-		byte[] targets = new byte[length];
-		for (int i = 0; i < length; i++) {
-			targets[i] = oldPack.getTarget(i);
-		}
-		pack.setTargets(targets);
-		for (int i = 0; i < length; i++) {
-			pack.setDfStaff(oldPack.getDfStaff(i), i);
-		}
-		
-		em.getRoot().getOrderManager().storeReleasePackage(oldPack);
-		this.pack = pack;
-		
 		return pack;
 	}
 	

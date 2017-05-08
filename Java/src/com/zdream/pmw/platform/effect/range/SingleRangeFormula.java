@@ -1,6 +1,7 @@
 package com.zdream.pmw.platform.effect.range;
 
 import com.zdream.pmw.platform.attend.AttendManager;
+import com.zdream.pmw.platform.effect.EffectManage;
 import com.zdream.pmw.platform.effect.SkillReleasePackage;
 
 /**
@@ -19,12 +20,14 @@ public class SingleRangeFormula implements IRangeFormula {
 		return "single";
 	}
 
-	public final byte[] range(SkillReleasePackage pack) {
+	public final byte[] range(SkillReleasePackage pack, EffectManage em) {
 		this.pack = pack;
+		this.em = em;
 		
 		byte[] result = onRange();
 
 		this.pack = null;
+		this.em = null;
 		return result;
 	}
 	
@@ -40,14 +43,14 @@ public class SingleRangeFormula implements IRangeFormula {
 		byte oritgseat = pack.getOriginTarget();
 		
 		if (oritgseat != -1) {
-			byte oritgno = pack.getAttends().noForSeat(oritgseat);
+			byte oritgno = em.getAttends().noForSeat(oritgseat);
 			if (oritgno != -1) {
 				return new byte[]{oritgseat};
 			}
 		}
 		
 		// 自动选择备选流程
-		AttendManager am = pack.getAttends();
+		AttendManager am = em.getAttends();
 		final int len = am.seatLength();
 		byte choose = -1; // 缓存选择的座位
 		byte atteam = am.teamForSeat(pack.getAtStaff().getSeat());
@@ -81,5 +84,11 @@ public class SingleRangeFormula implements IRangeFormula {
 	 *	  其它    *
 	 ************ */
 	protected SkillReleasePackage pack;
+	protected EffectManage em;
+	
+	@Override
+	public String toString() {
+		return name();
+	}
 
 }

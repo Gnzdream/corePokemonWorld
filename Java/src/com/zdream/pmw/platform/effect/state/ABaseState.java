@@ -69,7 +69,7 @@ public abstract class ABaseState implements IState {
 	 * <p>判断已经重复时, 处理的操作和需要返回的数据</p>
 	 */
 	protected String onRepeat(Aperitif ap, IStateInterceptable interceptor, BattlePlatform pf) {
-		ap.append("reason", "repeat").replace("result", 1);
+		ap.append("reason", "repeat").append("result", 1);
 		return null;
 	}
 

@@ -3,7 +3,7 @@ package com.zdream.pmw.platform.effect.state;
 import com.zdream.pmw.platform.attend.IStateInterceptable;
 import com.zdream.pmw.platform.effect.Aperitif;
 import com.zdream.pmw.platform.prototype.BattlePlatform;
-import com.zdream.pmw.util.json.JsonValue;
+import com.zdream.pmw.util.json.JsonObject;
 
 /**
  * <p>白雾状态</p>
@@ -46,7 +46,7 @@ public class MistState extends ASeatState implements IDuration {
 	 ************ */
 	
 	@Override
-	public void set(JsonValue v, BattlePlatform pf) {
+	public void set(JsonObject v, BattlePlatform pf) {
 		IDuration.super.set(v, pf);
 	}
 

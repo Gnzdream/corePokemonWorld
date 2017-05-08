@@ -11,7 +11,7 @@ import org.bson.Document;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCursor;
 import com.zdream.pmw.util.json.JsonBuilder;
-import com.zdream.pmw.util.json.JsonValue;
+import com.zdream.pmw.util.json.JsonObject;
 import com.zdream.pmwdb.mongo.BsonParser;
 import com.zdream.pmwdb.mongo.MongoBase;
 
@@ -38,9 +38,9 @@ public class DownloadSkill {
 		MongoCursor<Document> cursor = it.iterator();
 		while (cursor.hasNext()) {
 			Document doc = cursor.next();
-			JsonValue v = parser.bson2json(doc);
-			v.getMap().remove("_id");
-			int id = (int) v.getMap().get("skill_id").getValue();
+			JsonObject v = parser.bson2json(doc).asObject();
+			v.asMap().remove("_id");
+			int id = (int) v.asMap().get("skill_id").getValue();
 			
 			EJson ej = new EJson();
 			ej.id = id;

@@ -2,6 +2,7 @@ package com.zdream.pmw.platform.effect.state;
 
 import com.zdream.pmw.platform.attend.IState;
 import com.zdream.pmw.platform.prototype.BattlePlatform;
+import com.zdream.pmw.util.json.JsonObject;
 import com.zdream.pmw.util.json.JsonValue;
 
 /**
@@ -32,8 +33,8 @@ public interface IDuration extends IState {
 	public void reduceRound(int num);
 	
 	@Override
-	default void set(JsonValue v, BattlePlatform pf) {
-		JsonValue o = v.getMap().get(KEY_REDUCE_ROUND);
+	default void set(JsonObject v, BattlePlatform pf) {
+		JsonValue o = v.asMap().get(KEY_REDUCE_ROUND);
 		if (o != null) {
 			int value = Integer.valueOf(o.getValue().toString());
 			reduceRound(value);

@@ -9,6 +9,7 @@ import com.zdream.pmw.core.tools.ItemMethods;
 import com.zdream.pmw.monster.data.dao.ISkillDao;
 import com.zdream.pmw.monster.prototype.EPokemonType;
 import com.zdream.pmw.monster.skill.Skill;
+import com.zdream.pmw.util.json.JsonObject;
 import com.zdream.pmw.util.json.JsonValue;
 import com.zdream.pmwdb.asset.io.SkillDataReader;
 
@@ -25,23 +26,11 @@ public class SkillDaoImpl implements ISkillDao {
 	SkillDataReader container = new SkillDataReader();
 
 	@Override
-	public int addSkill(Skill skill) {
-		// TODO 暂不实现
-		return 0;
-	}
-
-	@Override
-	public int[] addBatchSkills(List<Skill> skills) {
-		// TODO 暂不实现
-		return null;
-	}
-
-	@Override
 	public Skill getSkill(short id) {
 		JsonValue v = container.getSkillInfo(id);
 		
 		if (v != null) {
-			return toModel(v);
+			return toModel(v.asObject());
 		}
 		
 		return null;
@@ -57,37 +46,13 @@ public class SkillDaoImpl implements ISkillDao {
 		
 		return toModels(list);
 	}
-
-	@Override
-	public int deleteSkill(short id) {
-		// TODO 暂不实现
-		return 0;
-	}
-
-	@Override
-	public int updateSkill(Skill model) {
-		// TODO 暂不实现
-		return 0;
-	}
-
-	@Override
-	public int[] updateBatchSkills(List<Skill> skills) {
-		// TODO 暂不实现
-		return null;
-	}
-
-	@Override
-	public List<Integer> allId() {
-		// TODO 暂不实现
-		return null;
-	}
 	
 	/* ************
 	 *	私有方法  *
 	 ************ */
 	
-	private Skill toModel(JsonValue v) {
-		Map<String, JsonValue> map = v.getMap();
+	private Skill toModel(JsonObject v) {
+		Map<String, JsonValue> map = v.asMap();
 		
 		Skill skill = new Skill();
 		skill.setId(((Number) map.get("skill_id").getValue()).shortValue());
@@ -102,7 +67,10 @@ public class SkillDaoImpl implements ISkillDao {
 		skill.setDescription(map.get("desc").getString());
 		
 		// effect
-		skill.setRelease(map.get("effect"));
+		JsonValue jv = map.get("effect");
+		if (jv != null && !jv.isNull()) {
+			skill.setRelease(jv.asArray());
+		}
 		
 		return skill;
 	}
@@ -112,7 +80,7 @@ public class SkillDaoImpl implements ISkillDao {
 		
 		for (Iterator<JsonValue> it = list.iterator(); it.hasNext();) {
 			JsonValue v = it.next();
-			skills.add(toModel(v));
+			skills.add(toModel(v.asObject()));
 		}
 		
 		return skills;

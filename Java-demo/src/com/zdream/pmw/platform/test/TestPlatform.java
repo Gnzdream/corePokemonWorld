@@ -158,7 +158,9 @@ public class TestPlatform extends SimplePlatformHandler {
 					try {
 						if ((data = dao.getData(id)) != null)
 							break;
-					} catch (Exception e) {}
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
 					System.err.println("[怪兽 #" + id + " 不存在]");
 				}
 				pm.setSpeciesID(id);
@@ -179,7 +181,9 @@ public class TestPlatform extends SimplePlatformHandler {
 						try {
 							if ((sk = sdao.getSkill(sid)) != null)
 								break;
-						} catch (Exception e) {}
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
 						System.err.println("[技能 #" + sid + " 不存在]");
 					}
 					pm.getSkill()[j] = sid;
@@ -217,8 +221,8 @@ public class TestPlatform extends SimplePlatformHandler {
 	}
 	
 	public static void main(String[] args) {
-		// new TestPlatform().testRandom();
-		new TestPlatform().test();
+		new TestPlatform().testRandom();
+		// new TestPlatform().test();
 	}
 
 }

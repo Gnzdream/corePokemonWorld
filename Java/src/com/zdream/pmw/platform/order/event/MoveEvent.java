@@ -2,7 +2,6 @@ package com.zdream.pmw.platform.order.event;
 
 import com.zdream.pmw.platform.control.IPrintLevel;
 import com.zdream.pmw.platform.prototype.BattlePlatform;
-import com.zdream.pmw.util.json.JsonValue;
 
 /**
  * 怪兽发动技能事件<br>
@@ -12,11 +11,7 @@ import com.zdream.pmw.util.json.JsonValue;
  * @date 2016年4月2日
  * @version v0.1
  */
-public class MoveEvent extends AEvent {
-
-	public MoveEvent() {
-		super(EventType.MOVE);
-	}
+public class MoveEvent extends AMoveEvent {
 	
 	/* ************
 	 *	 优先度   *
@@ -40,10 +35,6 @@ public class MoveEvent extends AEvent {
 	/* ************
 	 *	技能数据  *
 	 ************ */
-	/**
-	 * 该技能释放者的 no 值<br>
-	 */
-	private byte no;
 
 	/**
 	 * 指明了该技能释放者的技能<br>
@@ -55,20 +46,6 @@ public class MoveEvent extends AEvent {
 	 * 目标参数
 	 */
 	private byte target;
-	
-	/**
-	 * 其它附加参数, 用于修改技能释放时的技能参数、触发方式、结算公式等
-	 * @since v0.2.2
-	 */
-	private JsonValue param;
-	
-	public byte getNo() {
-		return no;
-	}
-
-	public void setNo(byte no) {
-		this.no = no;
-	}
 
 	public byte getSkillNum() {
 		return skillNum;
@@ -84,14 +61,6 @@ public class MoveEvent extends AEvent {
 
 	public void setTarget(byte target) {
 		this.target = target;
-	}
-	
-	public JsonValue getParam() {
-		return param;
-	}
-	
-	public void setParam(JsonValue param) {
-		this.param = param;
 	}
 	
 	/* ************

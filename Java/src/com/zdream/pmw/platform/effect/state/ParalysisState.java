@@ -93,7 +93,7 @@ public class ParalysisState extends AAbnormalState {
 		if (RanValue.isSmaller(50)) {
 			// 不能行动
 			value.replace("result", false);
-			value.append("fail", name());
+			value.put("fail", name());
 			return interceptor.getCommand();
 		}
 		

@@ -25,6 +25,10 @@ public class TestJson {
 		
 		v = b.parseJson("[{\"s\":7.5,},{\"q-6\":null,\"ccc\":[84,null,\" \",1,{}],\"s\":[],}]");
 		System.out.println(v);
+		JsonValue vc = v.clone();
+		System.out.println(vc);
+		System.out.println(v.asArray().asList().get(1) == vc.asArray().asList().get(1));
+		
 
 	}
 

@@ -1,9 +1,11 @@
 package com.zdream.pmw.platform.attend.service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import com.zdream.pmw.monster.data.SkillDataBuffer;
 import com.zdream.pmw.monster.skill.Skill;
@@ -11,6 +13,8 @@ import com.zdream.pmw.platform.attend.AttendManager;
 import com.zdream.pmw.platform.attend.ESkillRange;
 import com.zdream.pmw.platform.attend.SkillRelease;
 import com.zdream.pmw.platform.control.IPrintLevel;
+import com.zdream.pmw.util.json.JsonArray;
+import com.zdream.pmw.util.json.JsonObject;
 import com.zdream.pmw.util.json.JsonValue;
 
 /**
@@ -24,10 +28,14 @@ import com.zdream.pmw.util.json.JsonValue;
  * <b>v0.2</b><br>
  *   将名称改为 <code>SkillReleaseConverter</code>，并停用单例模式<br>
  * 
- * @since v0.1
+ * <p><b>v0.2.3</b><br>
+ * 将 {@code release} 部分的数据的解析方式做了修改, 和原先不同的是,
+ * 放入 {@code SkillRelease.addition} 的数据采用了黑名单的方式,
+ * 而非原来的白名单的方式</p>
+ * 
+ * @since v0.1 [2016-04-11]
  * @author Zdream
- * @date 2016年4月11日
- * @version v0.2
+ * @version v0.2.3 [2017-05-04]
  */
 public class SkillReleaseConverter {
 	
@@ -49,7 +57,7 @@ public class SkillReleaseConverter {
 		}
 		
 		SkillRelease release = new SkillRelease(skill);
-		JsonValue data = buffer.getReleaseData(skill.getId());
+		JsonArray data = skill.getRelease();
 		parseData(release, data);
 		map.put(skill.getId(), release);
 		
@@ -71,73 +79,70 @@ public class SkillReleaseConverter {
 	 * @param release
 	 * @param data
 	 */
-	private void parseData(SkillRelease release, JsonValue v) {
+	private void parseData(SkillRelease release, JsonArray a) {
+		ArrayList<JsonObject> additions = new ArrayList<>();
 		
-		if (v != null) {
-			try {
-				switch (v.getType()) {
-				case ArrayType: {
-					List<JsonValue> list = v.getArray();
-					for (Iterator<JsonValue> it = list.iterator(); it.hasNext();) {
-						JsonValue vs = it.next();
-						parseDataPair(release, vs);
-					}
-					
+		if (a != null) {
+			List<JsonValue> list = a.asArray().asList();
+			for (Iterator<JsonValue> it = list.iterator(); it.hasNext();) {
+				JsonObject o = it.next().asObject();
+				
+				Map<String, JsonValue> map = o.asMap();
+				switch (o.get("t").toString()) {
+				case "c": { // crit
+					int v = (int) map.get("v").getValue();
+					release.setCritLevel((byte) v);
 				} break;
-				case ObjectType:
-					parseDataPair(release, v);
+				
+				// v0.2 新加
+				case "p": { // priority
+					int v = (Integer) map.get("v").getValue();
+					release.setPriority((byte) v);
+				} break;
+				
+				// v0.2.1 新加
+				case "r": { // range
+					String r = map.get("v").getString();
+					release.setRange(ESkillRange.parseEnum(r));
+					if (map.size() > 2)
+						additions.add(o);
+				} break;
+				
+				// v0.2.3 新加
+				case "x": {// v0.2.3 用于补充特殊, 该类数据被合并至 SkillRelease.property 中
+					JsonObject jo = release.getProperty();
+					for (Iterator<Entry<String, JsonValue>> it0 = map.entrySet().iterator(); it.hasNext();) {
+						Entry<String, JsonValue> entry = it0.next();
+						String key = entry.getKey();
+						if ("t".equals(key)) {
+							continue;
+						}
+						jo.add(key, entry.getValue());
+					}
+				} break;
+				
+				// v0.2.3 新加
+				case "#": // v0.2.2 用于注释, 直接忽略即可
 					break;
 
+				// TODO add more
+					
 				default:
+				// 包括各种 formula 参数 (a d m w u) 等
+					additions.add(o);
 					break;
 				}
-				
-			} catch (RuntimeException e) {
-				e.printStackTrace();
 			}
 		}
 		
-		
-		setDefaultData(release);
-		
-		
-	}
-	
-	private void parseDataPair(SkillRelease release, JsonValue data) {
-//		if (data.startsWith(HEAD_CRIT)) {
-//			release.setCritLevel(Byte.parseByte(data.substring(HEAD_CRIT.length())));
-//		} else if (data.startsWith(HEAD_ADDITION)) {
-//			release.setAddition(data.substring(HEAD_ADDITION.length()));
-//		}
-		
-		Map<String, JsonValue> map = data.getMap();
-		switch (map.get("t").getString()) {
-		case "a": case "d": case "m": case "w": case "u": // addition +
-			release.addAddition(data);
-			break;
-		case "c": { // crit
-			int v = (Integer) data.getMap().get("v").getValue();
-			release.setCritLevel((byte) v);
-		} break;
-		
-		// v0.2 新加
-		case "p": { // priority
-			int v = (Integer) data.getMap().get("v").getValue();
-			release.setPriority((byte) v);
-		} break;
-		
-		// v0.2.1 新加
-		case "r": { // range
-			String r = data.getMap().get("v").getString();
-			release.setRange(ESkillRange.parseEnum(r));
-			release.addAddition(data);
-		} break;
-		
-		default:
-			break;
+		// 处理 addition
+		if (!additions.isEmpty()) {
+			JsonObject[] os = new JsonObject[additions.size()];
+			additions.toArray(os);
+			release.setAdditions(os);
 		}
 		
-		// TODO add more
+		setDefaultData(release);
 	}
 	
 	/**

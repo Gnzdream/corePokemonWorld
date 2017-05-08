@@ -3,7 +3,7 @@ package com.zdream.pmw.platform.attend;
 import java.util.List;
 
 import com.zdream.pmw.platform.prototype.BattlePlatform;
-import com.zdream.pmw.util.json.JsonValue;
+import com.zdream.pmw.util.json.JsonObject;
 
 /**
  * 状态列表处理接口<br>
@@ -53,7 +53,7 @@ public interface IStateContainer {
 	 * @param value
 	 * @param pf
 	 */
-	public void setState(String stateName, JsonValue value, BattlePlatform pf);
+	public void setState(String stateName, JsonObject value, BattlePlatform pf);
 	
 	/**
 	 * 通过名称获得对应的状态

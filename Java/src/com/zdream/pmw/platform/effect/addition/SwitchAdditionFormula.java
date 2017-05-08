@@ -1,5 +1,7 @@
 package com.zdream.pmw.platform.effect.addition;
 
+import java.util.Arrays;
+
 import com.zdream.pmw.platform.attend.AttendManager;
 import com.zdream.pmw.platform.effect.Aperitif;
 import com.zdream.pmw.util.random.RanValue;
@@ -60,11 +62,17 @@ public class SwitchAdditionFormula extends AAdditionFormula {
 
 	@Override
 	protected void force() {
+		int len = targets.length;
+		if (len != 1) {
+			throw new IllegalStateException(
+					"目标为 " + Arrays.toString(targets) + " 不唯一");
+		}
+		
 		// 选择 noIn
 		byte noIn = candidates[RanValue.random(0, length)];
-		byte noOut = (side == SIDE_ATSTAFF) ?
-				pack.getAtStaff().getNo() : pack.getDfStaff(0).getNo();
-		pack.getEffects().exchangeAct(noOut, noIn);
+		byte noOut = (targets[0] == pack.getAtStaff().getSeat()) ?
+				pack.getAtStaff().getNo() : am.noForSeat(targets[0]);
+		em.exchangeAct(noOut, noIn);
 	}
 	
 	@Override
@@ -80,13 +88,13 @@ public class SwitchAdditionFormula extends AAdditionFormula {
 	
 	private int calcCandidates() {
 		byte team;
-		AttendManager am = pack.getAttends();
-		if (side == SIDE_ATSTAFF) {
+		AttendManager am = em.getAttends();
+		byte atseat = pack.getAtStaff().getSeat();
+		
+		if (targets[0] == atseat) {
 			team = am.teamForNo(pack.getAtStaff().getNo());
-		} else if (side == SIDE_DFSTAFF) {
-			team = am.teamForNo(pack.getDfStaff(pack.getThiz()).getNo());
 		} else {
-			throw new IllegalArgumentException("side: " + side + " is illegal, [0, 1 was expected]");
+			team = am.teamForSeat(targets[0]);
 		}
 		
 		// 全场参与怪兽人数
@@ -106,12 +114,12 @@ public class SwitchAdditionFormula extends AAdditionFormula {
 		byte atseat = pack.getAtStaff().getSeat();
 		byte[] dfseats = pack.dfSeats();
 		
-		Aperitif ap = pack.getEffects().newAperitif(Aperitif.CODE_ADDITION_SETTLE, dfseats);
+		Aperitif ap = em.newAperitif(Aperitif.CODE_ADDITION_SETTLE, dfseats);
 		ap.putScanSeats(atseat);
-		ap.append("atseat", atseat).append("dfseats", dfseats).append("side", side)
+		ap.append("atseat", atseat).append("dfseats", dfseats)
 			.append("category", "switch");
 		
-		if (side == SIDE_ATSTAFF) {
+		if (atseat == targets[0]) {
 			ap.append("target", atseat);
 		} else {
 			if (dfseats.length != 1) {
@@ -121,7 +129,7 @@ public class SwitchAdditionFormula extends AAdditionFormula {
 			ap.append("target", dfseats[0]);
 		}
 		
-		pack.getEffects().startCode(ap);
+		em.startCode(ap);
 		Integer abs = (Integer) ap.get("abs");
 		if (abs == null || abs != 2) {
 			return true;

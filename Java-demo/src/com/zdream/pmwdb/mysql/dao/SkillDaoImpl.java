@@ -9,7 +9,6 @@ import java.util.List;
 
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
-import org.apache.commons.dbutils.handlers.ColumnListHandler;
 
 import com.zdream.pmw.monster.data.dao.ISkillDao;
 import com.zdream.pmw.monster.skill.Skill;
@@ -27,55 +26,6 @@ import com.zdream.pmwdb.mysql.model.SkillModel;
 public class SkillDaoImpl implements ISkillDao{
 	
 	private static final String TABLE_NAME = "Skill";
-	
-	@Override
-	public int addSkill(Skill model) {
-		Connection conn = DbBase.getConnection();
-		QueryRunner runner = DbBase.getRunner();
-		int result = -1;
-		try {
-			result = runner.update(conn, "insert into " + TABLE_NAME
-					+ "(skill_id,title,type,power,accuracy,category,ppmax,description,release_effect)"
-					+ "values(?,?,?,?,?,?,?,?,?);",
-					model.getId(), model.getTitle(), model.getType(), model.getPower(), model.getAccuracy(), 
-					model.getCategory(), model.getPpMax(), model.getDescription(), model.getRelease().getString());
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return result;
-	}
-	
-	@Override
-	public int[] addBatchSkills(List<Skill> skills) {
-		Connection conn = DbBase.getConnection();
-		QueryRunner runner = DbBase.getRunner();
-		Object[][] params = new Object[skills.size()][9];
-		
-		Iterator<Skill> it = skills.iterator();
-		for (int i = 0; i < params.length; i++) {
-			Object[] objs = params[i];
-			Skill skill = it.next();
-
-			objs[0] = skill.getId();
-			objs[1] = skill.getTitle();
-			objs[2] = skill.getType();
-			objs[3] = skill.getPower();
-			objs[4] = skill.getAccuracy();
-			objs[5] = skill.getCategory();
-			objs[6] = skill.getPpMax();
-			objs[7] = skill.getDescription();
-			objs[8] = skill.getRelease().getString();
-		}
-		int result[] = null;
-		try {
-			result = runner.batch(conn, "insert into " + TABLE_NAME
-					+ "(skill_id,title,type,power,accuracy,category,ppmax,description,release_effect)"
-					+ "values(?,?,?,?,?,?,?,?,?);", params);
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return result;
-	}
 
 	@Override
 	public Skill getSkill(final short id) {
@@ -175,74 +125,5 @@ public class SkillDaoImpl implements ISkillDao{
 		
 		
 		return skills;
-	}
-
-	@Override
-	public int deleteSkill(short id) {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public int updateSkill(Skill skill) {
-		Connection conn = DbBase.getConnection();
-		QueryRunner runner = DbBase.getRunner();
-		int result = -1;
-		try {
-			result = runner.update(conn, "update " + TABLE_NAME + 
-					" set title=?,type=?,power=?,accuracy=?,category=?,ppmax=?,description=?,release_effect=? "
-					+ "where skill_id=?;", skill.getTitle(), skill.getType(), skill.getPower(), skill.getAccuracy(),
-					skill.getCategory(), skill.getPpMax(), skill.getDescription(), skill.getRelease().getString()
-					, skill.getId());
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return result;
-	}
-	
-	@Override
-	public int[] updateBatchSkills(List<Skill> skills) {
-		Connection conn = DbBase.getConnection();
-		QueryRunner runner = DbBase.getRunner();
-		Object[][] params = new Object[skills.size()][9];
-		
-		Iterator<Skill> it = skills.iterator();
-		for (int i = 0; i < params.length; i++) {
-			Object[] objs = params[i];
-			Skill skill = it.next();
-			
-			objs[0] = skill.getTitle();
-			objs[1] = skill.getType();
-			objs[2] = skill.getPower();
-			objs[3] = skill.getAccuracy();
-			objs[4] = skill.getCategory();
-			objs[5] = skill.getPpMax();
-			objs[6] = skill.getDescription();
-			objs[7] = skill.getRelease().getString();
-			objs[8] = skill.getId();
-		}
-		int result[] = null;
-		try {
-			result = runner.batch(conn, "update " + TABLE_NAME + 
-					" set title=?,type=?,power=?,accuracy=?,category=?,ppmax=?,description=?,release_effect=? "
-					+ "where skill_id=?;", params);
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return result;
-	}
-
-	@Override
-	public List<Integer> allId() {
-		Connection conn = DbBase.getConnection();
-		QueryRunner runner = DbBase.getRunner();
-		List<Integer> result = null;
-		try {
-			result = runner.query(conn, "select skill_id from " + TABLE_NAME + ';', 
-					new ColumnListHandler<Integer>());
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return result;
 	}
 }

@@ -79,7 +79,7 @@ public class DefaultEnteranceEvent extends AAttendantEvent {
 		
 		if (exist) {
 			pf.getControlManager().inform();
-			pf.getOrderManager().pushEvents(pf.getOrderManager().buildMoveEvent());
+			pf.getOrderManager().buildMoveEvent();
 		}
 		
 		this.pf = null;
@@ -144,8 +144,8 @@ public class DefaultEnteranceEvent extends AAttendantEvent {
 	 */
 	private void sendRequestPokemonMsg(byte team, byte[] seats) {
 		Aperitif value = pf.getEffectManage().newAperitif(Aperitif.CODE_REQUEST_PM);
-		value.append("seats", seats);
-		value.append("team", team);
+		value.put("seats", seats);
+		value.put("team", team);
 		pf.readyCode(value);
 	}
 
@@ -158,7 +158,6 @@ public class DefaultEnteranceEvent extends AAttendantEvent {
 	}
 
 	public DefaultEnteranceEvent(boolean zeroRound) {
-		super(EventType.LAST);
 		this.zeroRound = zeroRound;
 	}
 

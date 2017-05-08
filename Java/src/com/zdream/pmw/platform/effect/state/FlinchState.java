@@ -3,7 +3,6 @@ package com.zdream.pmw.platform.effect.state;
 import com.zdream.pmw.platform.attend.IStateInterceptable;
 import com.zdream.pmw.platform.effect.Aperitif;
 import com.zdream.pmw.platform.prototype.BattlePlatform;
-import com.zdream.pmw.util.json.JsonValue;
 
 /**
  * 畏缩状态<br>
@@ -37,13 +36,13 @@ public class FlinchState extends AParticipantState {
 	}
 	
 	@Override
-	public String execute(Aperitif value, IStateInterceptable interceptor, BattlePlatform pf) {
-		switch (value.getHead()) {
+	public String execute(Aperitif ap, IStateInterceptable interceptor, BattlePlatform pf) {
+		switch (ap.getHead()) {
 		case CODE_JUDGE_MOVEABLE: 
-			return judgeMoveable(value, interceptor, pf);
+			return judgeMoveable(ap, interceptor, pf);
 			
 		case CODE_ROUND_END:
-			roundEnd(value, pf);
+			roundEnd(ap, pf);
 			break;
 		}
 		
@@ -70,7 +69,7 @@ public class FlinchState extends AParticipantState {
 		return interceptor.nextState();
 	}
 
-	private void roundEnd(JsonValue value, BattlePlatform pf) {
+	private void roundEnd(Aperitif value, BattlePlatform pf) {
 		pf.getEffectManage().sendRemoveParticipantStateMessage(name(), getNo());
 	}
 

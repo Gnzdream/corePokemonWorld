@@ -6,6 +6,7 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
 import com.zdream.pmw.monster.prototype.EPokemonType;
+import com.zdream.pmw.util.json.JsonArray;
 import com.zdream.pmw.util.json.JsonBuilder;
 import com.zdream.pmw.util.json.JsonValue;
 
@@ -91,7 +92,7 @@ public class Skill implements Externalizable {
 	 * 比如技能会提升自己能力、使对方陷入异常状态等<br>
 	 * @since v0.2
 	 */
-	private JsonValue release;
+	private JsonArray release;
 
 	public Skill() {
 		super();
@@ -192,14 +193,14 @@ public class Skill implements Externalizable {
 	/**
 	 * @since v0.2
 	 */
-	public JsonValue getRelease() {
+	public JsonArray getRelease() {
 		return release;
 	}
 
 	/**
 	 * @since v0.2
 	 */
-	public void setRelease(JsonValue release) {
+	public void setRelease(JsonArray release) {
 		this.release = release;
 	}
 
@@ -274,8 +275,9 @@ public class Skill implements Externalizable {
 			in.read(bs);
 			String s = new String(bs, "UTF-8");
 			
-			JsonBuilder bd = new JsonBuilder();
-			release = bd.parseJson(s);
+			JsonBuilder bd = JsonBuilder.getDefaultInstance();
+			JsonValue o = bd.parseJson(s);
+			release = (o == null) ? new JsonArray() : o.asArray();
 		}
 	}
 }

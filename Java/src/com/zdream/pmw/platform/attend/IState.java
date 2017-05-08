@@ -4,6 +4,7 @@ import com.zdream.pmw.platform.attend.service.EStateSource;
 import com.zdream.pmw.platform.control.IMessageCode;
 import com.zdream.pmw.platform.effect.Aperitif;
 import com.zdream.pmw.platform.prototype.BattlePlatform;
+import com.zdream.pmw.util.json.JsonObject;
 import com.zdream.pmw.util.json.JsonValue;
 
 /**
@@ -95,7 +96,7 @@ public interface IState extends IMessageCode {
 	 * @param  pf
 	 * @since  v0.2.1
 	 */
-	default public void set(JsonValue v, BattlePlatform pf) {}
+	default public void set(JsonObject v, BattlePlatform pf) {}
 	
 	/**
 	 * 说明这个状态是属于哪个种类的<br>

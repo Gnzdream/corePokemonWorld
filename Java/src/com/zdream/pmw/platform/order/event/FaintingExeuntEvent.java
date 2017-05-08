@@ -71,8 +71,8 @@ public class FaintingExeuntEvent extends APreviousEvent {
 	 */
 	private void sendExeuntMsg(byte team) {
 		Aperitif value = pf.getEffectManage().newAperitif(Aperitif.CODE_EXEUNT_FAINT, seat);
-		value.append("seat", seat);
-		value.append("team", team);
+		value.put("seat", seat);
+		value.put("team", team);
 		pf.readyCode(value);
 	}
 

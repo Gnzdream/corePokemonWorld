@@ -8,7 +8,7 @@ import java.util.Set;
 
 import com.zdream.pmw.platform.effect.state.ISubStateCreater;
 import com.zdream.pmw.platform.prototype.BattlePlatform;
-import com.zdream.pmw.util.json.JsonValue;
+import com.zdream.pmw.util.json.JsonObject;
 
 /**
  * 状态容器<br>
@@ -91,7 +91,7 @@ public class StateContainer implements IStateContainer {
 	}
 	
 	@Override
-	public void setState(String stateName, JsonValue value, BattlePlatform pf) {
+	public void setState(String stateName, JsonObject value, BattlePlatform pf) {
 		for (Iterator<IState> it = states.iterator(); it.hasNext();) {
 			IState state = it.next();
 			if (state.name().equals(stateName)) {

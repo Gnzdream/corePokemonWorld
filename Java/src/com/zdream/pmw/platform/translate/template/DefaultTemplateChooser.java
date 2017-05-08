@@ -47,7 +47,7 @@ public class DefaultTemplateChooser implements ITemplateChooser {
 		if (temp == null) {
 			return null;
 		} else {
-			return new String[]{temp.getMap().get("id").getString()};
+			return new String[]{temp.asObject().asMap().get("id").getString()};
 		}
 	}
 	
@@ -67,12 +67,12 @@ public class DefaultTemplateChooser implements ITemplateChooser {
 	}
 	
 	private JsonValue chooseTemplateEntry(String head, Map<String, String> context) {
-		JsonValue rawTemplate = rules.getMap().get(head);
+		JsonValue rawTemplate = rules.asObject().asMap().get(head);
 		if (rawTemplate == null) {
 			return null;
 		}
 		
-		List<JsonValue> list = rawTemplate.getArray();
+		List<JsonValue> list = rawTemplate.asArray().asList();
 		for (ListIterator<JsonValue> it = list.listIterator(); it.hasNext();) {
 			JsonValue jv = it.next();
 			if (judgeTemplate(jv, context)) {
@@ -88,7 +88,7 @@ public class DefaultTemplateChooser implements ITemplateChooser {
 			return false;
 		}
 		
-		Map<String, JsonValue> map = jv.getMap();
+		Map<String, JsonValue> map = jv.asObject().asMap();
 		for (Iterator<Entry<String, JsonValue>> it = map.entrySet().iterator(); it.hasNext();) {
 			Entry<String, JsonValue> entry = it.next();
 			String key = entry.getKey();

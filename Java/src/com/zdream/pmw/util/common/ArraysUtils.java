@@ -1,5 +1,7 @@
 package com.zdream.pmw.util.common;
 
+import java.util.Arrays;
+
 /**
  * 数组的通用工具<br>
  * <br>
@@ -65,6 +67,37 @@ public class ArraysUtils {
 			System.arraycopy(src, 0, dest, 0, length);
 			return dest;
 		}
+	}
+	
+	/**
+	 * 返回数组的 toString
+	 * @param a
+	 * @return
+	 */
+	public static String toString(Object a) {
+		if (a == null)
+			return "null";
+		
+		Class<?> oClass = a.getClass();
+		if (oClass == byte[].class)
+            return Arrays.toString((byte[]) a);
+        else if (oClass == short[].class)
+        	return Arrays.toString((short[]) a);
+        else if (oClass == int[].class)
+        	return Arrays.toString((int[]) a);
+        else if (oClass == long[].class)
+        	return Arrays.toString((long[]) a);
+        else if (oClass == char[].class)
+        	return Arrays.toString((char[]) a);
+        else if (oClass == float[].class)
+        	return Arrays.toString((float[]) a);
+        else if (oClass == double[].class)
+        	return Arrays.toString((double[]) a);
+        else if (oClass == boolean[].class)
+        	return Arrays.toString((boolean[]) a);
+        else {
+            return Arrays.deepToString((Object[]) a);
+        }
 	}
 
 }

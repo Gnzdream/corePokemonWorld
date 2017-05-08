@@ -3,6 +3,7 @@ package com.zdream.pmwdb.asset.io;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.zdream.pmw.util.json.JsonObject;
 import com.zdream.pmw.util.json.JsonValue;
 
 /**
@@ -40,7 +41,7 @@ public class SkillDataReader extends ADataReader<Integer> {
 	}
 
 	@Override
-	protected void onDataStore(JsonValue v) {
-		map.put((int) v.getMap().get("skill_id").getValue(), v);
+	protected void onDataStore(JsonObject v) {
+		map.put((int) v.asMap().get("skill_id").getValue(), v);
 	}
 }

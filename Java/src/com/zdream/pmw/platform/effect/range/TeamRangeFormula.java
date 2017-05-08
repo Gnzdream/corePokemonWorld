@@ -25,7 +25,7 @@ public class TeamRangeFormula extends SingleRangeFormula {
 	 * <li>忽略玩家的选择, 选定所有攻击方能够击中的、非本阵营的所有座位</li></p>
 	 */
 	protected byte[] onRange() {
-		AttendManager am = pack.getAttends();
+		AttendManager am = em.getAttends();
 		final int len = am.seatLength();
 		byte[] results = new byte[len - 1]; // 缓存选择的座位
 		int idx = 0;

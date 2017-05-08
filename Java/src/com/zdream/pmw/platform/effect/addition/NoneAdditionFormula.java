@@ -1,7 +1,6 @@
 package com.zdream.pmw.platform.effect.addition;
 
-import com.zdream.pmw.platform.effect.SkillReleasePackage;
-import com.zdream.pmw.util.json.JsonValue;
+import com.zdream.pmw.platform.effect.AInstruction;
 
 /**
  * 默认附加状态 / A 类附加效果判定实现类<br>
@@ -12,21 +11,11 @@ import com.zdream.pmw.util.json.JsonValue;
  * @date 2016年4月16日
  * @version v0.1
  */
-public class NoneAdditionFormula implements IAdditionFormula {
+public class NoneAdditionFormula extends AInstruction {
 
 	@Override
 	public String name() {
 		return "none";
-	}
-
-	@Override
-	public void addition(SkillReleasePackage package1) {
-		// none
-	}
-
-	@Override
-	public void set(JsonValue args) {
-		
 	}
 	
 	@Override
@@ -39,5 +28,10 @@ public class NoneAdditionFormula implements IAdditionFormula {
 	 ************ */
 	
 	public NoneAdditionFormula() {}
+
+	@Override
+	protected void execute() {
+		// do nothing
+	}
 
 }

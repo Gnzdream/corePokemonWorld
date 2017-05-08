@@ -7,10 +7,10 @@ import com.zdream.pmw.platform.attend.AttendManager;
 import com.zdream.pmw.platform.control.ControlBase;
 import com.zdream.pmw.platform.control.ControlManager;
 import com.zdream.pmw.platform.control.IPrintLevel;
-import com.zdream.pmw.platform.order.event.AEvent;
+import com.zdream.pmw.platform.order.event.IEvent;
 import com.zdream.pmw.platform.order.event.MoveEvent;
 import com.zdream.pmw.platform.order.event.ReplaceEvent;
-import com.zdream.pmw.util.json.JsonValue;
+import com.zdream.pmw.util.json.JsonObject;
 
 /**
  * 精灵发动技能事件的产生类<br>
@@ -31,15 +31,13 @@ public class MoveEventBuilder {
 	
 	/**
 	 * 外部调用方法<br>
-	 * 将用户端的消息转化成事件并返回<br>
+	 * 将用户端的消息转化成事件并添加到系统的行动列表中<br>
 	 * 
 	 * <p><b>v0.2.2</b><br>
 	 * 它行动方式进行了改动, 为有消息的控制体产生行动事件, 而不是所有控制体.</p>
-	 * 
-	 * @return
 	 */
-	public List<AEvent> build() {
-		List<AEvent> events = new ArrayList<AEvent>();
+	public void build() {
+		List<IEvent> events = new ArrayList<IEvent>();
 		AttendManager am = om.getRoot().getAttendManager();
 		ControlManager cm = om.getRoot().getControlManager();
 		
@@ -54,7 +52,8 @@ public class MoveEventBuilder {
 			}
 		}
 		
-		return events;
+		IEvent[] es = new IEvent[events.size()];
+		storage.store(events.toArray(es));
 	}
 	
 	/**
@@ -64,8 +63,8 @@ public class MoveEventBuilder {
 	 * @param team
 	 * @return
 	 */
-	public List<AEvent> buildForTeam(byte team) {
-		List<AEvent> events = new ArrayList<AEvent>();
+	public List<IEvent> buildForTeam(byte team) {
+		List<IEvent> events = new ArrayList<IEvent>();
 		ControlBase ctrl = om.getRoot().getControlManager().getCtrl(team);
 
 		if (ctrl.isLoaded()) {
@@ -90,9 +89,8 @@ public class MoveEventBuilder {
 	 */
 	public void buildMoveEvent(byte no,
 			byte skillNum,
-			byte target,
-			List<AEvent> events) {
-		events.add(this.buildMoveEvent0(no, skillNum, target));
+			byte target) {
+		this.storage.store(this.buildMoveEvent0(no, skillNum, target));
 	}
 	
 	/**
@@ -112,9 +110,8 @@ public class MoveEventBuilder {
 	public void buildMoveEvent(byte no,
 			byte skillNum,
 			byte target,
-			JsonValue param,
-			List<AEvent> events) {
-		events.add(this.buildMoveEvent0(no, skillNum, target, param));
+			JsonObject param) {
+		this.storage.store(this.buildMoveEvent0(no, skillNum, target, param));
 	}
 	
 	/**
@@ -123,7 +120,7 @@ public class MoveEventBuilder {
 	 * @param events
 	 *   event 列表，将产生的事件添加至此
 	 */
-	private void buildForEveryTeam(ControlBase base, List<AEvent> events) {
+	private void buildForEveryTeam(ControlBase base, List<IEvent> events) {
 		AttendManager am = om.getRoot().getAttendManager();
 		
 		// no, skill, target
@@ -194,7 +191,7 @@ public class MoveEventBuilder {
 	 *   附加参数
 	 * @return
 	 */
-	private MoveEvent buildMoveEvent0(byte no, byte skillNum, byte target, JsonValue param) {
+	private MoveEvent buildMoveEvent0(byte no, byte skillNum, byte target, JsonObject param) {
 		MoveEvent event = new MoveEvent();
 		
 		event.setNo(no);
@@ -231,6 +228,7 @@ public class MoveEventBuilder {
 	 ************ */
 	
 	OrderManager om;
+	IMoveEventStorage storage;
 
 	public MoveEventBuilder(OrderManager om) {
 		this.om = om;

@@ -5,6 +5,7 @@ import java.util.Map;
 import com.zdream.pmw.platform.attend.IState;
 import com.zdream.pmw.platform.attend.service.EStateSource;
 import com.zdream.pmw.platform.prototype.BattlePlatform;
+import com.zdream.pmw.util.json.JsonObject;
 import com.zdream.pmw.util.json.JsonValue;
 
 /**
@@ -39,8 +40,8 @@ public abstract class APlatformState implements IState {
 	}
 
 	@Override
-	public void set(JsonValue v, BattlePlatform pf) {
-		Map<String, JsonValue> map = v.getMap();
+	public void set(JsonObject v, BattlePlatform pf) {
+		Map<String, JsonValue> map = v.asMap();
 		// init: source
 		if (map.containsKey("source")) {
 			setSource(map.get("source").getString());

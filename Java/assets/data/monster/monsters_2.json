@@ -5,7 +5,7 @@
 "103":{"val":{"sd":75,"df":85,"at":95,"hp":95,"sp":55,"sa":125},"species_id":103,"son":102,"form":0,"species_name":"椰蛋树","root":102,"ability":[0,0,0],"type":["grass","psychic"],"wt":120.0},
 "104":{"val":{"sd":50,"df":95,"at":50,"hp":50,"sp":35,"sa":40},"species_id":104,"form":0,"species_name":"卡拉卡拉","root":104,"ability":[0,0,0],"type":["ground"],"wt":6.5},
 "105":{"val":{"sd":80,"df":110,"at":80,"hp":60,"sp":45,"sa":50},"species_id":105,"son":104,"form":0,"species_name":"嘎啦嘎啦","root":104,"ability":[0,0,0],"type":["grass","psychic"],"wt":45.0},
-"106":{"val":{"sd":110,"df":53,"at":120,"hp":50,"sp":87,"sa":35},"species_id":106,"son":236,"form":0,"species_name":"嘎啦嘎啦","root":236,"ability":[0,0,0],"type":["fighting"],"wt":49.8},
+"106":{"val":{"sd":110,"df":53,"at":120,"hp":50,"sp":87,"sa":35},"species_id":106,"son":236,"form":0,"species_name":"飞腿郎","root":236,"ability":[0,0,0],"type":["fighting"],"wt":49.8},
 "107":{"val":{"sd":110,"df":79,"at":105,"hp":50,"sp":76,"sa":35},"species_id":107,"son":236,"form":0,"species_name":"快拳郎","root":236,"ability":[0,0,0],"type":["fighting"],"wt":50.2},
 "108":{"val":{"sd":75,"df":75,"at":55,"hp":90,"sp":30,"sa":60},"species_id":108,"form":0,"species_name":"大舌头","root":108,"ability":[0,0,0],"type":["normal"],"wt":65.5},
 "109":{"val":{"sd":45,"df":95,"at":65,"hp":40,"sp":35,"sa":60},"species_id":109,"form":0,"species_name":"瓦斯弹","root":109,"ability":[0,0,0],"type":["poison"],"wt":1.0},

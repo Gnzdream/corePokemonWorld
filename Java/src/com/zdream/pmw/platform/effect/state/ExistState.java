@@ -12,7 +12,6 @@ import com.zdream.pmw.platform.control.IMessageCode;
 import com.zdream.pmw.platform.control.IPrintLevel;
 import com.zdream.pmw.platform.effect.Aperitif;
 import com.zdream.pmw.platform.prototype.BattlePlatform;
-import com.zdream.pmw.util.json.JsonValue;
 
 /**
  * 存在状态<br>
@@ -179,23 +178,23 @@ public final class ExistState extends ABaseState implements IPokemonDataType {
 		return calcStat(SP, value, interceptor, pf);
 	}
 	
-	private String calcStat(int item, Aperitif value, IStateInterceptable interceptor, BattlePlatform pf) {
-		byte seat = (byte) value.getMap().get("seat").getValue();
+	private String calcStat(int item, Aperitif ap, IStateInterceptable interceptor, BattlePlatform pf) {
+		byte seat = (byte) ap.get("seat");
 		
-		JsonValue v = value.getMap().get("ignore");
+		Object obj = ap.get("ignore");
 		int ignore;
-		if (v == null) {
+		if (obj == null) {
 			ignore = 0;
 		} else {
-			ignore = (int) v.getValue();
+			ignore = (int) obj;
 		}
 		
 		int level = pf.getAttendManager().abilityLevel(seat, item, ignore);
 		float rate = pf.getAttendManager().abilityLevelRate(item, level);
 		
-		v = value.getMap().get("rate");
-		v.setValue(rate * (float) v.getValue());
-		value.getMap().put("level", new JsonValue(level));
+		obj = ap.get("rate");
+		ap.put("rate", (float)(rate * (float) obj));
+		ap.put("level", level);
 		
 		return interceptor.nextState();
 	}

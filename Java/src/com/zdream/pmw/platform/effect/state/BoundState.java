@@ -8,6 +8,7 @@ import com.zdream.pmw.platform.attend.Participant;
 import com.zdream.pmw.platform.effect.Aperitif;
 import com.zdream.pmw.platform.effect.IStateMessageFormater;
 import com.zdream.pmw.platform.prototype.BattlePlatform;
+import com.zdream.pmw.util.json.JsonObject;
 import com.zdream.pmw.util.json.JsonValue;
 import com.zdream.pmw.util.random.RanValue;
 
@@ -99,33 +100,32 @@ public class BoundState extends AParticipantState
 	}
 	
 	@Override
-	public String forceCommandLine(JsonValue value, BattlePlatform pf) {
-		Map<String, JsonValue> map = value.getMap();
-		String statestr = map.get("state").getString();
+	public String forceCommandLine(Aperitif ap, BattlePlatform pf) {
+		String statestr = ap.get("state").toString();
 		
-		byte atseat = (Byte) map.get("atseat").getValue();
+		byte atseat = (byte) ap.get("atseat");
 		byte atno = pf.getAttendManager().noForSeat(atseat);
-		byte dfseat = (Byte) map.get("dfseat").getValue();
+		byte dfseat = (byte) ap.get("dfseat");
 		byte dfno = pf.getAttendManager().noForSeat(dfseat);
 		
 		String cmd = String.format("force-state %s -no %d -source %s -skillID %d -atno %d",
-				statestr, dfno, map.get("source").getString(),
-				map.get("skillID").getValue(), atno);
+				statestr, dfno, ap.get("source"),
+				ap.get("skillID"), atno);
 		return cmd;
 	}
 	
 	@Override
-	public void forceRealize(String[] codes, JsonValue argv, BattlePlatform pf) {
-		argv.add("no", new JsonValue(Byte.valueOf(codes[3])));
-		argv.add("source", new JsonValue(codes[5]));
-		argv.add("skillID", new JsonValue(Short.valueOf(codes[7])));
-		argv.add("atno", new JsonValue(Byte.valueOf(codes[9])));
+	public void forceRealize(String[] codes, JsonObject argv, BattlePlatform pf) {
+		argv.add("no", JsonValue.createJson(Byte.valueOf(codes[3])));
+		argv.add("source", JsonValue.createJson(codes[5]));
+		argv.add("skillID", JsonValue.createJson(Short.valueOf(codes[7])));
+		argv.add("atno", JsonValue.createJson(Byte.valueOf(codes[9])));
 	}
 	
 	@Override
-	public void set(JsonValue v, BattlePlatform pf) {
+	public void set(JsonObject v, BattlePlatform pf) {
 		super.set(v, pf);
-		Map<String, JsonValue> map = v.getMap();
+		Map<String, JsonValue> map = v.asMap();
 		
 		if (map.containsKey("atno")) {
 			this.atno = (byte) map.get("atno").getValue();

@@ -1,13 +1,10 @@
 package com.zdream.pmw.platform.control.code;
 
-import java.util.Map;
-
 import com.zdream.pmw.core.tools.AbnormalMethods;
 import com.zdream.pmw.monster.prototype.EPokemonAbnormal;
 import com.zdream.pmw.platform.control.ICodeRealizer;
 import com.zdream.pmw.platform.effect.Aperitif;
 import com.zdream.pmw.platform.prototype.BattlePlatform;
-import com.zdream.pmw.util.json.JsonValue;
 
 /**
  * 异常状态消息行动实现<br>
@@ -31,11 +28,11 @@ public class AbnornalCodeRealizer implements ICodeRealizer {
 	}
 
 	@Override
-	public String commandLine(Aperitif value, BattlePlatform pf) {
+	public String commandLine(Aperitif ap, BattlePlatform pf) {
 		this.pf = pf;
-		String head = value.getHead();
+		String head = ap.getHead();
 		if (CODE_FORCE_ABNORMAL.equals(head)) {
-			return forceAbnormalCommandLine(value);
+			return forceAbnormalCommandLine(ap);
 		}
 		return null;
 	}
@@ -57,15 +54,14 @@ public class AbnornalCodeRealizer implements ICodeRealizer {
 	 * @param value
 	 * @return
 	 */
-	private String forceAbnormalCommandLine(JsonValue value) {
-		Map<String, JsonValue> map = value.getMap();
+	private String forceAbnormalCommandLine(Aperitif ap) {
 		StringBuilder builder = new StringBuilder(25);
-		builder.append("force-abnormal ").append(map.get("dfseat").getValue()).append(' ')
-				.append(map.get("abnormal").getValue());
+		builder.append("force-abnormal ").append(ap.get("dfseat")).append(' ')
+				.append(ap.get("abnormal"));
 		
-		JsonValue paramv = map.get("param");
+		Object paramv = ap.get("param");
 		if (paramv != null) {
-			builder.append(' ').append(paramv.getString());
+			builder.append(' ').append(paramv);
 		}
 		
 		return builder.toString();

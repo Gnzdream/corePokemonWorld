@@ -48,6 +48,42 @@ public interface IMessageCode {
 	public static final String CODE_RELEASE_SKILL = "release-skill";
 	
 	/**
+	 * <p>拦截前消息的消息头<br>
+	 * 释放技能结束
+	 * 
+	 * <p><b>开胃酒消息格式</b>
+	 * <blockquote><table>
+	 * <tr><th>key</th><th>value 及说明</th></tr>
+	 * <tr><td>seat</td><td>byte, 攻击方座位</td></tr>
+	 * <tr><td>no</td><td>byte, 攻击方 no 编号</td></tr>
+	 * <tr><td>skillId</td><td>short, 本次释放的技能 ID 号</td></tr>
+	 * <tr><td>result</td><td>string, 结果, 可以为 success fail 或 miss.</td></tr>
+	 * <tr><td>[reason]</td><td>string, 原因, 当发动失败时, 显示原因</td></tr>
+	 * </table></blockquote>
+	 * <li>当技能释放途中, 攻击方如果因为各种原因使自己濒死, seat 值必须为 -1.
+	 * </li></p>
+	 * 
+	 * <p><b>命令行消息类型</b>
+	 * <blockquote><table>
+	 * <tr><th>说明</th><th>command format</th></tr>
+	 * <tr><td>技能成功结束</td>
+	 * <td><code>release-finish moveable &lt;no&gt;</code></td></tr>
+	 * <tr><td>技能发动因为无法行动结束</td>
+	 * <td><code>release-finish success &lt;no&gt; [reason]</code></td></tr>
+	 * <tr><td>技能发动失败结束</td>
+	 * <td><code>release-finish fail &lt;no&gt; [reason]</code></td></tr>
+	 * <tr><td>技能发动以未命中结束</td>
+	 * <td><code>release-finish miss &lt;no&gt; [reason]</code></td></tr>
+	 * </table></blockquote>
+	 * <li>飞踢等未命中会反伤的技能不会以未命中结束.
+	 * 一旦出现反伤的效果将计为成功触发结束.
+	 * </li></p>
+	 * 
+	 * @since v0.2.3
+	 */
+	public static final String CODE_RELEASE_FINISH = "release-finish";
+	
+	/**
 	 * 由于攻击方发动技能而使防御方受到伤害的消息头
 	 */
 	public static final String CODE_SKILL_DAMAGE = "skill-damage";
@@ -111,10 +147,16 @@ public interface IMessageCode {
 		CODE_CALC_HIDE = "calc-hide";
 	
 	/**
-	 * 计算属性
+	 * 确定释放技能的真实属性
 	 */
 	public static final String
 		CODE_CALC_TYPE = "calc-type";
+	
+	/**
+	 * 确定防御方对技能的免疫情况
+	 */
+	public static final String
+		CODE_JUDGE_IMMUSE = "judge-immuse";
 	
 	/**
 	 * 计算 CT 暴击等级
@@ -198,5 +240,27 @@ public interface IMessageCode {
 	 * 广播
 	 */
 	public static final String CODE_BROADCAST = "broadcast";
+	
+	/* ************
+	 *	附加效果  *
+	 ************ */
+	
+	/**
+	 * <p>单回合多轮攻击的攻击次数确定
+	 * 
+	 * <p><b>开胃酒消息格式</b>
+	 * <blockquote><table>
+	 * <tr><th>key</th><th>value 及说明</th></tr>
+	 * <tr><th>SEATS</th><td>攻击方座位</td></tr>
+	 * <tr><td>seat</td><td>byte, 攻击方座位</td></tr>
+	 * <tr><td>round</td><td>int, 暂时确定的攻击次数</td></tr>
+	 * <tr><td>mode</td><td>int, 见 {@code MultiStrikeInstruction} 中 mode 的说明</td></tr>
+	 * </table></blockquote>
+	 * <li>从 addition-settle 中分化, 仅在 2-5 次等攻击次数浮动时触发的消息.
+	 * </li></p>
+	 * 
+	 * @since v0.2.3
+	 */
+	public static final String CODE_MULTI_STRIKE_COUNT = "multi-strike-count";
 	
 }

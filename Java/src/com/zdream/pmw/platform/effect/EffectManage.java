@@ -1,18 +1,20 @@
 package com.zdream.pmw.platform.effect;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
+import java.util.Properties;
 
 import com.zdream.pmw.monster.prototype.EPokemonAbnormal;
-import com.zdream.pmw.monster.prototype.EPokemonType;
 import com.zdream.pmw.platform.attend.AttendManager;
 import com.zdream.pmw.platform.attend.SkillRelease;
 import com.zdream.pmw.platform.attend.StateHandler;
 import com.zdream.pmw.platform.control.IPrintLevel;
-import com.zdream.pmw.platform.effect.type.TypeRestraint;
 import com.zdream.pmw.platform.prototype.BattlePlatform;
 import com.zdream.pmw.platform.prototype.Fuse;
 import com.zdream.pmw.platform.prototype.IPlatformComponent;
 import com.zdream.pmw.platform.prototype.RuleConductor;
+import com.zdream.pmw.util.json.JsonObject;
 import com.zdream.pmw.util.json.JsonValue;
 
 /**
@@ -57,7 +59,7 @@ public class EffectManage implements IPlatformComponent {
 	/**
 	 * 服务
 	 */
-	private SkillFormulaLoader skillLoader;
+	FormulaLoader formualLoader;
 	
 	/**
 	 * 技能发动的释放计算平台
@@ -68,11 +70,6 @@ public class EffectManage implements IPlatformComponent {
 	 * 行动事件计算和处理平台
 	 */
 	private ActBox act;
-	
-	/**
-	 * 属性克制表
-	 */
-	private TypeRestraint table = new TypeRestraint();
 	
 	/**
 	 * 目标计算
@@ -108,38 +105,9 @@ public class EffectManage implements IPlatformComponent {
 		return target.toString();
 	}
 
-	/**
-	 * 获得属性克制倍率
-	 * @param atType
-	 *   攻击方属性
-	 * @param dfType
-	 *   防御方属性
-	 * @return
-	 *   倍率
-	 */
-	public float getRestraintRate(EPokemonType atType, EPokemonType dfType) {
-		return table.getRestraintRate(atType, dfType);
-	}
-
+	@SuppressWarnings("deprecation")
 	public byte[] defaultSkillRange(byte seat, short skillID) {
-		return skillLoader.defaultSkillRange(seat, skillID);
-	}
-
-	/**
-	 * 为技能选择技能计算公式
-	 * @param pack
-	 * @param skill
-	 */
-	public void loadFormula(SkillReleasePackage pack, SkillRelease skill) {
-		skillLoader.loadFormula(pack, skill);
-	}
-
-	/**
-	 * 为技能选择技能计算公式, 使用其它选项, 来修改最终得到的计算公式.
-	 * @see SkillFormulaLoader#loadFormula(SkillReleasePackage, SkillRelease, JsonValue)
-	 */
-	public void loadFormula(SkillReleasePackage pack, SkillRelease skill, JsonValue param) {
-		skillLoader.loadFormula(pack, skill, param);
+		return formualLoader.defaultSkillRange(seat, skillID);
 	}
 
 	/**
@@ -160,7 +128,7 @@ public class EffectManage implements IPlatformComponent {
 	 * 技能行动释放, 并加入选项参数, 来修改该技能的计算方式
 	 * @see SkillReleaseBox#moveAct(byte, byte, byte, JsonValue)
 	 */
-	public void moveAct(byte no, byte skillNum, byte originTarget, JsonValue param) {
+	public void moveAct(byte no, byte skillNum, byte originTarget, JsonObject param) {
 		box.moveAct(no, skillNum, originTarget, param);
 	}
 
@@ -190,6 +158,7 @@ public class EffectManage implements IPlatformComponent {
 		act.enteranceAct(seat, noIn);
 	}
 
+	/*
 	public boolean judgeMoveable(SkillReleasePackage pack) {
 		return box.judgeMoveable(pack);
 	}
@@ -198,7 +167,7 @@ public class EffectManage implements IPlatformComponent {
 	 * 计算攻击方实时命中率（忽略能力变化）
 	 * @return v0.2.1
 	 *   当返回数值为负数 (-1) 则为必中
-	 */
+	 *
 	public float calcHitrate(SkillReleasePackage pack) {
 		return box.calcHitrate(pack);
 	}
@@ -207,7 +176,7 @@ public class EffectManage implements IPlatformComponent {
 	 * 计算防御方实时躲避率（忽略能力变化）
 	 * @return v0.2.1
 	 *   当返回数值为负数 (-1) 则为必不中
-	 */
+	 *
 	public float calcHide(SkillReleasePackage pack) {
 		return box.calcHide(pack);
 	}
@@ -219,7 +188,7 @@ public class EffectManage implements IPlatformComponent {
 	/**
 	 * 判定释放技能的属性<br>
 	 * @return
-	 */
+	 *
 	public EPokemonType calcSkillType(SkillReleasePackage pack) {
 		return box.calcSkillType(pack);
 	}
@@ -229,7 +198,7 @@ public class EffectManage implements IPlatformComponent {
 	 * @param pack
 	 * @return
 	 *  数组的大小 = 对应敌方怪兽的属性多少
-	 */
+	 *
 	public float[] calcTypeRate(SkillReleasePackage pack) {
 		return box.calcTypeRate(pack);
 	}
@@ -241,7 +210,7 @@ public class EffectManage implements IPlatformComponent {
 	 *   当数值大于等于零, 表示会心一击等级;<br>
 	 *   当数值为 -2, 表示绝对回避会心;<br>
 	 *   当数值为 -1, 表示绝对会心;<br>
-	 */
+	 *
 	public byte calcCt(SkillReleasePackage pack) {
 		return box.calcCt(pack);
 	}
@@ -250,7 +219,7 @@ public class EffectManage implements IPlatformComponent {
 	 * 计算技能威力
 	 * @param pack
 	 * @return
-	 */
+	 *
 	public int calcPower(SkillReleasePackage pack) {
 		return box.calcPower(pack);
 	}
@@ -259,7 +228,7 @@ public class EffectManage implements IPlatformComponent {
 	 * 计算最后的伤害修正 (状态等修正)<br>
 	 * 这里不包括乱数修正等<br>
 	 * @param index
-	 */
+	 *
 	public float calcCorrect(SkillReleasePackage pack) {
 		return box.calcCorrect(pack);
 	}
@@ -268,10 +237,10 @@ public class EffectManage implements IPlatformComponent {
 	 * 计算最后伤害
 	 * @param pack
 	 * @return
-	 */
+	 *
 	public int calcDamage(SkillReleasePackage pack) {
 		return box.calcDamage(pack);
-	}
+	}*/
 	
 	/**
 	 * 获得精灵的实时能力<br>
@@ -285,7 +254,7 @@ public class EffectManage implements IPlatformComponent {
 	 * @return
 	 *   实时的能力值<br>
 	 */
-	public int calcAbility(byte seat, int item) {
+	public float calcAbility(byte seat, int item) {
 		return box.calcAbility(seat, item);
 	}
 
@@ -306,7 +275,7 @@ public class EffectManage implements IPlatformComponent {
 	 * @return
 	 *   实时的能力值<br>
 	 */
-	public int calcAbility(byte seat, int item, int ignore) {
+	public float calcAbility(byte seat, int item, int ignore) {
 		return box.calcAbility(seat, item, ignore);
 	}
 	
@@ -331,7 +300,7 @@ public class EffectManage implements IPlatformComponent {
 	 * @return
 	 *   实时的能力值<br>
 	 */
-	public int calcAbility(byte seat, int item, int ignore, boolean alter) {
+	public float calcAbility(byte seat, int item, int ignore, boolean alter) {
 		return box.calcAbility(seat, item, ignore, alter);
 	}
 
@@ -363,6 +332,7 @@ public class EffectManage implements IPlatformComponent {
 	 * @return
 	 * @since v0.2.1
 	 */
+	@Deprecated
 	public SkillReleasePackage getCurrentPackage() {
 		return box.getCurrentPackage();
 	}
@@ -377,7 +347,7 @@ public class EffectManage implements IPlatformComponent {
 			byte atseat,
 			byte dfseat,
 			short skillID,
-			JsonValue param) {
+			JsonObject param) {
 		stateBuilder.sendForceStateMessage(stateName, atseat, dfseat, skillID, param);
 	}
 
@@ -411,21 +381,6 @@ public class EffectManage implements IPlatformComponent {
 	 */
 	public void sendRemoveSeatStateMessage(final String stateName, final byte seat) {
 		stateBuilder.sendRemoveSeatStateMessage(stateName, seat);
-	}
-	
-	/**
-	 * <p>替换 {@code SkillReleasePackage}.</p>
-	 * <p>用新建的 package 的替换现在正在使用的 package.
-	 * 会将旧有的 package 存入仓库, 然后将初始化一个新的 packge 返回.</p>
-	 * <p>一般在多段攻击时, 每一轮攻击需要生成一个 package, 需要再此替换 package.</p>
-	 * @param oldPack
-	 *   原有的 package
-	 * @return
-	 *   新建的 package
-	 * @since v0.2.2
-	 */
-	public SkillReleasePackage replacePackage(SkillReleasePackage oldPack) {
-		return box.replacePackage(oldPack);
 	}
 	
 	/* ************
@@ -472,6 +427,41 @@ public class EffectManage implements IPlatformComponent {
 	 *	 初始化   *
 	 ************ */
 	
+	Properties conf;
+	
+	private void loadProperties() {
+		conf = new Properties();
+		InputStream in = getClass().getResourceAsStream("/com/zdream/pmw/platform/effect/conf.properties");
+		try {
+			conf.load(in);
+            in.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * 获得配置项数据
+	 * @param key
+	 * @return
+	 * @since v0.2.3
+	 */
+	public String getConfig(String key) {
+		return conf.getProperty(key);
+	}
+	
+	/**
+	 * 获得配置项数据
+	 * @param key
+	 * @param def
+	 *   默认值
+	 * @return
+	 * @since v0.2.3
+	 */
+	public String getConfig(String key, String def) {
+		return conf.getProperty(key, def);
+	}
+	
 	/**
 	 * 指向战斗平台（环境）
 	 * @since 0.2
@@ -492,9 +482,11 @@ public class EffectManage implements IPlatformComponent {
 		if (!msg.isPassive()) {
 			box = new SkillReleaseBox(this);
 			target = new TargetCounter(this);
-			skillLoader = new SkillFormulaLoader(this);
+			formualLoader = new FormulaLoader(this);
 			stateBuilder = new StateBuilder(this, (StateHandler) msg.getDeliver("stateHandler"));
 			act = new ActBox(this);
+			
+			loadProperties();
 		}
 	}
 	

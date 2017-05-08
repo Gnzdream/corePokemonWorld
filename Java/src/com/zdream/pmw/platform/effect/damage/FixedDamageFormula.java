@@ -1,15 +1,15 @@
 package com.zdream.pmw.platform.effect.damage;
 
 import java.util.Iterator;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import com.zdream.pmw.platform.attend.AttendManager;
 import com.zdream.pmw.platform.attend.Participant;
 import com.zdream.pmw.platform.control.IPrintLevel;
-import com.zdream.pmw.platform.effect.EffectManage;
 import com.zdream.pmw.platform.effect.SkillReleasePackage;
 import com.zdream.pmw.platform.order.OrderManager;
+import com.zdream.pmw.util.json.JsonObject;
 import com.zdream.pmw.util.json.JsonValue;
 
 /**
@@ -109,42 +109,8 @@ public class FixedDamageFormula extends DefaultDamageFormula {
 	 *	覆盖方法  *
 	 ************ */
 	
-	protected void onDamage(int index) {
-		
-		// 属性克制倍率
-		if (writeTypeRate(index)) {
-			// 没有效果
-			sendImmune(index);
-			return;
-		}
-		
-		// 不判定会心一击
-		// 不计算攻击力
-		// 不计算技能威力
-		// 不计算防御力
-		// 不计算修正
-		
-		// 伤害计算
-		writeDamage(index);
-		
-		// 实现伤害
-		executeDamage(index);
-		
-	}
-	
 	@Override
-	protected boolean judgeValid() {
-		switch (mode) {
-		case MODE_ONE_HIT:
-			return pack.getAtStaff().getAttendant().getLevel() >=
-				pack.getDfStaff(pack.getThiz()).getAttendant().getLevel();
-		default:
-			return true;
-		}
-	}
-	
-	protected void writeDamage(int index) {
-		// 按照 mode 来计算伤害
+	protected float calcDamage(int index) {
 		int damage = 0;
 		
 		switch (mode) {
@@ -152,7 +118,7 @@ public class FixedDamageFormula extends DefaultDamageFormula {
 			damage = param;
 			break;
 		case MODE_ONE_HIT:
-			damage = pack.getDfStaff(pack.getThiz()).getStat(Participant.HP);
+			damage = pack.getDfStaff(index).getStat(Participant.HP);
 			break;
 		case MODE_COUNTER:
 			damage = this.searchCounterDamage();
@@ -164,15 +130,8 @@ public class FixedDamageFormula extends DefaultDamageFormula {
 		default:
 			break;
 		}
-
-		// 先放入 package, 让 box 进行再加工. 这一步不能缺
-		pack.setDamage(damage, index);
-		damage = pack.getEffects().calcDamage(pack);
 		
-		pack.getEffects().logPrintf(IPrintLevel.PRINT_LEVEL_VERBOSE,
-				"DefaultDamageFormula.writeAt(1): seat=%d 的技能伤害为 %d",
-				pack.getAtStaff().getSeat(), damage);
-		pack.setDamage(damage, index);
+		return damage;
 	}
 	
 	/**
@@ -181,7 +140,7 @@ public class FixedDamageFormula extends DefaultDamageFormula {
 	 *   -1 为没找到
 	 */
 	private int searchCounterDamage() {
-		AttendManager am = pack.getAttends();
+		AttendManager am = em.getAttends();
 		OrderManager om = am.getRoot().getOrderManager();
 		int curRound = om.getRound();
 		SkillReleasePackage[] ps = om.getReleasePackage(curRound);
@@ -239,8 +198,8 @@ public class FixedDamageFormula extends DefaultDamageFormula {
 	}
 	
 	@Override
-	public void set(JsonValue args) {
-		Set<Entry<String, JsonValue>> set = args.getMap().entrySet();
+	public void set(JsonObject args) {
+		Set<Entry<String, JsonValue>> set = args.asMap().entrySet();
 
 		String k;
 		JsonValue v;
@@ -291,15 +250,4 @@ public class FixedDamageFormula extends DefaultDamageFormula {
 		param = 0;
 		rate = 1.0f;
 	}
-	
-	/* ************
-	 *	 初始化   *
-	 ************ */
-	
-	private EffectManage em;
-	
-	public FixedDamageFormula(EffectManage em) {
-		this.em = em;
-	}
-
 }

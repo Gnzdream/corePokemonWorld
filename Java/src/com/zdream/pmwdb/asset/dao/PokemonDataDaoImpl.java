@@ -7,6 +7,7 @@ import java.util.Map;
 import com.zdream.pmw.monster.data.PokemonBaseData;
 import com.zdream.pmw.monster.data.dao.IPokemonDataDao;
 import com.zdream.pmw.monster.prototype.EPokemonType;
+import com.zdream.pmw.util.json.JsonObject;
 import com.zdream.pmw.util.json.JsonValue;
 import com.zdream.pmwdb.asset.io.PokemonDataReader;
 
@@ -24,7 +25,7 @@ public class PokemonDataDaoImpl implements IPokemonDataDao {
 
 	@Override
 	public PokemonBaseData getData(short speciesId) {
-		JsonValue v = container.getPokemonInfo(speciesId);
+		JsonObject v = container.getPokemonInfo(speciesId);
 		if (v == null) {
 			return null;
 		}
@@ -40,14 +41,14 @@ public class PokemonDataDaoImpl implements IPokemonDataDao {
 	 *	私有方法  *
 	 ************ */
 	
-	private PokemonBaseData toModel(JsonValue v) {
+	private PokemonBaseData toModel(JsonObject v) {
 		PokemonBaseData data = new PokemonBaseData();
-		Map<String, JsonValue> map = v.getMap();
+		Map<String, JsonValue> map = v.asMap();
 		data.setSpeciesID(((Number) map.get("species_id").getValue()).shortValue());
 		data.setForm(((Number) map.get("form").getValue()).byteValue());
 		
 		// 属性
-		List<JsonValue> typearr = map.get("type").getArray();
+		List<JsonValue> typearr = map.get("type").asArray().asList();
 		EPokemonType[] types = new EPokemonType[typearr.size()];
 		for (ListIterator<JsonValue> ittype = typearr.listIterator(); ittype.hasNext();) {
 			JsonValue obj = ittype.next();
@@ -59,7 +60,7 @@ public class PokemonDataDaoImpl implements IPokemonDataDao {
 		data.setTypes(types);
 		
 		// 种族值
-		Map<String, JsonValue> valdoc = map.get("val").getMap();
+		Map<String, JsonValue> valdoc = map.get("val").asObject().asMap();
 		short[] speciesValue = new short[]
 				{
 						((Number) valdoc.get("hp").getValue()).shortValue(),

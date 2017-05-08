@@ -10,7 +10,7 @@ import java.util.Set;
 
 import com.zdream.pmw.monster.data.dao.ISkillDao;
 import com.zdream.pmw.monster.skill.Skill;
-import com.zdream.pmw.util.json.JsonValue;
+import com.zdream.pmw.util.json.JsonArray;
 import com.zdream.pmwdb.core.DaoGetter;
 
 /**
@@ -89,7 +89,7 @@ public class SkillDataBuffer {
 	 * @return
 	 *   可能为空
 	 */
-	public JsonValue getReleaseData(short skillID) {
+	public JsonArray getReleaseData(short skillID) {
 		Short s = Short.valueOf(skillID);
 		if (skillMap.containsKey(s)) {
 			return skillMap.get(s).getRelease();

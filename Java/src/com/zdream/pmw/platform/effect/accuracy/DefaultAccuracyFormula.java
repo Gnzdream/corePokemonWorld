@@ -31,5 +31,10 @@ public class DefaultAccuracyFormula implements IAccuracyFormula {
 	public DefaultAccuracyFormula() {
 		
 	}
+	
+	@Override
+	public String toString() {
+		return name();
+	}
 
 }

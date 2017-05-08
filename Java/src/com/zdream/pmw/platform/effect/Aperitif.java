@@ -1,24 +1,27 @@
 package com.zdream.pmw.platform.effect;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import com.zdream.pmw.platform.control.IMessageCode;
-import com.zdream.pmw.util.json.JsonValue;
 
 /**
  * 开胃酒 (消息), 原名为拦截前消息<br>
  * <p>由于消息种类繁多容易混淆, 从 v0.2.1 版本开始将逐步取消拦截前消息的叫法.</p>
  * <p>开胃酒将有一个循环队列来储存, 以降低分配内存带来的消耗</p>
  * 
- * @since v0.2.1
+ * <p><b>v0.2.3</b>
+ * 改为使用 HashMap 作为超类</p>
+ * 
+ * @since v0.2.1 [2017-03-15]
  * @author Zdream
- * @date 2017年3月15日
- * @version v0.2.1
+ * @version v0.2.3 [2017-04-21]
  */
-public final class Aperitif extends JsonValue implements IMessageCode {
+public final class Aperitif extends HashMap<String, Object> implements IMessageCode {
+	
+	private static final long serialVersionUID = -3081505858619197088L;
 	
 	/* ************
 	 *	数据结构  *
@@ -88,45 +91,10 @@ public final class Aperitif extends JsonValue implements IMessageCode {
 		System.arraycopy(scanSeats, 0, this.scanSeats, scanLength, scanSeats.length);
 		this.scanLength = expectLength;
 	}
-	
-	/* ************
-	 *	拓展方法  *
-	 ************ */
-	/**
-	 * 指向 Aperitif.value
-	 */
-	private Map<String, JsonValue> map;
-	
 	public Aperitif append(String key, Object value) {
-		map.put(key, new JsonValue(value));
+		this.put(key, value);
 		return this;
 	}
-	
-	public Object get(String key) {
-		JsonValue v = map.get(key);
-		if (v != null) {
-			return v.getValue();
-		} else {
-			return null;
-		}
-	}
-	
-	public Object replace(String key, Object value) {
-		JsonValue v = map.get(key);
-		if (v != null) {
-			Object raw = v.getValue();
-			v.setValue(value);
-			return raw;
-		} else {
-			map.put(key, new JsonValue(value));
-			return null;
-		}
-	}
-	
-	/**
-	 * 不允许设置
-	 */
-	public void setValue(Object value) {};
 	
 	/* ************
 	 *	 初始化   *
@@ -136,14 +104,13 @@ public final class Aperitif extends JsonValue implements IMessageCode {
 	 * 包可见性
 	 */
 	Aperitif() {
-		super(JsonType.ObjectType);
-		map = getMap();
+		super();
 		scanSeats = new byte[2];
 		filters = new HashSet<>();
 	}
 	
 	public void restore(String head, byte... scanSeats) {
-		getMap().clear();
+		this.clear();
 		this.head = head;
 		this.scanLength = 0;
 		putScanSeats(scanSeats);

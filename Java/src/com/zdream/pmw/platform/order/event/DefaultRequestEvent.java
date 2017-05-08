@@ -17,10 +17,6 @@ import com.zdream.pmw.platform.prototype.BattlePlatform;
  */
 public class DefaultRequestEvent extends AAttendantEvent {
 
-	public DefaultRequestEvent() {
-		super(EventType.LAST);
-	}
-
 	/* ************
 	 *	事件发动  *
 	 ************ */
@@ -96,7 +92,7 @@ public class DefaultRequestEvent extends AAttendantEvent {
 		OrderManager om = pf.getOrderManager();
 		
 		// 添加 MoveEvent
-		om.pushEvents(om.buildMoveEvent());
+		om.buildMoveEvent();
 		
 		byte[] seats = pf.getAttendManager().existsSeat();
 		

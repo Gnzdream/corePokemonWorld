@@ -9,6 +9,8 @@ import java.util.Set;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 
+import com.zdream.pmw.util.json.JsonArray;
+import com.zdream.pmw.util.json.JsonObject;
 import com.zdream.pmw.util.json.JsonValue;
 import com.zdream.pmw.util.json.JsonValue.JsonType;
 
@@ -25,10 +27,6 @@ import com.zdream.pmw.util.json.JsonValue.JsonType;
  */
 public class BsonParser {
 
-	public BsonParser() {
-		// TODO Auto-generated constructor stub
-	}
-	
 	public JsonValue bson2json(Object doc) {
 		if (doc == null) {
 			return null;
@@ -38,7 +36,7 @@ public class BsonParser {
 	
 	private JsonValue parseObject(Object obj) {
 		if (obj == null) {
-			return new JsonValue(JsonType.NullType);
+			return JsonValue.createJson(JsonType.NullType);
 		}
 		
 		if (obj instanceof Integer || obj instanceof Double ||
@@ -55,11 +53,11 @@ public class BsonParser {
 	}
 
 	private JsonValue parseValue(Object i) {
-		return new JsonValue(i);
+		return JsonValue.createJson(i);
 	}
 
 	private JsonValue parseDocument(Document doc) {
-		JsonValue value = new JsonValue(JsonType.ObjectType);
+		JsonObject value = new JsonObject();
 		
 		Set<Entry<String, Object>> set = doc.entrySet();
 		for (Iterator<Entry<String, Object>> it = set.iterator(); it.hasNext();) {
@@ -72,8 +70,8 @@ public class BsonParser {
 	}
 	
 	private JsonValue parseArray(List<?> arr) {
-		JsonValue value = new JsonValue(JsonType.ArrayType);
-		List<JsonValue> list = value.getArray();
+		JsonArray value = new JsonArray();
+		List<JsonValue> list = value.asList();
 		
 		for (ListIterator<?> it = arr.listIterator(); it.hasNext();) {
 			Object object = it.next();

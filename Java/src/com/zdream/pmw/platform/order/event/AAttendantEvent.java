@@ -14,14 +14,10 @@ import com.zdream.pmw.util.common.ArraysUtils;
  * @date 2016年4月11日
  * @version v0.2
  */
-public abstract class AAttendantEvent extends AEvent{
+public abstract class AAttendantEvent implements IEvent {
 	
 	protected BattlePlatform pf;
-
-	protected AAttendantEvent(EventType type) {
-		super(type);
-	}
-
+	
 	/* ************
 	 *	工具方法  *
 	 ************ */

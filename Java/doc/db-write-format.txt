@@ -1,0 +1,328 @@
+
+这里阐述了写在数据库中数据的格式
+表 skill 技能数据
+
+属性表 type 字段
+1	一般 normal
+2	格斗 fighting
+3	飞行 flying
+4	毒 poison
+5	地面 ground
+6	岩石 rock
+7	虫 bug
+8	幽灵 ghost
+9	钢 steel
+10	火 fire
+11	水 water
+12	草 grass
+13	电 electric
+14	超能力 psychic
+15	冰 ice
+16	龙 dragon
+17	恶 dark
+18	妖精 fairy
+
+        physical,
+        special,
+        status
+
+技能效果 release_effect 字段
+
+解析该数据的位置在
+void com.zdream.pmw.platform.attend.service.SkillReleaseConvertServiceImpl
+	.parseData(SkillRelease release, String data)
+由于旧规则在一定程度上有数据的歧义，因此在 2016/08/29 进行新旧数据的修正。
+后面所有存储的技能效果数据全部使用新数据格式。
+采用 JSON
+
+如果不存在技能效果，数据为空，存储为空字符串；
+否则，最外层固定为数组形式 []，里面每一个元素为一个技能效果
+
+默认 key:
+n(name): 名称 (addition 必需)
+t(type): 类型，属于哪个方面的技能效果，可以是下面的选项
+	a(addition) 附加状态
+	d(damage) 伤害计算公式
+	m(moveable) 能否行动的公式
+	w(power)
+	u(accuracy)
+	c(crit) 该技能有特殊的暴击率，不为 0
+	p(priority) 该技能有特殊的优先度，默认 0 [制定中]
+	r(range) 技能默认的攻击范围，有如下几个给定值:
+	
+	*	r.default/r.single  敌方单体, 默认值
+	*	r.team    敌方全体
+	*	r.all     周围全体, 除了自己
+	*	r.self    自己
+	
+其它数据如果和默认值相同可不写出
+
+
+1. 能力等级的升降 ablc (ability-level-change)
+{
+	"n":"a.ablc",
+	"t":"a",
+	"tg":"enemy",
+	"r":100,
+	"i":5,
+	"v":-2
+},
+
+说明:
+tg(target): 目标， String, 可以为:
+	enemy	敌方 (默认)
+	self	自己
+	both	敌方与自己
+	platform   全场, 无视距离
+r(rate): 击中的概率, int, 默认是 100
+i(items): 哪个能力发生变化, 格式可以为:
+	1	攻击能力
+	[1,2]	攻击、防御能力
+	"AT"	攻击能力
+	"AT,DF"	攻击、防御能力
+v(value): 变化数值, 可以为:
+	1	或	-1	等, int 可为正和负数, 当 i 参数的数据为一项时
+	[1,-1,2]	当 i 参数的数据为多项时
+p(param): 参数, String, 可以为:
+	c	能力变化 (默认)
+	s	能力设置
+
+数据检查部分:
+1.	以上全部的可选值
+2.	i 数据与 v 数据必须
+3.	i 数据各项, 数值为 1-7, 字符串必须为正确值(缓存时全存储为数值)
+4.	i 与 v 项数必须相同, 或者 v 项数可以为 1
+
+
+2. 会心率 crit
+{
+	"t":"c",
+	"v":1
+},
+
+
+3. 异常状态施加 abn (abnormal)
+{
+	"n":"a.abn",
+	"t":"a",
+	"tg":"enemy",
+	"r":100,
+	"i":"PARALYSIS"
+},
+
+说明:
+tg(target): 目标， String, 可以为:
+	enemy	敌方(默认)
+	self	自己
+r(rate): 击中的概率, int, 默认是 100
+i(items): 施加哪个（些）异常状态, 格式可以为:
+	"PARALYSIS"	麻痹
+	"PARALYSIS,POISON"	麻痹、中毒
+	POISON,BADLY_POISON,PARALYSIS,SLEEP,BURN,FREEZE
+
+
+4. 其它状态施加或删除 state
+{
+	"n":"a.state",
+	"t":"a",
+	"tg":"enemy",
+	"v":"confusion",
+	"r":100,
+	"rm":false,
+	"-...":...
+},
+
+说明:
+tg(target): 目标， String, 可以为:
+	enemy	敌方(默认)
+	self	自己
+v(value): 哪个状态. 可以参照指定 state.name() 返回的数据
+	示例中是混乱状态
+	flinch, confusion, bound
+r(rate): 击中的概率, int, 默认是 100
+rm(remove): 是否是删除指定的状态, 默认 false (v0.2.2 添加)
+...: 所有带 '-' 开头的数据会直接传入 state 作为启动数据
+
+
+5. 吸血或反作用力
+{
+	"n":"a.absorb",
+	"t":"a",
+	"tg":"s",
+	"rf":"d",
+	"r":0.5,
+	"m":"d"
+},
+
+说明:
+tg(target): 目标， String, 可以为:
+	enemy	敌方
+	self	自己(默认)
+rf(reference): String 参考方. 吸血或受伤的值将什么作为参考
+	d	(damage)伤害值(默认)
+	l	(life)自己的生命值
+r(rate): float 对敌方进行攻击时, 自己回复/受伤占参考方的倍数
+	吸血为正数, 受伤为负数. 例如
+	-0.333
+	为受伤, 受伤的伤害是参考方的 0.333 倍
+m(mode): String 模式
+	d	默认
+	j	Jump Kick 飞踢模式. 
+		该模式下不需要指定上面 rf 和 tg 的值 (恒定为 "l" 和 "s"), 修改也是无济于事的
+
+
+6. 交换
+{
+	"n":"a.switch",
+	"t":"a",
+	"tg":"s",
+	???
+},
+
+说明:
+tg(target): 目标， String, 可以为:
+	enemy	敌方
+	self	自己(默认)
+
+***** damage *****
+
+1. 多段攻击
+{
+	"n":"d.double",
+	"t":"d",
+	"m":"float"
+},
+{
+	"n":"d.double",
+	"t":"d",
+	"m":"fixed",
+	"r":2
+},
+
+说明:
+m(mode): 模式, String,
+    可以是 "float" (默认) ... ,
+    见 DoubleDamageFormula
+r(round): 参数, int
+    mode=fixed 时, round 为攻击的次数
+
+
+2. 固定伤害技能
+{
+	"n":"d.double",
+	"t":"d",
+	"m":"float"
+},
+
+说明:
+m(mode): 模式, String,
+    可以是 "fixed" (默认, 类似龙之怒) ... ,
+    见 FixedDamageFormula
+p(param): 数值, int
+    龙之怒等, 固定伤害值
+r(rate): 比率, float
+
+
+3. 蓄力和反作用类型的技能
+   旋风刀
+
+# 格式已经弃用
+{
+    "n" : "d.period",
+    "t" : "d",
+    "m" : "c",
+    "p" : [ 
+        {
+            "formula" : {
+                "mode" : "set",
+                "value" : [ 
+                    {
+                        "n" : "d.default",
+                        "t" : "d"
+                    }
+                ]
+            },
+            "ppSub" : 0
+        }
+    ]
+}, 
+
+# v0.2.3 以后的格式
+
+{
+	"t" : "confsk",
+	"init" :
+	{
+		"period" :
+		{
+			"t" : "d",
+    		"m" : "c",
+    		"p" : 
+    		[ 
+		        {
+		        	"t" : "confsk",
+		        	"pp-sub" : false,
+		            "_mode" : "set",
+		            "_value" : 
+		            [ 
+		                {
+		                    "n" : "d.default",
+		                    "t" : "d"
+		                }
+		            ]
+		        }
+		    ]
+		}
+	}
+}
+
+说明:
+m(mode): 模式, String,
+    "c": 像旋风刀一样一回合不做任何动作, 二回合攻击的是 charge
+    "t": 暴走模式
+    "hb": 破坏光线模式
+p(param): 参数, Array,
+    这个参数用于生成下一个回合需要合成的必要公式的参数;
+    比如上面的例子是旋风刀, 它在第二回合攻击, 设置方式, 使用默认的技能公式, 并且扣除 pp 数为 0
+
+
+
+
+#   传递给其它类的 Json 格式的数据
+
+ConfirmSkillInstruction
+    param:
+
+{
+	"t" : "confsk",
+	"pp-sub" : false,
+	"_mode" : "set",
+	"_value" : [
+	    {
+	        "n" : "d.default",
+	        "t" : "d"
+	    }
+	]
+}
+
+_mode: 模式 string
+    default (默认) 用传入的参数覆盖掉 skill.release 的默认技能参数
+    set     使用传入的参数, 而不使用 skill.release 的默认技能参数
+    merge   将输入的参数覆盖原来的默认技能参数, 只是将 object 下的参数 (二级元素) 进行覆盖
+
+
+PeriodInstruction
+	param:
+
+{
+	"t" : "period",
+	"m" : "c"
+}
+
+m: 模式 string
+   "c" (默认) 像旋风刀一样一回合不做任何动作, 二回合攻击的是 charge
+   "t" 像大闹一番技能 (暴走) 一样, 2 至 3 回合连续攻击, 最后一轮攻击结束后自己混乱
+   "hb" 像破坏光线技能一样, 第一回合攻击, 第二回合将不能行动
+
+
+

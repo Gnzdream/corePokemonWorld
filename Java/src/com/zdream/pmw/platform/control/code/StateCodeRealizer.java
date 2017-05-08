@@ -2,14 +2,13 @@ package com.zdream.pmw.platform.control.code;
 
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Set;
 
 import com.zdream.pmw.platform.control.ICodeRealizer;
 import com.zdream.pmw.platform.effect.Aperitif;
 import com.zdream.pmw.platform.prototype.BattlePlatform;
+import com.zdream.pmw.util.json.JsonObject;
 import com.zdream.pmw.util.json.JsonValue;
-import com.zdream.pmw.util.json.JsonValue.JsonType;
 
 /**
  * 状态相关的消息行动实现<br>
@@ -29,16 +28,16 @@ public class StateCodeRealizer implements ICodeRealizer {
 	}
 
 	@Override
-	public String commandLine(Aperitif value, BattlePlatform pf) {
-		String head = value.getHead();
+	public String commandLine(Aperitif ap, BattlePlatform pf) {
+		String head = ap.getHead();
 		
 		switch (head) {
 		case CODE_FORCE_STATE:
-			return pf.getEffectManage().forceStateCommandLine(value);
+			return pf.getEffectManage().forceStateCommandLine(ap);
 		case CODE_REMOVE_STATE:
-			return removeStateCommandLine(value, pf);
+			return removeStateCommandLine(ap, pf);
 		case CODE_STATE_SET:
-			return stateSetCommandLine(value, pf);
+			return stateSetCommandLine(ap, pf);
 
 		default:
 			break;
@@ -70,14 +69,12 @@ public class StateCodeRealizer implements ICodeRealizer {
 	 *	消息分配  *
 	 ************ */
 
-	private String removeStateCommandLine(Aperitif value, BattlePlatform pf) {
-		Map<String, JsonValue> map = value.getMap();
-		
-		if (map.containsKey("seat")) {
+	private String removeStateCommandLine(Aperitif ap, BattlePlatform pf) {
+		if (ap.containsKey("seat")) {
 			// 是怪兽或指定座位的状态
-			byte seat = (Byte) map.get("seat").getValue();
+			byte seat = (byte) ap.get("seat");
 			String cmd = String.format("%s %s -seat %d",
-					CODE_REMOVE_STATE, map.get("state").getValue(), seat);
+					CODE_REMOVE_STATE, ap.get("state"), seat);
 			return cmd;
 		} else {
 			
@@ -99,15 +96,14 @@ public class StateCodeRealizer implements ICodeRealizer {
 		return null;
 	}
 
-	private String stateSetCommandLine(Aperitif value, BattlePlatform pf) {
-		Map<String, JsonValue> map = value.getMap();
-		Set<String> sets = new HashSet<>(map.keySet());
+	private String stateSetCommandLine(Aperitif ap, BattlePlatform pf) {
+		Set<String> sets = new HashSet<>(ap.keySet());
 		
 		StringBuilder builder = new StringBuilder(40);
-		builder.append(CODE_STATE_SET).append(' ').append(map.get("state").getString());
+		builder.append(CODE_STATE_SET).append(' ').append(ap.get("state"));
 		
 		if (sets.contains("-seat")) {
-			builder.append(' ').append("-seat").append(' ').append(map.get("-seat").getValue());
+			builder.append(' ').append("-seat").append(' ').append(ap.get("-seat"));
 			sets.remove("-seat");
 		} else {
 			// TODO 不是作为 ParticipantSeat
@@ -117,7 +113,7 @@ public class StateCodeRealizer implements ICodeRealizer {
 			String str = it.next();
 			if (str.charAt(0) == '-') {
 				builder.append(' ').append(str)
-				.append(' ').append(map.get(str).getValue());
+				.append(' ').append(ap.get(str));
 			}
 		}
 		
@@ -132,7 +128,7 @@ public class StateCodeRealizer implements ICodeRealizer {
 		String stateName = codes[1];
 		if ("-seat".equals(codes[2])) {
 			byte seat = Byte.parseByte(codes[3]);
-			JsonValue v = stateSetPutParam(codes);
+			JsonObject v = stateSetPutParam(codes);
 			pf.getAttendManager().setStateFromParticipant(seat, stateName, v);
 			pf.getAttendManager().setStateFromSeat(seat, stateName, v);
 		} else {
@@ -140,10 +136,10 @@ public class StateCodeRealizer implements ICodeRealizer {
 		}
 	}
 	
-	private JsonValue stateSetPutParam(String[] codes) {
-		JsonValue v = new JsonValue(JsonType.ObjectType);
+	private JsonObject stateSetPutParam(String[] codes) {
+		JsonObject v = new JsonObject();
 		for (int i = 4; i < codes.length; i += 2) {
-			v.add(codes[i], new JsonValue(codes[i + 1]));
+			v.add(codes[i], JsonValue.createJson(codes[i + 1]));
 		}
 		return v;
 	}

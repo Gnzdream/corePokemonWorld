@@ -54,13 +54,13 @@ public class RequestCodeRealizer implements ICodeRealizer {
 
 	/**
 	 * 请求行动指令
-	 * @param value
+	 * @param ap
 	 * @return
 	 */
-	private String requestMoveCommandLine(Aperitif value) {
+	private String requestMoveCommandLine(Aperitif ap) {
 		return String.format("%s %d %s", CODE_REQUEST_MOVE, 
-				value.get("team"),
-				listToString((byte[]) value.getMap().get("seats").getValue()));
+				ap.get("team"),
+				listToString((byte[]) ap.get("seats")));
 	}
 
 	/**

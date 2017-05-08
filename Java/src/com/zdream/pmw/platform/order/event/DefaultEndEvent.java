@@ -13,11 +13,7 @@ import com.zdream.pmw.platform.prototype.BattlePlatform;
  * @date 2016年4月2日
  * @version v0.1
  */
-public class DefaultEndEvent extends AEvent {
-
-	public DefaultEndEvent() {
-		super(EventType.LAST);
-	}
+public class DefaultEndEvent implements IEvent {
 
 	/* ************
 	 *	实现方法  *

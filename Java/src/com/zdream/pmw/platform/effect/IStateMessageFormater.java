@@ -1,7 +1,7 @@
 package com.zdream.pmw.platform.effect;
 
 import com.zdream.pmw.platform.prototype.BattlePlatform;
-import com.zdream.pmw.util.json.JsonValue;
+import com.zdream.pmw.util.json.JsonObject;
 
 /**
  * 状态用于自己说明自己需要的参数、创建状态所需的数据<br>
@@ -20,11 +20,11 @@ public interface IStateMessageFormater {
 	
 	/**
 	 * 产生状态的命令
-	 * @param value
+	 * @param ap
 	 * @param pf
 	 * @return
 	 */
-	public String forceCommandLine(JsonValue value, BattlePlatform pf);
+	public String forceCommandLine(Aperitif ap, BattlePlatform pf);
 	
 	/**
 	 * 按照命令解析, 并实现状态的施加<br>
@@ -33,6 +33,6 @@ public interface IStateMessageFormater {
 	 * @param argv
 	 * @param pf
 	 */
-	public void forceRealize(String[] codes, JsonValue argv, BattlePlatform pf);
+	public void forceRealize(String[] codes, JsonObject argv, BattlePlatform pf);
 
 }

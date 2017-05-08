@@ -8,6 +8,7 @@ import com.zdream.pmw.platform.attend.Participant;
 import com.zdream.pmw.platform.control.IPrintLevel;
 import com.zdream.pmw.platform.effect.Aperitif;
 import com.zdream.pmw.platform.effect.EffectManage;
+import com.zdream.pmw.util.json.JsonObject;
 import com.zdream.pmw.util.json.JsonValue;
 
 /**
@@ -94,10 +95,10 @@ public class AbsorbAdditionFormula extends AAdditionFormula {
 	 ************ */
 	
 	@Override
-	protected void onStart() {
+	protected void preHandle() {
 		if (mode == MODE_JUMP_KICK) {
 			reference = REFERENCE_LIFE;
-			side = SIDE_ATSTAFF;
+			// side = SIDE_ATSTAFF;
 		}
 	}
 
@@ -109,7 +110,7 @@ public class AbsorbAdditionFormula extends AAdditionFormula {
 	@Override
 	protected boolean canTrigger() {
 		if (mode == MODE_JUMP_KICK) {
-			if (seatLen > 0) {
+			if (targets.length > 0) {
 				// 飞踢的反伤效果将不会触发
 				return false;
 			} else {
@@ -137,10 +138,10 @@ public class AbsorbAdditionFormula extends AAdditionFormula {
 				pack.getAtStaff().getNickname(), pack.getAtStaff().getSeat(),
 				(rate > 0) ? "吸血":"反作用", value);
 		
-		if (side == SIDE_ATSTAFF) {
+		/*if (side == SIDE_ATSTAFF) {
 			em.logPrintf(EffectManage.PRINT_LEVEL_WARN, 
 					"AbsorbAdditionF.addition(): 目标为自己的技能还没有完成");
-		}
+		}*/
 		
 		byte atseat = pack.getAtStaff().getSeat();
 		byte[] dfseats = pack.dfSeats();
@@ -155,7 +156,7 @@ public class AbsorbAdditionFormula extends AAdditionFormula {
 		System.arraycopy(dfseats, 0, scans, 1, dfseats.length);
 		
 		Aperitif ap = em.newAperitif(Aperitif.CODE_ADDITION_SETTLE, scans);
-		ap.append("atseat", atseat).append("dfseat", dfseats).append("side", side)
+		ap.append("atseat", atseat).append("dfseat", dfseats)
 			.append("category", (rate > 0) ? "absorb" : "reaction")
 			.append("reference", reference).append("refer", refer).append("target", atseat)
 			.append("rate", rate).append("value", value);
@@ -163,9 +164,9 @@ public class AbsorbAdditionFormula extends AAdditionFormula {
 	}
 	
 	@Override
-	public void set(JsonValue args) {
+	public void set(JsonObject args) {
 		super.set(args);
-		Set<Entry<String, JsonValue>> set = args.getMap().entrySet();
+		Set<Entry<String, JsonValue>> set = args.asMap().entrySet();
 
 		String k;
 		JsonValue v;
@@ -213,7 +214,7 @@ public class AbsorbAdditionFormula extends AAdditionFormula {
 	@Override
 	public void restore() {
 		super.restore();
-		side = SIDE_ATSTAFF;
+		// side = SIDE_ATSTAFF;
 		reference = REFERENCE_DAMAGE;
 		rate = 0;
 		mode = MODE_DEFAULT;

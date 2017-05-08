@@ -17,7 +17,7 @@ import com.zdream.pmw.platform.effect.state.FreezeState;
 import com.zdream.pmw.platform.effect.state.ParalysisState;
 import com.zdream.pmw.platform.effect.state.PoisonState;
 import com.zdream.pmw.platform.effect.state.SleepState;
-import com.zdream.pmw.util.json.JsonValue;
+import com.zdream.pmw.util.json.JsonObject;
 
 /**
  * 参与精灵的数据直接操作类<br>
@@ -216,7 +216,7 @@ public class AttendantOperateHandler {
 	 *   所要设置给状态的参数
 	 * @since v0.2.1
 	 */
-	public void setStateFromParticipant(byte seat, String stateName, JsonValue value) {
+	public void setStateFromParticipant(byte seat, String stateName, JsonObject value) {
 		Participant participant = am.getParticipant(seat);
 		participant.setState(stateName, value, am.getRoot());
 	}
@@ -280,7 +280,7 @@ public class AttendantOperateHandler {
 	 *   所要设置给状态的参数
 	 * @since v0.2.2
 	 */
-	public void setStateFromSeat(byte seat, String stateName, JsonValue value) {
+	public void setStateFromSeat(byte seat, String stateName, JsonObject value) {
 		IStateContainer c = am.getSeatStates(seat);
 		c.setState(stateName, value, am.getRoot());
 	}

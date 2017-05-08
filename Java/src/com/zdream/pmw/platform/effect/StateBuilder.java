@@ -1,16 +1,17 @@
 package com.zdream.pmw.platform.effect;
 
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Map.Entry;
 
 import com.zdream.pmw.platform.attend.IState;
 import com.zdream.pmw.platform.attend.StateHandler;
 import com.zdream.pmw.platform.attend.service.EStateSource;
-import com.zdream.pmw.platform.effect.state.ASeatState;
 import com.zdream.pmw.platform.effect.state.AParticipantState;
+import com.zdream.pmw.platform.effect.state.ASeatState;
 import com.zdream.pmw.util.json.JsonBuilder;
+import com.zdream.pmw.util.json.JsonObject;
 import com.zdream.pmw.util.json.JsonValue;
+import com.zdream.pmw.util.json.JsonValue.JsonType;
 
 /**
  * <p>状态生成器, 控制层</p>
@@ -45,14 +46,14 @@ public class StateBuilder {
 	 * @param pack
 	 */
 	@Deprecated
-	public void sendForceStateMessage(final JsonValue args, SkillReleasePackage pack) {
+	public void sendForceStateMessage(final JsonObject args, SkillReleasePackage pack) {
 		// 导入 pack 数据
-		Aperitif value = pipePackage(pack);
+		Aperitif ap = pipePackage(pack);
 		
 		// 根据每个状态的需要, 从 args 中拿到需要的数据, 向 value 中放入
-		putArgument(value, args);
+		putArgument(ap, args);
 		
-		em.startCode(value);
+		em.startCode(ap);
 	}
 
 	/**
@@ -75,7 +76,7 @@ public class StateBuilder {
 			final byte atseat,
 			final byte dfseat,
 			final short skillID,
-			final JsonValue param) {
+			final JsonObject param) {
 		
 		Aperitif ap = em.newAperitif(Aperitif.CODE_CALC_ADDITION_RATE, atseat, dfseat);
 		ap.append("atseat", atseat).append("dfseat", dfseat).append("target", dfseat)
@@ -98,11 +99,17 @@ public class StateBuilder {
 				.append("source", EStateSource.SKILL.name())
 				.append("skillID", skillID);
 		
-		for (Iterator<Entry<String, JsonValue>> it = param.getMap().entrySet().iterator(); it.hasNext();) {
+		for (Iterator<Entry<String, JsonValue>> it = param.asMap().entrySet().iterator(); it.hasNext();) {
 			Entry<String, JsonValue> entry = it.next();
 			String key = entry.getKey();
 			if (key.startsWith("-") && !Character.isDigit(key.charAt(1))) {
-				ap.add(key, entry.getValue());
+				JsonValue v = entry.getValue();
+				
+				if (v.getType() == JsonType.ObjectType || v.getType() == JsonType.ArrayType) {
+					ap.append(key, v);
+				} else {
+					ap.append(key, v.getValue());
+				}
 			}
 		}
 		
@@ -146,12 +153,11 @@ public class StateBuilder {
 	/**
 	 * 获得施加状态的命令行类型消息<br>
 	 * 调用方是 {@code com.zdream.pmw.platform.control.codeStateCodeRealizer}<br>
-	 * @param value
+	 * @param ap
 	 * @return
 	 */
-	public String forceStateCommandLine(Aperitif value) {
-		Map<String, JsonValue> map = value.getMap();
-		String statestr = map.get("state").getString();
+	public String forceStateCommandLine(Aperitif ap) {
+		String statestr = ap.get("state").toString();
 
 		Class<?> clazz = stateHandler.stateClass(statestr);
 		
@@ -161,42 +167,36 @@ public class StateBuilder {
 			if (AParticipantState.class.isAssignableFrom(clazz)) {
 				// force-state confusion -no 1 -source SKILL -skillID 60
 				cmd.append("force-state").append(' ').append(statestr).append(' ')
-						.append("-no").append(' ').append(map.get("no").getValue()).append(' ')
+						.append("-no").append(' ').append(ap.get("no")).append(' ')
 						.append("-source").append(' ')
-						.append(map.get("source").getString()).append(' ')
+						.append(ap.get("source")).append(' ')
 						.append("-skillID").append(' ')
-						.append(map.get("skillID").getValue());
+						.append(ap.get("skillID"));
 			} else if (ASeatState.class.isAssignableFrom(clazz)) {
 				// force-state mist -seat 1 -source SKILL -skillID 54
 				cmd.append("force-state").append(' ').append(statestr).append(' ')
-						.append("-seat").append(' ').append(map.get("dfseat").getValue()).append(' ')
+						.append("-seat").append(' ').append(ap.get("dfseat")).append(' ')
 						.append("-source").append(' ')
-						.append(map.get("source").getString()).append(' ')
+						.append(ap.get("source")).append(' ')
 						.append("-skillID").append(' ')
-						.append(map.get("skillID").getValue());
+						.append(ap.get("skillID"));
 			} else {
 				// 其它
 				throw new IllegalArgumentException("对象不是怪兽本体、不是座位的状态现在还没写呢！");
 			}
 			
 			// 将所有以 "-" 开头的参数进行转化
-			for (Iterator<Entry<String, JsonValue>> it = map.entrySet().iterator(); it.hasNext();) {
-				Entry<String, JsonValue> entry = it.next();
+			for (Iterator<Entry<String, Object>> it = ap.entrySet().iterator(); it.hasNext();) {
+				Entry<String, Object> entry = it.next();
 				String key = entry.getKey();
-				JsonBuilder b = null;
 				if (key.startsWith("-") && !Character.isDigit(key.charAt(1))) {
+					Object o = entry.getValue();
 					cmd.append(' ').append(key).append(' ');
-					JsonValue v = entry.getValue();
-					switch (v.getType()) {
-					case ObjectType: case ArrayType:
-						if (b == null) {
-							b = new JsonBuilder();
-						}
-						cmd.append(b.getJson(v));
-						break;
-					default:
-						cmd.append(v.getValue());
-						break;
+					if (o instanceof JsonValue) {
+						JsonBuilder b = JsonBuilder.getDefaultInstance();
+						cmd.append(b.getJson((JsonValue) o));
+					} else {
+						cmd.append(o);
 					}
 				}
 			}
@@ -206,7 +206,7 @@ public class StateBuilder {
 		} else {
 			try {
 				IStateMessageFormater formater = (IStateMessageFormater) clazz.newInstance();
-				return formater.forceCommandLine(value, em.getRoot());
+				return formater.forceCommandLine(ap, em.getRoot());
 			} catch (InstantiationException | IllegalAccessException e) {
 				e.printStackTrace();
 			}
@@ -225,7 +225,7 @@ public class StateBuilder {
 	 * @return
 	 */
 	private Aperitif pipePackage(SkillReleasePackage pack) {
-		int thiz = pack.getThiz();
+		int thiz = 0; //pack.getThiz();
 		byte dfseat = pack.getDfStaff(thiz).getSeat();
 		
 		Aperitif ap = em.newAperitif(Aperitif.CODE_FORCE_STATE, dfseat);
@@ -236,20 +236,19 @@ public class StateBuilder {
 				.append("damage", pack.getDamage(thiz)); // int
 
 		// TODO 不确定这些参数是放在这个函数中的
-		ap.append("source", EStateSource.SKILL.name()); // string
+		ap.put("source", EStateSource.SKILL.name()); // string
 		
 		return ap;
 	}
 	
 	/**
 	 * 根据状态和 args 中对状态的介绍, 生成 value<br>
-	 * @param value
+	 * @param ap
 	 * @param args
 	 */
-	private void putArgument(JsonValue value, final JsonValue args) {
-		Map<String, JsonValue> map = value.getMap();
-		String statestr = args.getMap().get("v").getString(); // 格式: xxx
-		map.put("state", new JsonValue(statestr));
+	private void putArgument(Aperitif ap, final JsonObject args) {
+		String statestr = args.asMap().get("v").getString(); // 格式: xxx
+		ap.put("state", statestr);
 		
 		Class<?> clazz = stateHandler.stateClass(statestr);
 		
@@ -257,19 +256,18 @@ public class StateBuilder {
 			// 默认的生成方式
 			if (AParticipantState.class.isAssignableFrom(clazz)) {
 				// no
-				byte dfseat = (Byte) map.get("dfseat").getValue();
-				map.put("no", new JsonValue(em.getRoot().getAttendManager().noForSeat(dfseat)));
-				// 
+				byte dfseat = (Byte) ap.get("dfseat");
+				ap.put("no", em.getRoot().getAttendManager().noForSeat(dfseat));
 			} else {
 				// 对象不是怪兽本体的状态
 			}
 
 			// 将所有以 "-" 开头的数据放入参数中
-			for (Iterator<Entry<String, JsonValue>> it = args.getMap().entrySet().iterator(); it.hasNext();) {
+			for (Iterator<Entry<String, JsonValue>> it = args.asMap().entrySet().iterator(); it.hasNext();) {
 				Entry<String, JsonValue> entry = it.next();
 				String key = entry.getKey();
 				if (key.startsWith("-") && !Character.isDigit(key.charAt(1))) {
-					map.put(key, entry.getValue());
+					ap.put(key, entry.getValue().getValue());
 				}
 			}
 		} else {

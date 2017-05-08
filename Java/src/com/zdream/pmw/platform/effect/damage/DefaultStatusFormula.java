@@ -1,11 +1,7 @@
 package com.zdream.pmw.platform.effect.damage;
 
-import com.zdream.pmw.platform.attend.AttendManager;
-import com.zdream.pmw.platform.control.IPrintLevel;
-import com.zdream.pmw.platform.effect.Aperitif;
+import com.zdream.pmw.platform.effect.EffectManage;
 import com.zdream.pmw.platform.effect.SkillReleasePackage;
-import com.zdream.pmw.platform.effect.addition.IAdditionFormula;
-import com.zdream.pmw.util.random.RanValue;
 
 /**
  * 默认变化类技能的 (伤害) 计算公式<br>
@@ -19,6 +15,7 @@ import com.zdream.pmw.util.random.RanValue;
  * @date 2017年3月4日
  * @version v0.2.1
  */
+@Deprecated
 public class DefaultStatusFormula implements IDamageFormula {
 
 	@Override
@@ -27,8 +24,8 @@ public class DefaultStatusFormula implements IDamageFormula {
 	}
 
 	@Override
-	public final void damage(SkillReleasePackage pack) {
-		this.pack = pack;
+	public final int[] damage(SkillReleasePackage pack, EffectManage em) {
+		/*this.pack = pack;
 		
 		// 判断是否发动失败 + 是否有效
 		// 注意, 像麻痹之类的行动判定早已经完成, 这里不做这类数据的判断
@@ -58,13 +55,16 @@ public class DefaultStatusFormula implements IDamageFormula {
 			return;
 		}
 		
-		onAddition();
+		onAddition();*/
+		
+		// do nothing
+		return null;
 	}
 
-	/**
+	/*
 	 * 询问是否发动失败
 	 * @return
-	 */
+	 *
 	protected boolean canAct() {
 		return true;
 	}
@@ -72,7 +72,7 @@ public class DefaultStatusFormula implements IDamageFormula {
 	/**
 	 * 询问技能是否有效
 	 * @return
-	 */
+	 *
 	protected boolean isEffective() {
 		return true;
 	}
@@ -84,7 +84,7 @@ public class DefaultStatusFormula implements IDamageFormula {
 	 * 如果没有命中，还会向系统外发送没有命中的消息<br>
 	 * @return
 	 *   是否命中
-	 */
+	 *
 	protected boolean writeHitable() {
 		int index = pack.getThiz();
 		byte atseat = pack.getAtStaff().getSeat(); // 攻击方的 seat
@@ -141,7 +141,7 @@ public class DefaultStatusFormula implements IDamageFormula {
 	/**
 	 * 计算攻击方实时命中率（忽略能力变化）
 	 * @return
-	 */
+	 *
 	protected float countHitrate() {
 		return this.pack.getEffects().calcHitrate(pack);
 	}
@@ -149,7 +149,7 @@ public class DefaultStatusFormula implements IDamageFormula {
 	/**
 	 * 计算防御方实时躲避率（忽略能力变化）
 	 * @return
-	 */
+	 *
 	protected float countHide() {
 		return this.pack.getEffects().calcHide(pack);
 	}
@@ -157,7 +157,7 @@ public class DefaultStatusFormula implements IDamageFormula {
 	/**
 	 * 计算技能实时命中率
 	 * @return
-	 */
+	 *
 	protected float countAccuracy() {
 		return this.pack.getEffects().calcAccuracy(pack);
 	}
@@ -165,7 +165,7 @@ public class DefaultStatusFormula implements IDamageFormula {
 	/**
 	 * 由于攻击没有命中，发出开胃酒消息
 	 * @param index
-	 */
+	 *
 	protected void sendMiss(int index) {
 		Aperitif ap = pack.getEffects().newAperitif(Aperitif.CODE_BROADCAST);
 		ap.append("type", "miss").append("-atseat", pack.getAtStaff().getSeat())
@@ -176,7 +176,7 @@ public class DefaultStatusFormula implements IDamageFormula {
 	/**
 	 * 由于属性免疫，发出开胃酒消息
 	 * @param index
-	 */
+	 *
 	protected void sendImmune(int index) {
 		Aperitif ap = pack.getEffects().newAperitif(Aperitif.CODE_BROADCAST);
 		ap.append("type", "immune").append("-atseat", pack.getAtStaff().getSeat())
@@ -187,7 +187,7 @@ public class DefaultStatusFormula implements IDamageFormula {
 	/**
 	 * 附加状态 / 附加效果实现
 	 * @param index
-	 */
+	 *
 	private void onAddition() {
 		IAdditionFormula[] formulas = pack.getAdditionFormulas();
 		for (int i = 0; i < formulas.length; i++) {
@@ -197,14 +197,14 @@ public class DefaultStatusFormula implements IDamageFormula {
 	
 	/* ************
 	 *	数据结构  *
-	 ************ */
+	 ************ *
 	/**
 	 * 释放数据包
-	 */
+	 *
 	private SkillReleasePackage pack;
 	
 	protected SkillReleasePackage getPack() {
 		return pack;
-	}
+	}*/
 
 }

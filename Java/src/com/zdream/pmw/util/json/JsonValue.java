@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * 构造 JSON 结构的节点<br>
@@ -18,15 +19,15 @@ import java.util.Map;
  * @date 2016年3月16日
  * @version v0.1.1
  */
-public class JsonValue {
+public class JsonValue implements Cloneable {
 	
 	public enum JsonType{
 		ObjectType, ArrayType, StringType, ValueType, NullType
 	}
 	
-	private Object value;
+	protected Object value;
 	
-	private JsonType type;
+	protected JsonType type;
 	
 	/**
 	 * 是否强制不改变类型<br>
@@ -35,137 +36,92 @@ public class JsonValue {
 	private boolean forceType;
 	
 	/**
-	 * 当该 JsonValue 的类型是 object 或 array 时，添加一个 key-value 对<br>
-	 * 当该 JsonValue 的类型是 array 时，添加一个 value 
-	 * @param key
-	 *   当 JsonValue 的类型是 object 时，key 值不允许为空<br>
-	 *   当 JsonValue 的类型是 array 时，key 值会被忽略；
-	 * @param value
-	 * @throws NullPointerException
-	 *   当 (key == null && type == JsonType.ObjectType)
+	 * 利用类型创建 json 数据
+	 * @param type
+	 * @return
+	 * @since v0.2.3
 	 */
-	public void add(String key, JsonValue value){
+	public static JsonValue createJson(JsonType type) {
 		switch (type) {
-		case ObjectType:{
-			getMap().put(key, value);
-		} break;
-		case ArrayType:{
-			getArray().add(value);
-		}
+		case ObjectType:
+			return new JsonObject();
+		case ArrayType:
+			return new JsonArray();
 		default:
-			throw new RuntimeException("type: " + type.name() + " is not allowed to add value");
+			return new JsonValue(type);
 		}
 	}
 	
 	/**
-	 * 添加多个 key-value 对<br>
-	 * @param key
-	 *   当 JsonValue 的类型是 object 时，key 长度等同于 values<br>
-	 *     并且每个元素不为空
-	 *   当 JsonValue 的类型是 array 时，key 值会被忽略；
-	 * @param value
-	 * @throws NullPointerException
-	 *   当 (type == JsonType.ObjectType) 时，key 或 key 的任何一个元素为空
+	 * 利用数据创建 json 数据, 支持创建 object 和 array 类型的数据
+	 * @param obj
+	 * @return
 	 */
-	public void addBatch(String[] keys, JsonValue[] values){
-		switch (type) {
-		case ObjectType: {
-			assert(keys.length == values.length);
-			Map<String, JsonValue> map = getMap();
-			
-			for (int i = 0; i < keys.length; i++) {
-				map.put(keys[i], values[i]);
-			}
-		} break;
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public static JsonValue createJson(Object obj) {
+		JsonValue v;
 		
-		case ArrayType: {
-			// TODO
-		} break;
-
-		default:
-			break;
-		}
-	}
-	
-	/**
-	 * 添加多个 key-value 对<br>
-	 * @param key
-	 *   当 JsonValue 的类型是 object 时，key 的元素个数等同于 values<br>
-	 *     并且每个元素不为空
-	 *   当 JsonValue 的类型是 array 时，key 值会被忽略；
-	 * @param value
-	 * @throws NullPointerException
-	 *   当 (type == JsonType.ObjectType) 时，key 或 key 的任何一个元素为空
-	 */
-	public void addBatch(String[] keys, List<JsonValue> values){
-		switch (type) {
-		case ObjectType: {
-			assert(keys.length == values.size());
-			Map<String, JsonValue> map = getMap();
-			
-			Iterator<JsonValue> it = values.iterator();
-			for (int i = 0; i < keys.length; i++) {
-				JsonValue value = it.next();
-				map.put(keys[i], value);
+		if (obj == null){
+			v = new JsonValue(JsonType.NullType);
+			return v;
+		} else if (obj instanceof String){
+			v = new JsonValue(JsonType.StringType);
+			v.value = obj;
+			return v;
+		} else if (obj instanceof Enum){
+			v = new JsonValue(JsonType.StringType);
+			v.value = ((Enum<?>) obj).name();
+			return v;
+		} else if (obj instanceof JsonValue) {
+			return createJson(((JsonValue) obj).value);
+		} else if (obj instanceof Map) {
+			v = new JsonObject();
+			Map<String, JsonValue> map = (Map<String, JsonValue>) v.value;
+			for (Iterator<Entry<?, ?>> it = ((Map)obj).entrySet().iterator(); it.hasNext();) {
+				Entry<?, ?> entry = it.next();
+				map.put(entry.getKey().toString(), createJson(entry.getValue()));
 			}
-		} break;
+			return v;
+		} else if (obj instanceof List) {
+			v = new JsonArray();
+			List<JsonValue> list = (List<JsonValue>) v.value;
+			for (Iterator it = ((List)obj).iterator(); it.hasNext();) {
+				Object o = it.next();
+				list.add(createJson(o));
+			}
+			return v;
+		}
 		
-		case ArrayType: {
-			// TODO
-		} break;
-
-		default:
-			break;
+		// 兼容混乱代码
+		v = new JsonValue(JsonType.ValueType);
+		v.value = obj;
+		return v;
+	}
+	
+	/**
+	 * 将其视为 JsonObject 数据
+	 * @throws ClassCastException
+	 *   当该 json 不是 ObjectType 类型时
+	 * @since v0.2.3
+	 */
+	public JsonObject asObject() {
+		if (type != JsonType.ObjectType) {
+			throw new ClassCastException("type: " + this.type + " can not be case to jsonObject");
 		}
+		return (JsonObject) this;
 	}
 	
 	/**
-	 * 当该 JsonValue 的类型是 array 时，容器中添加一个 value <br>
-	 * @param values
+	 * 将其视为 JsonArray 数据
 	 * @throws ClassCastException
-	 *   当该 JsonValue 的类型不是 JsonValue.ArrayType
+	 *   当该 json 不是 ArrayType 类型时
+	 * @since v0.2.3
 	 */
-	public void add(JsonValue values){
-		getArray().add(values);
-	}
-	
-	/**
-	 * 当该 JsonValue 的类型是 array 时，添加多个 value 元素<br>
-	 * @param value
-	 * @throws ClassCastException
-	 *   当该 JsonValue 的类型不是 JsonValue.ArrayType
-	 */
-	public void addBatch(List<JsonValue> values){
-		getArray().addAll(values);
-	}
-	
-	/**
-	 * 当该 JsonValue 的类型是 array 时，添加多个 value 元素<br>
-	 * @param values
-	 * @throws ClassCastException
-	 *   当该 JsonValue 的类型不是 JsonValue.ArrayType
-	 */
-	public void addBatch(JsonValue[] values){
-		List<JsonValue> list = getArray();
-		for (int i = 0; i < values.length; i++) {
-			list.add(values[i]);
+	public JsonArray asArray() {
+		if (type != JsonType.ArrayType) {
+			throw new ClassCastException("type: " + this.type + " can not be case to jsonArray");
 		}
-	}
-	
-	/**
-	 * 默认的 Json 类型为 JsonType.ObjectType 
-	 */
-	public JsonValue() {
-		this(JsonType.ValueType);
-	}
-	
-	/**
-	 * 默认的 Json 类型为 JsonType.ObjectType，参数为 value
-	 * @param value
-	 */
-	public JsonValue(Object value) {
-		this(JsonType.ValueType);
-		set(value);
+		return (JsonArray) this;
 	}
 	
 	@SuppressWarnings("rawtypes")
@@ -180,20 +136,10 @@ public class JsonValue {
 			return;
 		} else if (value instanceof JsonValue) {
 			JsonValue raw = (JsonValue) value;
-			switch (raw.getType()) {
-			case ObjectType:
-				this.type = JsonType.ObjectType;
-				this.value = raw.getMap();
-				break;
-			case ArrayType:
-				this.type = JsonType.ArrayType;
-				this.value = raw.getArray();
-				break;
-			default:
-				set(raw.getValue());
-				break;
-			}
+			set(raw.getValue());
 			return;
+		} else if (value instanceof Map || value instanceof List) {
+			throw new IllegalArgumentException("value:" + value + " can not be set as 'JsonValue'.");
 		}
 		
 		this.value = value;
@@ -203,7 +149,7 @@ public class JsonValue {
 	 * 指定 Json 类型
 	 * @param type
 	 */
-	public JsonValue(JsonType type) {
+	protected JsonValue(JsonType type) {
 		if (type == null){
 			this.type = JsonType.NullType;
 			return;
@@ -220,23 +166,6 @@ public class JsonValue {
 		default:
 			break;
 		}
-	}
-	
-	@Override
-	public String toString() {
-		return ((value == null) ? "" : value.toString());
- 	}
-	
-	@SuppressWarnings("unchecked")
-	public Map<String, JsonValue> getMap(){
-		assert(type == JsonType.ObjectType);
-		return (Map<String, JsonValue>) this.value;
-	}
-	
-	@SuppressWarnings("unchecked")
-	public List<JsonValue> getArray(){
-		assert(type == JsonType.ObjectType);
-		return (List<JsonValue>) this.value;
 	}
 	
 	public Object getValue() {
@@ -262,7 +191,7 @@ public class JsonValue {
 		} break;
 
 		default:
-			throw new RuntimeException("value type: " + value.getClass().getName() + " is not allowed.");
+			throw new IllegalArgumentException("value type: " + value.getClass().getName() + " is not allowed.");
 		}
 	}
 	
@@ -277,4 +206,27 @@ public class JsonValue {
 	public void setForceType(boolean forceType) {
 		this.forceType = forceType;
 	}
+	
+	/**
+	 * 该 json 数据是否为 null
+	 * @return
+	 * @since v0.2.3
+	 */
+	public boolean isNull() {
+		return type == JsonType.NullType;
+	}
+	
+	@Override
+	public JsonValue clone() {
+		try {
+			return (JsonValue) super.clone();
+		} catch (CloneNotSupportedException e) {
+			return null;
+		}
+	}
+	
+	@Override
+	public String toString() {
+		return JsonBuilder.getDefaultInstance().getJson(this);
+ 	}
 }

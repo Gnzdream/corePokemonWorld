@@ -23,6 +23,7 @@ import com.zdream.pmw.platform.prototype.IPlatformComponent;
 import com.zdream.pmw.platform.prototype.RuleConductor;
 import com.zdream.pmw.platform.prototype.Team;
 import com.zdream.pmw.trainer.prototype.TrainerData;
+import com.zdream.pmw.util.json.JsonObject;
 import com.zdream.pmw.util.json.JsonValue;
 
 /**
@@ -339,7 +340,7 @@ public class AttendManager implements IPlatformComponent {
 			// 删状态
 			participants[seat].removeAllStates(pf);
 			
-			participants[seat].setSeat((byte) 0);
+			participants[seat].setSeat((byte) -1);
 			participants[seat] = null;
 		}
 		
@@ -676,7 +677,7 @@ public class AttendManager implements IPlatformComponent {
 	 *   所要设置给状态的参数
 	 * @since v0.2.1
 	 */
-	public void setStateFromParticipant(byte seat, String stateName, JsonValue value) {
+	public void setStateFromParticipant(byte seat, String stateName, JsonObject value) {
 		attOper.setStateFromParticipant(seat, stateName, value);
 	}
 
@@ -708,7 +709,7 @@ public class AttendManager implements IPlatformComponent {
 	 * @see AttendantOperateHandler#setStateFromSeat(byte, String, JsonValue)
 	 * @since v0.2.2
 	 */
-	public void setStateFromSeat(byte seat, String stateName, JsonValue value) {
+	public void setStateFromSeat(byte seat, String stateName, JsonObject value) {
 		attOper.setStateFromSeat(seat, stateName, value);
 	}
 
@@ -718,7 +719,7 @@ public class AttendManager implements IPlatformComponent {
 	 * @return
 	 * @since v0.2.2
 	 */
-	public IState buildState(JsonValue args) {
+	public IState buildState(JsonObject args) {
 		return stateHandler.buildState(args);
 	}
 

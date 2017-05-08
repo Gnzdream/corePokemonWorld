@@ -1,6 +1,7 @@
 package com.zdream.pmw.platform.effect.power;
 
 import com.zdream.pmw.monster.data.PokemonBaseData;
+import com.zdream.pmw.platform.effect.EffectManage;
 import com.zdream.pmw.platform.effect.SkillReleasePackage;
 
 /**
@@ -21,7 +22,7 @@ import com.zdream.pmw.platform.effect.SkillReleasePackage;
  * 
  * @since v0.2.2 [2017-04-18]
  * @author Zdream
- * @version v0.2.2 [2017-04-18]
+ * @version v0.2.3 [2017-05-04]
  */
 public class WeightPowerFormula implements IPowerFormula {
 
@@ -31,9 +32,21 @@ public class WeightPowerFormula implements IPowerFormula {
 	}
 
 	@Override
-	public int power(SkillReleasePackage pack) {
+	public int[] power(SkillReleasePackage pack, EffectManage em) {
+		final int len = pack.targetsLength();
+		byte[] seats = pack.getTargets();
+		int[] results = new int[len];
+		
+		for (int i = 0; i < len; i++) {
+			results[i] = eachPower(em, seats[i]);
+		}
+		
+		return results;
+	}
+	
+	private int eachPower(EffectManage em, byte seat) {
 		PokemonBaseData data = 
-				pack.getAttends().pokemonBaseData(pack.getDfStaff(pack.getThiz()));
+				em.getAttends().pokemonBaseData(em.getAttends().getParticipant(seat));
 		float wt = data.getWt();
 		
 		if (wt >= 50) {
@@ -53,6 +66,11 @@ public class WeightPowerFormula implements IPowerFormula {
 				return 20;
 			}
 		}
+	}
+	
+	@Override
+	public String toString() {
+		return name();
 	}
 
 }

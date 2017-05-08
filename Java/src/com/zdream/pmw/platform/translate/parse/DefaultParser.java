@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.zdream.pmw.util.json.JsonArray;
+import com.zdream.pmw.util.json.JsonObject;
 import com.zdream.pmw.util.json.JsonValue;
 import com.zdream.pmw.util.json.JsonValue.JsonType;
 
@@ -21,12 +23,13 @@ public class DefaultParser {
 	String[] msg;
 	int msgIdx;
 	
-	JsonValue now, info;
+	JsonObject info;
+	JsonValue now;
 	ArrayList<JsonValue> searchs;
 	
 	Map<String, String> context;
 
-	public Map<String, String> parse(String[] msg, JsonValue dict) {
+	public Map<String, String> parse(String[] msg, JsonArray dict) {
 		initContext();
 		msgIdx = 1;
 		this.msg = msg;
@@ -84,7 +87,7 @@ public class DefaultParser {
 
 	private void parseArray(int offset) {
 		// now.type = array
-		List<JsonValue> list = now.getArray();
+		List<JsonValue> list = now.asArray().asList();
 		int length = list.size();
 		for (int i = offset; i < length; i++) {
 			JsonValue v = list.get(i);
@@ -93,7 +96,7 @@ public class DefaultParser {
 			parseNext();
 			
 			if (info != null) {
-				Map<String, JsonValue> map = now.getMap();
+				Map<String, JsonValue> map = now.asObject().asMap();
 				String cmd = map.get("/mean").getString();
 				switch (cmd) {
 				case "loop": {
@@ -112,7 +115,7 @@ public class DefaultParser {
 	}
 
 	private void parseObject() {
-		Map<String, JsonValue> map = now.getMap();
+		Map<String, JsonValue> map = now.asObject().asMap();
 		String cmd = map.get("/mean").getString();
 		switch (cmd) {
 		case "set":
@@ -122,7 +125,7 @@ public class DefaultParser {
 			judgeOption();
 			break;
 		case "loop":
-			info = now;
+			info = now.asObject();
 			break;
 		case "switch":
 			judgeSwitch();
@@ -134,7 +137,7 @@ public class DefaultParser {
 	}
 	
 	private void judgeOption() {
-		Map<String, JsonValue> map = now.getMap();
+		Map<String, JsonValue> map = now.asObject().asMap();
 		String ik = null;
 		String msg = nextMsg(); // msg 可能为空
 		for (int i = 0;; i++) {
@@ -147,7 +150,7 @@ public class DefaultParser {
 				continue;
 			}
 			
-			JsonValue judgev = v.getArray().get(0);
+			JsonValue judgev = v.asArray().asList().get(0);
 			if (judgev.getType() == JsonType.NullType) {
 				if (msgIdx == msg.length()) {
 					// 匹配成功
@@ -192,7 +195,7 @@ public class DefaultParser {
 	}
 	
 	private void judgeSwitch() {
-		Map<String, JsonValue> m = now.getMap();
+		Map<String, JsonValue> m = now.asObject().asMap();
 		// 处理部分
 		Map<String, JsonValue> map = new HashMap<>();
 		for (int i = 0; ; i++) {
@@ -202,7 +205,7 @@ public class DefaultParser {
 			}
 			
 			JsonValue v = m.get(ik);
-			String k = v.getArray().get(0).getString();
+			String k = v.asArray().asList().get(0).getString();
 			if (k.startsWith("'")) {
 				k = k.substring(1);
 			}

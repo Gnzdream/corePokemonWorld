@@ -13,15 +13,11 @@ import com.zdream.pmw.platform.prototype.BattlePlatform;
  * @date 2017年3月6日
  * @version v0.2.1
  */
-public class ReplaceEvent extends APreviousEvent {
+public class ReplaceEvent extends AMoveEvent {
 
 	/* ************
 	 *	技能数据  *
 	 ************ */
-	/**
-	 * 需要更换下场的 no 值<br>
-	 */
-	private byte no;
 	/**
 	 * 需要更换上场的怪兽的 no<br>
 	 */
@@ -31,14 +27,6 @@ public class ReplaceEvent extends APreviousEvent {
 	 * <p>当没有退场怪兽, 只有入场怪兽时, seat 是必需的.</p>
 	 */
 	private byte seat;
-	
-	public byte getNo() {
-		return no;
-	}
-
-	public void setNo(byte no) {
-		this.no = no;
-	}
 
 	public byte getReplaceNo() {
 		return replaceNo;
@@ -77,11 +65,6 @@ public class ReplaceEvent extends APreviousEvent {
 		}
 	}
 
-	@Override
-	public int priority() {
-		return 0;
-	}
-	
 	/* ************
 	 *	 初始化   *
 	 ************ */

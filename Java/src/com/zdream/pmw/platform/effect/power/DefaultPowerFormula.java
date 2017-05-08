@@ -1,5 +1,8 @@
 package com.zdream.pmw.platform.effect.power;
 
+import java.util.Arrays;
+
+import com.zdream.pmw.platform.effect.EffectManage;
 import com.zdream.pmw.platform.effect.SkillReleasePackage;
 
 /**
@@ -7,10 +10,9 @@ import com.zdream.pmw.platform.effect.SkillReleasePackage;
  * 计算步骤：<br>
  * 直接获取并返回技能原始威力<br>
  * 
- * @since v0.1
+ * @since v0.1 [2016-04-10]
  * @author Zdream
- * @date 2016年4月10日
- * @version v0.1
+ * @version v0.2.3 [2017-05-04]
  */
 public class DefaultPowerFormula implements IPowerFormula {
 
@@ -20,8 +22,16 @@ public class DefaultPowerFormula implements IPowerFormula {
 	}
 
 	@Override
-	public int power(SkillReleasePackage package1) {
-		return package1.getSkill().getSkill().getPower();
+	public int[] power(SkillReleasePackage pack, EffectManage em) {
+		final int len = pack.targetsLength();
+		int[] result = new int[len];
+		Arrays.fill(result, pack.getSkill().getSkill().getPower());
+		return result;
+	}
+	
+	@Override
+	public String toString() {
+		return name();
 	}
 	
 }

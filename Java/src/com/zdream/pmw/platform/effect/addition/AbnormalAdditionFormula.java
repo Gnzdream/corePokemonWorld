@@ -9,6 +9,7 @@ import com.zdream.pmw.monster.prototype.EPokemonAbnormal;
 import com.zdream.pmw.platform.control.IPrintLevel;
 import com.zdream.pmw.platform.effect.Aperitif;
 import com.zdream.pmw.platform.effect.EffectManage;
+import com.zdream.pmw.util.json.JsonObject;
 import com.zdream.pmw.util.json.JsonValue;
 import com.zdream.pmw.util.random.RanValue;
 
@@ -66,11 +67,11 @@ public class AbnormalAdditionFormula extends AAdditionFormula {
 
 	@Override
 	public String name() {
-		return "abnormal";
+		return "abn";
 	}
 	
 	@Override
-	protected void onFinish() {
+	protected void postHandle() {
 		forces = null;
 	}
 
@@ -81,9 +82,9 @@ public class AbnormalAdditionFormula extends AAdditionFormula {
 	 * r: 百分比施加可能性<br>
 	 * tg: 施加对象<br>
 	 */
-	public void set(JsonValue value) { // 暂时没定格式
+	public void set(JsonObject value) { // 暂时没定格式
 		super.set(value);
-		Set<Entry<String, JsonValue>> set = value.getMap().entrySet();
+		Set<Entry<String, JsonValue>> set = value.asMap().entrySet();
 
 		String k;
 		JsonValue v;
@@ -133,27 +134,22 @@ public class AbnormalAdditionFormula extends AAdditionFormula {
 	protected boolean canTrigger() {
 		// 需要计算附加状态真实释放几率
 		
-		if (seatLen == 0) {
+		final int len = targets.length;
+		if (len == 0) {
 			return false;
 		}
 		
-		if (side == SIDE_ATSTAFF) {
-			if (canTriggerForSelf()) {
-				this.forces = new boolean[]{true};
-				return true;
-			}
-		} else if (side == SIDE_DFSTAFF) {
-			this.forces = new boolean[seatLen];
-		} else {
-			throw new IllegalArgumentException("side: " + side + " is illegal.");
-		}
-		
+		this.forces = new boolean[targets.length];
+		final byte atseat = pack.getAtStaff().getSeat();
 		boolean exist = false;
-		byte[] bs = pack.dfSeats();
-		for (int i = 0; i < this.seatLen; i++) {
-			if (canTriggerForEnemy(i, bs)) {
-				exist = true;
-				this.forces[i] = true;
+		
+		for (int i = 0; i < len; i++) {
+			byte target = targets[i];
+			
+			if (target == atseat) {
+				exist |= forces[i] = canTriggerForSelf();
+			} else {
+				exist |= forces[i] = canTriggerForEnemy(target, targets);
 			}
 		}
 		
@@ -167,7 +163,7 @@ public class AbnormalAdditionFormula extends AAdditionFormula {
 		final byte[] dfseats = pack.dfSeats();
 		final byte atseat = pack.getAtStaff().getSeat();
 		
-		Aperitif ap = pack.getEffects().newAperitif(Aperitif.CODE_CALC_ADDITION_RATE, dfseats);
+		Aperitif ap = em.newAperitif(Aperitif.CODE_CALC_ADDITION_RATE, dfseats);
 		ap.putScanSeats(atseat);
 		
 		ap.append("type", "abnormal")
@@ -178,7 +174,7 @@ public class AbnormalAdditionFormula extends AAdditionFormula {
 			.append("rate", rate)
 			.append("result", 0)
 			.append("state-category", "abnormal");
-		pack.getEffects().startCode(ap);
+		em.startCode(ap);
 		
 		int result = (Integer) ap.get("result");
 		if (result == 0) {
@@ -191,18 +187,17 @@ public class AbnormalAdditionFormula extends AAdditionFormula {
 	
 	/**
 	 * 施加异常状态到防御方身上
-	 * @param i
-	 *   在攻击到的对象列表中的索引, 指向 <code>this.seats</code>
+	 * @param target
+	 *   在攻击到的对象 seat
 	 * @param dfseats
 	 *   防御方座位组成的数组, 作为参数因为每次调用该方法时,
 	 *   生成的 dfseats 都一样, 因此作为传入数据可以减少多次重复的方法调用
 	 * @return
 	 */
-	private boolean canTriggerForEnemy(int i, byte[] dfseats) {
-		byte target = seats[i];
+	private boolean canTriggerForEnemy(byte target, byte[] dfseats) {
 		byte atseat = pack.getAtStaff().getSeat();
 		
-		Aperitif ap = pack.getEffects().newAperitif(Aperitif.CODE_CALC_ADDITION_RATE, atseat, target);
+		Aperitif ap = em.newAperitif(Aperitif.CODE_CALC_ADDITION_RATE, atseat, target);
 		ap.append("type", "abnormal")
 			.append("dfseats", dfseats)
 			.append("atseat", atseat)
@@ -211,7 +206,7 @@ public class AbnormalAdditionFormula extends AAdditionFormula {
 			.append("rate", rate)
 			.append("result", 0)
 			.append("state-category", "abnormal");
-		pack.getEffects().startCode(ap);
+		em.startCode(ap);
 		
 		int result = (Integer) ap.get("result");
 		if (result == 0) {
@@ -227,9 +222,9 @@ public class AbnormalAdditionFormula extends AAdditionFormula {
 	 */
 	protected void force() {
 		byte atseat = pack.getAtStaff().getSeat();
-		for (int i = 0; i < seatLen; i++) {
+		for (int i = 0; i < targets.length; i++) {
 			if (forces[i]) {
-				pack.getEffects().forceAbnormal(atseat, seats[i],
+				em.forceAbnormal(atseat, targets[i],
 						AbnormalMethods.toBytes(abnormal));
 			}
 		}

@@ -2,16 +2,18 @@ package com.zdream.pmw.platform.order;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 
 import com.zdream.pmw.platform.control.IPrintLevel;
 import com.zdream.pmw.platform.effect.SkillReleasePackage;
-import com.zdream.pmw.platform.order.event.AEvent;
-import com.zdream.pmw.platform.order.event.MoveEvent;
+import com.zdream.pmw.platform.order.event.AMoveEvent;
+import com.zdream.pmw.platform.order.event.IEvent;
 import com.zdream.pmw.platform.prototype.BattlePlatform;
 import com.zdream.pmw.platform.prototype.Fuse;
 import com.zdream.pmw.platform.prototype.IPlatformComponent;
 import com.zdream.pmw.platform.prototype.RuleConductor;
+import com.zdream.pmw.util.json.JsonObject;
 import com.zdream.pmw.util.json.JsonValue;
 
 /**
@@ -64,7 +66,7 @@ public class OrderManager implements IPlatformComponent {
 	 * 按顺序触发事件
 	 */
 	public void actNextEvent() {
-		AEvent event = list.nextEvent();
+		IEvent event = list.nextEvent();
 		Instant t = Instant.now();
 		event.action(pf);
 		logPrintf(IPrintLevel.PRINT_LEVEL_INFO, "事件: %s 用时 %d ms",
@@ -78,15 +80,15 @@ public class OrderManager implements IPlatformComponent {
 	/**
 	 * 行动事件生成器
 	 */
-	private MoveEventBuilder builder = new MoveEventBuilder(this);
+	private MoveEventBuilder builder;
 	
 	/**
 	 * 将用户端的消息转化成事件并返回<br>
 	 * 一般在请求玩家行动之后调用<br>
 	 * @return
 	 */
-	public List<AEvent> buildMoveEvent() {
-		return builder.build();
+	public void buildMoveEvent() {
+		builder.build();
 	}
 	
 	/**
@@ -96,7 +98,7 @@ public class OrderManager implements IPlatformComponent {
 	 * @param team
 	 * @return
 	 */
-	public List<AEvent> buildMoveEvent(byte team) {
+	public List<IEvent> buildMoveEvent(byte team) {
 		return builder.buildForTeam(team);
 	}
 	
@@ -108,29 +110,27 @@ public class OrderManager implements IPlatformComponent {
 	 *   选择怪兽的第几个技能
 	 * @param target
 	 *   选择目标, 默认为 -1
-	 * @param events
-	 *   盛放事件的列表, 生成的事件将加入到这里去
 	 * @since v0.2.2
 	 */
-	public void buildMoveEvent(byte no, byte skillNum, byte target, List<AEvent> events) {
-		builder.buildMoveEvent(no, skillNum, target, events);
+	public void buildMoveEvent(byte no, byte skillNum, byte target) {
+		builder.buildMoveEvent(no, skillNum, target);
 	}
 
 	/**
 	 * <p>公共方法, 创建释放技能的行动事件并添加到指定的容器中</p>
-	 * @see MoveEventBuilder#buildMoveEvent(byte, byte, byte, JsonValue, List)
+	 * @see MoveEventBuilder#buildMoveEvent(byte, byte, byte, JsonValue)
 	 * @since v0.2.2
 	 */
-	public void buildMoveEvent(byte no, byte skillNum, byte target, JsonValue param, List<AEvent> events) {
-		builder.buildMoveEvent(no, skillNum, target, param, events);
+	public void buildMoveEvent(byte no, byte skillNum, byte target, JsonObject param) {
+		builder.buildMoveEvent(no, skillNum, target, param);
 	}
 
 	/**
 	 * 触发列表
 	 */
 	private EventList list;
-	
-	public void pushEvent(AEvent event) {
+
+	public void pushEvent(IEvent event) {
 		list.pushEvent(event);
 	}
 	
@@ -138,8 +138,40 @@ public class OrderManager implements IPlatformComponent {
 	 * 添加多数 Event 列表
 	 * @param events
 	 */
-	public void pushEvents(List<AEvent> events) {
+	public void pushEvents(List<IEvent> events) {
 		list.pushEvents(events);
+	} 
+
+	/**
+	 * @see EventList#pushEventToNext(IEvent)
+	 * @since v0.2.3
+	 */
+	public void pushEventToNext(IEvent event) {
+		list.pushEventToNext(event);
+	}
+	
+	/**
+	 * @see EventList#pushEventsToNext(IEvent)
+	 * @since v0.2.3
+	 */
+	public void pushEventsToNext(List<IEvent> events) {
+		list.pushEventsToNext(events);
+	}
+	
+	/**
+	 * @see EventList#removeInstructions(tasks)
+	 * @since v0.2.3
+	 */
+	public void removeInstructions(Collection<String> tasks) {
+		list.removeInstructions(tasks);
+	}
+	
+	/**
+	 * @see EventList#removeNexts()
+	 * @since v0.2.3
+	 */
+	public List<IEvent> removeNexts() {
+		return list.removeNexts();
 	}
 	
 	/**
@@ -150,10 +182,9 @@ public class OrderManager implements IPlatformComponent {
 	 * @return
 	 *   该事件的实例
 	 */
-	public MoveEvent removeMoveEvent(byte no) {
+	public AMoveEvent removeMoveEvent(byte no) {
 		return list.removeMoveEvent(no);
 	}
-
 	/**
 	 * 添加默认的回合结束事件
 	 */
@@ -230,8 +261,10 @@ public class OrderManager implements IPlatformComponent {
 	 * @param pf
 	 */
 	public void init(Fuse msg, RuleConductor referee, BattlePlatform pf) {
+		builder = new MoveEventBuilder(this);
 		if (!msg.isPassive()) {
 			list = new EventList(this);
+			builder.storage = list.storage;
 		}
 		
 		recorder = new Recorder(this);

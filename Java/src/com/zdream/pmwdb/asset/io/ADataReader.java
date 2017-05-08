@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 
 import com.zdream.pmw.util.json.JsonBuilder;
+import com.zdream.pmw.util.json.JsonObject;
 import com.zdream.pmw.util.json.JsonValue;
 
 /**
@@ -20,11 +21,11 @@ import com.zdream.pmw.util.json.JsonValue;
  */
 public abstract class ADataReader<I> {
 	
-	protected final JsonBuilder builder = new JsonBuilder();
+	protected final JsonBuilder builder = JsonBuilder.getDefaultInstance();
 	
 	protected abstract String filePath(I key);
 	protected abstract void onFileRead(I key);
-	protected abstract void onDataStore(JsonValue v);
+	protected abstract void onDataStore(JsonObject v);
 
 	protected JsonValue read(I key) {
 		File file = new File(filePath(key));
@@ -46,11 +47,12 @@ public abstract class ADataReader<I> {
 			reader.close();
 			
 			JsonValue v = this.builder.parseJson(builder.toString());
-			for (Iterator<Entry<String, JsonValue>> it = v.getMap().entrySet().iterator(); it.hasNext();) {
+			for (Iterator<Entry<String, JsonValue>> it = v.asObject().asMap().entrySet().iterator();
+					it.hasNext();) {
 				Entry<String, JsonValue> entry = it.next();
 				
 				try {
-					onDataStore(entry.getValue());
+					onDataStore(entry.getValue().asObject());
 				} catch (RuntimeException e) {
 					e.printStackTrace();
 				}

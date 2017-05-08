@@ -3,7 +3,7 @@ package com.zdream.pmw.platform.effect.state;
 import com.zdream.pmw.platform.attend.IStateInterceptable;
 import com.zdream.pmw.platform.effect.Aperitif;
 import com.zdream.pmw.platform.prototype.BattlePlatform;
-import com.zdream.pmw.util.json.JsonValue;
+import com.zdream.pmw.util.json.JsonObject;
 import com.zdream.pmw.util.random.RanValue;
 
 /**
@@ -77,7 +77,7 @@ public class ConfusionState extends AParticipantState implements IDuration {
 	}
 	
 	@Override
-	public void set(JsonValue v, BattlePlatform pf) {
+	public void set(JsonObject v, BattlePlatform pf) {
 		super.set(v, pf);
 		IDuration.super.set(v, pf);
 	}
@@ -109,7 +109,7 @@ public class ConfusionState extends AParticipantState implements IDuration {
 		if (RanValue.random(0, 3) == 0) {
 			// 混乱攻击自己, 技能为 0
 
-			value.add("skillID", new JsonValue((short) 0));
+			value.put("skillID", (short) 0);
 		}
 	}
 	

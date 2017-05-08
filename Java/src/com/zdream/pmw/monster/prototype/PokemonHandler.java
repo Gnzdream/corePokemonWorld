@@ -12,6 +12,7 @@ import com.zdream.pmw.monster.data.PokemonBaseData;
 import com.zdream.pmw.monster.data.PokemonDataBuffer;
 import com.zdream.pmw.trainer.prototype.TrainerData;
 import com.zdream.pmw.util.json.JsonBuilder;
+import com.zdream.pmw.util.json.JsonObject;
 import com.zdream.pmw.util.json.JsonValue;
 
 /**
@@ -74,20 +75,20 @@ public class PokemonHandler {
 			}
 			
 			JsonBuilder builder = new JsonBuilder();
-			JsonValue value = builder.parseJson(strBuilder.toString());
+			JsonObject value = builder.parseJson(strBuilder.toString()).asObject();
 			reader.close();
 			
 			List<JsonValue> list;
 			
 			// natures
-			list = value.getMap().get("nature").getArray();
+			list = value.asMap().get("nature").asArray().asList();
 			natures = new String[list.size()];
 			for (ListIterator<JsonValue> it = list.listIterator(); it.hasNext();) {
 				natures[it.nextIndex()] = it.next().getString();
 			}
 			
 			// types
-			list = value.getMap().get("type").getArray();
+			list = value.asMap().get("type").asArray().asList();
 			types = new String[list.size()];
 			for (ListIterator<JsonValue> it = list.listIterator(); it.hasNext();) {
 				types[it.nextIndex()] = it.next().getString();

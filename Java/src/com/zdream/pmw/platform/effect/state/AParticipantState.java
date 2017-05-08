@@ -8,6 +8,7 @@ import com.zdream.pmw.platform.attend.Participant;
 import com.zdream.pmw.platform.attend.service.EStateSource;
 import com.zdream.pmw.platform.prototype.BattlePlatform;
 import com.zdream.pmw.platform.prototype.IPlatformComponent;
+import com.zdream.pmw.util.json.JsonObject;
 import com.zdream.pmw.util.json.JsonValue;
 
 /**
@@ -69,8 +70,8 @@ public abstract class AParticipantState implements IState {
 	}
 
 	@Override
-	public void set(JsonValue v, BattlePlatform pf) {
-		Map<String, JsonValue> map = v.getMap();
+	public void set(JsonObject v, BattlePlatform pf) {
+		Map<String, JsonValue> map = v.asMap();
 		// init: no
 		if (map.containsKey("no")) {
 			no = (Byte) map.get("no").getValue();

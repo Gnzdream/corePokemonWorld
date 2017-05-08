@@ -22,7 +22,7 @@ public class PlatformRangeFormula extends SingleRangeFormula {
 	 * <li>忽略玩家的选择, 选定所有存在怪兽的座位</li></p>
 	 */
 	protected byte[] onRange() {
-		AttendManager am = pack.getAttends();
+		AttendManager am = em.getAttends();
 		return am.existsSeat();
 	}
 

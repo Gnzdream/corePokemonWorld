@@ -3,7 +3,7 @@ package com.zdream.pmwdb.asset.io;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.zdream.pmw.util.json.JsonValue;
+import com.zdream.pmw.util.json.JsonObject;
 
 /**
  * 缓存、读取怪兽的文本数据<br>
@@ -15,10 +15,10 @@ import com.zdream.pmw.util.json.JsonValue;
  */
 public class PokemonDataReader extends ADataReader<Integer> {
 	
-	private Map<Integer, JsonValue> map = new HashMap<>();
+	private Map<Integer, JsonObject> map = new HashMap<>();
 	private Map<Integer, Boolean> hasRead = new HashMap<>();
 	
-	public JsonValue getPokemonInfo(int speciesId) {
+	public JsonObject getPokemonInfo(int speciesId) {
 		if (map.containsKey(speciesId)) {
 			return map.get(speciesId);
 		} else if (hasRead.containsKey(speciesId / 50)) {
@@ -40,7 +40,7 @@ public class PokemonDataReader extends ADataReader<Integer> {
 	}
 
 	@Override
-	protected void onDataStore(JsonValue v) {
-		map.put((int) v.getMap().get("species_id").getValue(), v);
+	protected void onDataStore(JsonObject v) {
+		map.put((int) v.asMap().get("species_id").getValue(), v);
 	}
 }

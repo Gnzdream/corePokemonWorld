@@ -6,7 +6,7 @@ import com.zdream.pmw.platform.attend.IStateInterceptable;
 import com.zdream.pmw.platform.attend.service.EStateSource;
 import com.zdream.pmw.platform.effect.Aperitif;
 import com.zdream.pmw.platform.prototype.BattlePlatform;
-import com.zdream.pmw.util.json.JsonValue;
+import com.zdream.pmw.util.json.JsonObject;
 import com.zdream.pmw.util.random.RanValue;
 
 /**
@@ -100,7 +100,7 @@ public class SleepState extends AAbnormalState implements IDuration {
 	}
 	
 	@Override
-	public void set(JsonValue v, BattlePlatform pf) {
+	public void set(JsonObject v, BattlePlatform pf) {
 		super.set(v, pf);
 		IDuration.super.set(v, pf);
 	}
@@ -118,12 +118,12 @@ public class SleepState extends AAbnormalState implements IDuration {
 	 * 判断能否行动时触发<br>
 	 * 判断精灵的状态，如果它的异常状态参数（睡眠回合数）为零，当回合即可移除该状态，并且能够行动<br>
 	 * 否则不允许行动
-	 * @param value
+	 * @param ap
 	 * @param interceptor
 	 * @return
 	 */
-	private String judgeMoveable(Aperitif value, IStateInterceptable interceptor) {
-		byte seat = (Byte) value.getMap().get("seat").getValue();
+	private String judgeMoveable(Aperitif ap, IStateInterceptable interceptor) {
+		byte seat = (byte) ap.get("seat");
 		
 		if (round == 0) {
 			// 移除睡眠状态
@@ -133,8 +133,8 @@ public class SleepState extends AAbnormalState implements IDuration {
 			return interceptor.nextState();
 		}
 		
-		value.replace("result", false);
-		value.append("fail", name());
+		ap.replace("result", false);
+		ap.append("fail", name());
 		return interceptor.getCommand();
 	}
 
