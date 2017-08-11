@@ -193,24 +193,66 @@ public class EventList {
 	/**
 	 * 添加多数新的 <code>IEvent</code>,
 	 * 让其在当前事件完成后按次序执行.
-	 * @param event
+	 * @param events
 	 * @since v0.2.3
 	 */
-	public void pushEventsToNext(List<IEvent> events) {
+	public void pushEventsToNext(List<? extends IEvent> events) {
 		om.logPrintf(IPrintLevel.PRINT_LEVEL_DEBUG, "尝试添加多个事件稍后执行 %s\r\n\tat %s", events,
 				Thread.currentThread().getStackTrace()[1]);
 		if (lit == null) {
-			for (ListIterator<IEvent> it = events.listIterator(events.size()); it.hasPrevious();) {
+			for (ListIterator<? extends IEvent> it = events.listIterator(events.size()); it.hasPrevious();) {
 				IEvent eve = it.previous();
 				previousEvent.addFirst(eve);
 			}
 		} else {
-			for (ListIterator<IEvent> it = events.listIterator(events.size()); it.hasPrevious();) {
+			for (ListIterator<? extends IEvent> it = events.listIterator(events.size()); it.hasPrevious();) {
 				IEvent eve = it.previous();
 				lit.add(eve);
 				lit.previous();
 			}
 		}
+	}
+	
+	/**
+	 * <p>在指定的指示事件之后添加事件.
+	 * <p>如果现在正在技能判定的流程中, 系统只会在正在判定的事件之后寻找需要找的指示.
+	 * @param name
+	 *   用于寻找、匹配指示
+	 * @param event
+	 *   等待添加的事件
+	 * @return
+	 *   是否寻找到相应的指示. 如果寻找到了, 则添加成功, 否则就是未添加成功.
+	 * @since v0.2.3
+	 */
+	public boolean putAfterInstructions(String name, IEvent event) {
+		final boolean exist = (lit != null);
+		boolean result = false;
+		
+		ListIterator<IEvent> it = this.lit;
+		int idx = -1;
+		if (!exist) {
+			it = previousEvent.listIterator();
+		} else {
+			idx = it.nextIndex();
+		}
+		
+		for (; lit.hasNext();) {
+			IEvent e = lit.next();
+			if (e instanceof AInstruction) {
+				AInstruction inst = (AInstruction) e;
+				if (inst.canHandle().equals(name)) {
+					lit.add(event);
+					result = true;
+					break;
+				}
+			}
+		}
+		
+		if (exist) {
+			lit = previousEvent.listIterator(idx);
+		}
+		
+		return result;
 	}
 	
 	/**
@@ -221,7 +263,12 @@ public class EventList {
 	 */
 	public void removeInstructions(Collection<String> tasks) {
 		if (lit == null) {
-			previousEvent.removeIf((name) -> {return tasks.contains(name);});
+			previousEvent.removeIf((event) -> {
+				if (event instanceof AInstruction) {
+					return tasks.contains(((AInstruction) event).canHandle());
+				}
+				return false;
+			});
 		} else {
 			int idx = lit.nextIndex();
 			for (; lit.hasNext();) {

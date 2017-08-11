@@ -58,9 +58,50 @@ public class RequestCodeRealizer implements ICodeRealizer {
 	 * @return
 	 */
 	private String requestMoveCommandLine(Aperitif ap) {
-		return String.format("%s %d %s", CODE_REQUEST_MOVE, 
-				ap.get("team"),
-				listToString((byte[]) ap.get("seats")));
+		StringBuilder b = new StringBuilder(20);
+		
+		b.append(CODE_REQUEST_MOVE).append(' ').append(ap.get("team"))
+				.append(' ').append(ArraysUtils.bytesToString(
+						(byte[]) ap.get("seats")));
+		
+		Object o;
+		boolean bo = false;
+		// v0.2.3 白名单
+		if ((o = ap.get("option")) != null) {
+			byte[] seats = (byte[]) o;
+			if (seats.length > 0) {
+				bo = true;
+				int[] options = (int[]) ap.get("option_skill");
+				
+				b.append(' ').append("-option");
+				for (int i = 0; i < seats.length; i++) {
+					b.append(' ').append(seats[i]).append(' ').append(options[i]);
+				}
+			}
+		}
+
+		// v0.2.3 黑名单
+		if (!bo && (o = ap.get("limits")) != null) {
+			byte[] seats = (byte[]) o;
+			if (seats.length > 0) {
+				bo = true;
+				int[][] limits = (int[][]) ap.get("limit_skills");
+				
+				b.append(' ').append("-limit");
+				for (int i = 0; i < seats.length; i++) {
+					b.append(' ').append(seats[i]).append(' ');
+					int[] ls = limits[i];
+					
+					if (ls.length == 1) {
+						b.append(ls[0]);
+					} else {
+						b.append(ArraysUtils.intsToString(ls));
+					}
+				}
+			}
+		}
+		
+		return b.toString();
 	}
 
 	/**
@@ -92,19 +133,37 @@ public class RequestCodeRealizer implements ICodeRealizer {
 		byte team = Byte.parseByte(codes[1]);
 		byte[] seats = ArraysUtils.StringToBytes(codes[2]);
 		pf.getControlManager().putMoveRequest(team, seats);
-	}
-	
-	/* ************
-	 *	工具方法  *
-	 ************ */
-	
-	/**
-	 * list 转成字符串
-	 * @param list
-	 * @return
-	 */
-	private String listToString(byte[] array) {
-		return ArraysUtils.bytesToString(array);
+		
+		// v0.2.3 黑、白名单
+		if (codes.length > 3) {
+			int idx = 4;
+			final int len = codes.length;
+			// 因为黑名单与白名单不能同时存在
+			final boolean isLimit = "-limit".equals(codes[3]);
+			
+			for (; idx < len; idx += 2) {
+				byte seat = Byte.parseByte(codes[idx]);
+				if (codes[idx + 1].startsWith("[")) {
+					// 数组
+					int[] is = ArraysUtils.StringToInts(codes[idx + 1]);
+					for (int i = 0; i < is.length; i++) {
+						if (isLimit) {
+							pf.getControlManager().putMoveLimit(team, seat, is[i]);
+						} else {
+							pf.getControlManager().putMoveOption(team, seat, is[i]);
+						}
+					}
+				} else {
+					// 数值
+					int skillNum = Integer.parseInt(codes[idx + 1]);
+					if (isLimit) {
+						pf.getControlManager().putMoveLimit(team, seat, skillNum);
+					} else {
+						pf.getControlManager().putMoveOption(team, seat, skillNum);
+					}
+				}
+			}
+		}
 	}
 	
 	/* ************

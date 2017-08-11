@@ -36,6 +36,26 @@ public class ArraysUtils {
 	}
 	
 	/**
+	 * 将 byte 数组转化成字符串
+	 * @param arrays
+	 * @return
+	 */
+	public static String intsToString(int[] arrays) {
+		if (arrays.length == 0) {
+			return "[]";
+		}
+		
+		StringBuilder builder = new StringBuilder(arrays.length * 3 + 2);
+		builder.append('[');
+		int v = arrays.length - 1;
+		for (int i = 0; i < v; i++) {
+			builder.append(arrays[i]).append(',');
+		}
+		builder.append(arrays[v]).append(']');
+		return builder.toString();
+	}
+	
+	/**
 	 * 将 [1,2,3,4,5] 类似的字符串转成相应的 byte 数组
 	 * @param str
 	 * @return
@@ -54,12 +74,30 @@ public class ArraysUtils {
 	}
 	
 	/**
+	 * 将 [1,2,3,4,5] 类似的字符串转成相应的 int 数组
+	 * @param str
+	 * @return
+	 */
+	public static int[] StringToInts(String str) {
+		String[] ss = str.substring(1, str.length() - 1).split(",");
+		if (ss.length == 1 && ss[0].equals("")) {
+			return new int[0];
+		}
+		
+		int[] ints = new int[ss.length];
+		for (int i = 0; i < ss.length; i++) {
+			ints[i] = Byte.parseByte(ss[i]);
+		}
+		return ints;
+	}
+	
+	/**
 	 * byte 数组拷贝到一定长度
 	 * @param src
 	 * @param length
 	 * @return
 	 */
-	public static byte[] copyArray(byte[] src, int length) {
+	public static byte[] splitArray(byte[] src, int length) {
 		if (src.length == length) {
 			return src;
 		} else {
@@ -67,6 +105,21 @@ public class ArraysUtils {
 			System.arraycopy(src, 0, dest, 0, length);
 			return dest;
 		}
+	}
+	
+	/**
+	 * 查询在 src 中有没有 elem 元素
+	 * @param src
+	 * @param elem
+	 * @return
+	 */
+	public static boolean contain(byte[] src, byte elem) {
+		for (int i = 0; i < src.length; i++) {
+			if (src[i] == elem) {
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	/**

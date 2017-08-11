@@ -1,8 +1,11 @@
 package com.zdream.pmw.platform.control;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.zdream.pmw.platform.attend.AttendManager;
+import com.zdream.pmw.platform.attend.Attendant;
 import com.zdream.pmw.platform.prototype.IMessageCallback;
 import com.zdream.pmw.platform.prototype.IRequestCallback;
 
@@ -12,15 +15,17 @@ import com.zdream.pmw.platform.prototype.IRequestCallback;
  * <br>
  * <b>v0.2</b><br>
  *   与 <code>RequestSignal</code> 进行了合并<br>
- * <br>
+ * 
  * <p><b>v0.2.2</b><br>
  * 添加了回调函数属性. 原本回调函数属性实在子类 {@code SingleModeControl} 中,
  * 现在将其移到该超类中.</p>
  * 
- * @since v0.1
+ * <p><b>v0.2.3</b><br>
+ * 添加了输入检查.</p>
+ * 
+ * @since v0.1 [2016-03-31]
  * @author Zdream
- * @date 2016年3月31日
- * @version v0.2.2
+ * @version v0.2.3 [2017-05-10]
  */
 public abstract class ControlBase implements IRequestKey, IRespondKey, IMessageProvider {
 	
@@ -61,6 +66,21 @@ public abstract class ControlBase implements IRequestKey, IRespondKey, IMessageP
 	 */
 	protected boolean ready, loaded;
 	
+	protected int valid;
+	
+	/**
+	 * {@code valid} 参数的所有选值:
+	 * <li>VALID_UNKNOWED: 参数合法情况未知. 在未调用 {@link #check()} 方法时的参数
+	 * <li>VALID: 参数合法
+	 * <li>INVALID: 参数不合法
+	 * <li>MISSING: 参数缺失, 有需提交却还未提交的参数
+	 * </li>
+	 */
+	public static final int VALID_UNKNOWED = 0,
+			VALID = 1,
+			INVALID = 2,
+			MISSING = 3;
+	
 	/**
 	 * <p>当这个控制体中放入了请求的数据时, {@code ready} 这个参数就会为 {@code true},
 	 * 表示该请求已经准备好, 能够通知相应的控制方, 并能够接受指令.<br>
@@ -91,6 +111,32 @@ public abstract class ControlBase implements IRequestKey, IRespondKey, IMessageP
 	 */
 	public boolean isLoaded() {
 		return loaded;
+	}
+	
+	/**
+	 * <p>检测从玩家控制端输入的数据是否合法.
+	 * <p>判断合法是由参数 {@code valid} 来决定的. 如果调用该方法时,
+	 * 如果发现 {@code valid =} {@link #VALID_UNKNOWED}, 意味着输入参数
+	 * 没有检查, 此时会调用 {@link #check()} 方法检查数据;
+	 * 当 {@code valid} 为 {@link #VALID} 时返回 {@code true}.</p>
+	 * @return
+	 *   已输入的参数是否合法
+	 * @since v0.2.3
+	 */
+	public boolean isValid() {
+		if (valid == VALID_UNKNOWED) {
+			check();
+		}
+		return valid == VALID;
+	}
+	
+	/**
+	 * <p>获得是否合法的参数. 方法内不会调用 {@code #check()} 方法.
+	 * <p>valid 的 Getter 方法</p>
+	 * @return
+	 */
+	public int getValid() {
+		return valid;
 	}
 
 	/* ************
@@ -127,7 +173,7 @@ public abstract class ControlBase implements IRequestKey, IRespondKey, IMessageP
 	 */
 	
 	/**
-	 * <p>在请求域中放入控制方进行行动的必要数据和规则,
+	 * <p>在请求域中放入控制方进行行动的怪兽列表,
 	 * 但是该方法不通知控制方.</p>
 	 * <p>系统调用</p>
 	 * @param seats
@@ -141,6 +187,73 @@ public abstract class ControlBase implements IRequestKey, IRespondKey, IMessageP
 		request.put(KEY_REQ_CONTENT, VALUE_REQ_CONTENT_MOVE);
 		
 		ready = true;
+	}
+	
+	/**
+	 * <p>在请求域中放入控制方进行行动的怪兽对应的限制,
+	 * 座位号为 seat 的怪兽不允许使用哪些技能.
+	 * <p>传入的数据相当于黑名单, 在黑名单中的技能不允许选入;<br>
+	 * 如果请求域中含白名单和黑名单, 则仅白名单有效, 黑名单将失效.
+	 * <p>系统调用</p>
+	 * @param seat
+	 * @param skillNum
+	 *   技能在怪兽的技能列表中的索引, 作为黑名单
+	 * @throws IllegalStateException
+	 *   如果该请求不为请求行动时
+	 * @since v0.2.3
+	 */
+	public void putMoveLimit(byte seat, int skillNum) {
+		if (!VALUE_REQ_CONTENT_MOVE.equals(request.get(KEY_REQ_CONTENT))) {
+			throw new IllegalStateException(
+					"content:" + request.get(KEY_REQ_CONTENT) + " != moves");
+		}
+		
+		String key = KEY_REQ_LIMITS + seat;
+		Object o = request.get(key);
+		int[] is;
+		if (o == null) {
+			is = new int[]{skillNum};
+			request.put(key, is);
+		} else {
+			int[] os = (int[]) o;
+			boolean exist = false;
+			for (int i = 0; i < os.length; i++) {
+				if (skillNum == os[i]) {
+					exist = true;
+					break;
+				}
+			}
+			
+			if (!exist) {
+				is = new int[os.length + 1];
+				System.arraycopy(os, 0, is, 0, os.length);
+				is[os.length] = skillNum;
+				request.put(key, is);
+			}
+		}
+	}
+	
+	/**
+	 * <p>在请求域中放入控制方进行行动的怪兽对应的限制,
+	 * 座位号为 seat 的怪兽只能允许使用哪些技能.
+	 * <p>传入的数据相当于白名单, 在白名单外的技能不允许选入;
+	 * 白名单只有一项, 也就意味着当已经存在白名单时试图调用此方法,
+	 * 将使上一次设置的白名单失效, 白名单参数将重置成本次的值;<br>
+	 * 如果请求域中含白名单和黑名单, 则仅白名单有效, 黑名单将失效.
+	 * <p>系统调用</p>
+	 * @param seat
+	 * @param skillNum
+	 *   技能在怪兽的技能列表中的索引
+	 * @throws IllegalStateException
+	 *   如果该请求不为请求行动时
+	 * @since v0.2.3
+	 */
+	public void putMoveOption(byte seat, int skillNum) {
+		if (!VALUE_REQ_CONTENT_MOVE.equals(request.get(KEY_REQ_CONTENT))) {
+			throw new IllegalStateException(
+					"content:" + request.get(KEY_REQ_CONTENT) + " != moves");
+		}
+		
 	}
 	
 	/**
@@ -185,11 +298,19 @@ public abstract class ControlBase implements IRequestKey, IRespondKey, IMessageP
 	/**
 	 * <p>正式通知控制方处理请求.
 	 * 结果是调用 {@code IRequestCallback} 回调函数.</p>
-	 * <p>如果该控制体的 {@link isReady()} 为 {@code true} 时,
+	 * <p>如果该控制体的 {@link #isReady()} 为 {@code true} 时,
 	 * {@link IRequestSemaphore} 就会调用它.</p>
 	 */
 	public void inform() {
-		callback.onRequest(cm.getRoot(), this);
+		valid = 0;
+		while (!loaded) {
+			callback.onRequest(cm.getRoot(), this);
+			
+			// v0.2.3 当判断为游戏结束时, 自动跳出循环. 此时 loaded = false;
+			if (IRequestKey.VALUE_REQ_CONTENT_END.equals(getContent())) {
+				break;
+			}
+		}
 	}
 	
 	@Override
@@ -229,22 +350,280 @@ public abstract class ControlBase implements IRequestKey, IRespondKey, IMessageP
 	}
 	
 	/**
-	 * 返回需要请求行动的精灵 seat 数组
+	 * 询问当前请求是否为请求行动
+	 * @return
+	 *   当当前请求为请求行动时返回 true
+	 * @since v0.2.3
+	 */
+	public boolean isMoveContent() {
+		return VALUE_REQ_CONTENT_MOVE.equals(request.get(KEY_REQ_CONTENT));
+	}
+	
+	/**
+	 * 询问当前请求是否为交换怪兽
+	 * @return
+	 *   当当前请求为交换怪兽时返回 true
+	 * @since v0.2.3
+	 */
+	public boolean isSwitchContent() {
+		return VALUE_REQ_CONTENT_SWITCH.equals(request.get(KEY_REQ_CONTENT));
+	}
+	
+	/**
+	 * 询问当前请求是否为战斗结束
+	 * @return
+	 *   当当前请求为战斗结束时返回 true
+	 * @since v0.2.3
+	 */
+	public boolean isSwitchEnd() {
+		return VALUE_REQ_CONTENT_END.equals(request.get(KEY_REQ_CONTENT));
+	}
+	
+	/**
+	 * 返回需要请求行动的精灵 seat 数组的复制
 	 * @return
 	 */
 	public byte[] getSeats() {
+		byte[] seats = getSeats0();
+		return Arrays.copyOf(seats, seats.length);
+	}
+	
+	byte[] getSeats0() {
 		return (byte[]) request.get(KEY_REQ_SEAT);
 	}
 	
 	/**
 	 * 设置行动指令完成
 	 */
-	public void commit() {
-		cm.logPrintf(IPrintLevel.PRINT_LEVEL_WARN, "行动指令没有验证检测");
+	public boolean commit() {
+		cm.logPrintf(IPrintLevel.PRINT_LEVEL_DEBUG, "队伍 %d 尝试提交行动\r\n\t%s",
+				team, Thread.currentThread().getStackTrace()[1]);
+		if (!isValid()) {
+			cm.logPrintf(IPrintLevel.PRINT_LEVEL_DEBUG,
+					"检查到队伍 %d 尝试提交行动不合法\r\n\t%s",
+					team, Thread.currentThread().getStackTrace()[1]);
+			return false;
+		}
 		cm.logPrintf(IPrintLevel.PRINT_LEVEL_DEBUG, "队伍 %d 已经提交行动", team);
 		cm.getRoot().getControlManager().onCommitResponse();
 		
 		loaded = true;
+		return true;
+	}
+	
+	/**
+	 * <p>清除控制方提交的数据, 同时将 valid 参数置为 {@link #VALID_UNKNOWED}.
+	 * <p>控制方调用
+	 * @return
+	 */
+	public void clearResponse() {
+		respond.clear();
+		valid = VALID_UNKNOWED;
+	}
+	
+	/**
+	 * <p>检查从控制端输入的参数是否合法, 并将检查的结果写入到 {@code valid} 参数中.
+	 * <p>该方法会检查:
+	 * <li>输入数据是否缺失, 即检查是否有没有确定行动或没有确定更换的怪兽;
+	 * <li>输入数据是否合法, 如果在确定行动时, 当有白名单时, 选择白名单外的技能将
+	 * 视为不合法; 否则, 当有黑名单时, 选择黑名单内的技能将视为不合法; 再次, 除非
+	 * 所有的技能 PP 均为 0, 否则选择 PP 为 0 的技能将视为不合法.
+	 * </li>
+	 * 当同时出现参数缺失与参数不合法时, valid 为 {@link #INVALID}</p>
+	 */
+	public void check() {
+		String content = getContent();
+		switch (content) {
+		case VALUE_REQ_CONTENT_END:
+			this.valid = VALID;
+			break;
+		case VALUE_REQ_CONTENT_MOVE:
+			checkMoves();
+			break;
+		case VALUE_REQ_CONTENT_SWITCH:
+			this.valid = VALID;
+			break;
+		}
+	}
+	
+	protected void checkMoves() {
+		int result = VALID;
+		byte[] seats = getSeats0();
+		byte[] replaces = new byte[seats.length];
+		int replacesLen = 0;
+		
+		for (int i = 0; i < seats.length; i++) {
+			byte seat = seats[i];
+			String cmd = getCommand(seat);
+			
+			if (cmd == null) {
+				result = MISSING;
+				break;
+			}
+			
+			switch (cmd) {
+			case COMMAND_MOVES:
+				result = checkMovesCommand(seat);
+				break;
+			case COMMAND_REPLACE: {
+				byte replaceNo = (byte) getParam(seat);
+				if (replaceNo == -1) {
+					result = INVALID;
+				}
+				replaces[replacesLen++] = replaceNo;
+			} break;
+
+			default:
+				// TODO 检查未完成
+				result = INVALID;
+				break;
+			}
+			
+			if (result != VALID) {
+				break;
+			}
+		}
+		
+		// 更换是最后检查的
+		checkReplaceCommand(replaces, replacesLen);
+		
+		this.valid = result;
+	}
+	
+	private int checkMovesCommand(byte seat) {
+		int skillNum = this.getParam(seat);
+		if (skillNum == -1) {
+			return MISSING;
+		}
+		
+		byte target = this.getTarget(seat);
+		
+		return (checkMoves(seat, skillNum, target)) ? VALID : INVALID;
+	}
+	
+	private boolean checkMoves(byte seat, int skillNum, byte target) {
+		//	如果在确定行动时, 当有白名单时, 选择白名单外的技能将
+		//	视为不合法; 否则, 当有黑名单时, 选择黑名单内的技能将视为不合法; 再次, 除非
+		//	所有的技能 PP 均为 0, 否则选择 PP 为 0 的技能将视为不合法
+		
+		Object o;
+		
+		// 白名单, 无视黑名单和 PP 检查
+		if ((o = request.get(KEY_REQ_OPTION + seat)) != null) {
+			int option = (int) o;
+			return option == skillNum;
+		}
+		
+		boolean[] bs = new boolean[Attendant.SKILL_LENGTH];
+		Arrays.fill(bs, true);
+		
+		// 黑名单
+		if ((o = request.get(KEY_REQ_LIMITS + seat)) != null) {
+			int[] limits = (int[]) o;
+			for (int i = 0; i < limits.length; i++) {
+				bs[i] = false;
+				if (limits[i] == skillNum) {
+					return false;
+				}
+			}
+		}
+		
+		// PP 检查
+		AttendManager am = cm.getRoot().getAttendManager();
+		byte[] pps = am.getParticipant(seat).getAttendant().getSkillPP();
+		if (pps[skillNum] == 0) {
+			short[] skills = am.getParticipant(seat).getAttendant().getSkill();
+			for (int i = 0; i < pps.length; i++) {
+				if (!bs[i] || skills[i] == 0) {
+					continue;
+				}
+				if (pps[i] != 0) {
+					return false;
+				}
+			}
+		}
+		
+		return true;
+	}
+	
+	/**
+	 * @param replaceNo
+	 *   选择替换的怪兽 no
+	 * @return
+	 */
+	private int checkReplaceCommand(byte replaceNo) {
+		byte[] seats = getSeats0();
+		byte[] nos = new byte[seats.length];
+		
+		AttendManager am = cm.getRoot().getAttendManager();
+		
+		for (int i = 0; i < nos.length; i++) {
+			nos[i] = am.noForSeat(seats[i]);
+		}
+		
+		byte[] replaces = new byte[nos.length];
+		int replacesLen = 1;
+		replaces[0] = replaceNo;
+		
+		for (int i = 0; i < nos.length; i++) {
+			byte no = nos[i];
+			String cmd = getCommand(no);
+			
+			if (cmd == null) {
+				continue;
+			}
+			
+			if (cmd.equals(COMMAND_REPLACE)) {
+				byte replaceTo0 = (byte) getParam(no);
+				if (replaceTo0 == -1) {
+					continue;
+				}
+				replaces[replacesLen++] = replaceTo0;
+			}
+		}
+		
+		return checkReplaceCommand(replaces, replacesLen);
+	}
+	
+	/**
+	 * @param nos
+	 *   所有选择交换上场的怪兽的 no 列表
+	 * @param len
+	 *   seats 的有效长度
+	 * @return
+	 */
+	private int checkReplaceCommand(byte[] nos, int len) {
+		if (len == 0) {
+			return VALID;
+		}
+		
+		AttendManager am = cm.getRoot().getAttendManager();
+		boolean[] bs = new boolean[am.attendantLength()];
+		
+		// 放入在场的所有怪兽
+		byte[] exists = am.existSeats(team);
+		for (int i = 0; i < exists.length; i++) {
+			if (bs[exists[i]]) {
+				return INVALID;
+			} else {
+				bs[exists[i]] = true;
+			}
+		}
+		
+		for (int i = 0; i < len; i++) {
+			byte no = nos[i];
+			if (am.getAttendant(no).getHpi() == 0) {
+				// 不能选择空血的怪兽
+				return INVALID;
+			}
+			if (bs[no]) {
+				return INVALID;
+			} else {
+				bs[no] = true;
+			}
+		}
+		
+		return VALID;
 	}
 	
 	/* ************
@@ -273,7 +652,11 @@ public abstract class ControlBase implements IRequestKey, IRespondKey, IMessageP
 	private static final String KEY_COMMAND = "Command";
 	
 	public String getCommand(byte seat) {
-		return respond.get(KEY_COMMAND + seat).toString();
+		Object o;
+		if ((o = respond.get(KEY_COMMAND + seat)) != null) {
+			return o.toString();
+		}
+		return null;
 	}
 	
 	/**
@@ -283,6 +666,7 @@ public abstract class ControlBase implements IRequestKey, IRespondKey, IMessageP
 	 */
 	public void setCommand(byte seat, String command) {
 		respond.put(KEY_COMMAND + seat, command);
+		valid = VALID_UNKNOWED;
 	}
 	
 	/**
@@ -292,29 +676,36 @@ public abstract class ControlBase implements IRequestKey, IRespondKey, IMessageP
 			KEY_PARAM = "Param-",
 			KEY_TARGET = "Target-";
 	
-	public String getParam(byte seat) {
+	public int getParam(byte seat) {
 		String key = KEY_PARAM + seat;
 		Object v = respond.get(key);
 		if (v != null) {
-			return (String) v;
+			return (int) v;
 		} else {
-			return null;
+			return -1;
 		}
 	}
-	public void setParam(byte seat, String param) {
+	protected void setParam(byte seat, int param) {
 		respond.put(KEY_PARAM + seat, param);
+		valid = VALID_UNKNOWED;
 	}
-	public String getTarget(byte seat) {
+	/**
+	 * 目标, 默认为 -1
+	 * @param seat
+	 * @return
+	 */
+	public byte getTarget(byte seat) {
 		String key = KEY_TARGET + seat;
 		Object v = respond.get(key);
 		if (v != null) {
-			return (String) v;
+			return (byte) v;
 		} else {
-			return null;
+			return -1;
 		}
 	}
-	public void setTarget(byte seat, String target) {
+	protected void setTarget(byte seat, byte target) {
 		respond.put(KEY_TARGET + seat, target);
+		valid = VALID_UNKNOWED;
 	}
 	
 	/**
@@ -326,6 +717,7 @@ public abstract class ControlBase implements IRequestKey, IRespondKey, IMessageP
 		
 		ready = false;
 		loaded = false;
+		valid = VALID_UNKNOWED;
 	}
 	
 	/*
@@ -349,6 +741,8 @@ public abstract class ControlBase implements IRequestKey, IRespondKey, IMessageP
 	 *   该怪兽的第几个技能
 	 * @return
 	 *   该行动是否有效
+	 * @throws IllegalArgumentException
+	 *   当当前请求不为请求行动时
 	 * @since v0.2.1
 	 */
 	public boolean chooseMove(byte seat, int skillNum) {
@@ -366,15 +760,23 @@ public abstract class ControlBase implements IRequestKey, IRespondKey, IMessageP
 	 *   如果为 -1 时, 系统会尝试自动选择目标, 一旦失败, 就会判定失误
 	 * @return
 	 *   该行动是否有效
+	 * @throws IllegalArgumentException
+	 *   当当前请求不为请求行动时
 	 * @since v0.2.1
 	 */
 	public boolean chooseMove(byte seat, int skillNum, byte target) {
-		// TODO 对玩家输入的指令, 系统判断该行动是合法的, 返回 true, 否则 false
+		if (!isMoveContent()) {
+			throw new IllegalArgumentException("content: " + getContent() + " can not permit to choose move.");
+		}
+		// 对玩家输入的指令, 系统判断该行动是合法的, 返回 true, 否则 false
+		if (!checkMoves(seat, skillNum, target)) {
+			return false;
+		}
 		
 		setCommand(seat, COMMAND_MOVES);
-		setParam(seat, Integer.toString(skillNum));
+		setParam(seat, skillNum);
 		if (target >= 0) {
-			setTarget(seat, Byte.toString(target));
+			setTarget(seat, target);
 		}
 		
 		return true;
@@ -391,10 +793,13 @@ public abstract class ControlBase implements IRequestKey, IRespondKey, IMessageP
 	 * @since v0.2.1
 	 */
 	public boolean chooseReplace(byte seat, byte replaceNo) {
-		// TODO 对玩家输入的指令, 系统判断该行动是合法的, 返回 true, 否则 false
+		// 对玩家输入的指令, 系统判断该行动是合法的, 返回 true, 否则 false
+		if (checkReplaceCommand(replaceNo) != VALID) {
+			return false;
+		}
 
 		setCommand(seat, COMMAND_REPLACE);
-		setParam(seat, Byte.toString(replaceNo));
+		setParam(seat, replaceNo);
 		
 		return true;
 	}

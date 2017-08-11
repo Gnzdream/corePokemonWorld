@@ -4,9 +4,11 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Predicate;
 
 import com.zdream.pmw.platform.control.IPrintLevel;
 import com.zdream.pmw.platform.effect.SkillReleasePackage;
+import com.zdream.pmw.platform.order.RecorderQuerier.PackageIterator;
 import com.zdream.pmw.platform.order.event.AMoveEvent;
 import com.zdream.pmw.platform.order.event.IEvent;
 import com.zdream.pmw.platform.prototype.BattlePlatform;
@@ -151,11 +153,19 @@ public class OrderManager implements IPlatformComponent {
 	}
 	
 	/**
-	 * @see EventList#pushEventsToNext(IEvent)
+	 * @see EventList#pushEventsToNext(List)
 	 * @since v0.2.3
 	 */
-	public void pushEventsToNext(List<IEvent> events) {
+	public void pushEventsToNext(List<? extends IEvent> events) {
 		list.pushEventsToNext(events);
+	}
+	
+	/**
+	 * @see EventList#putAfterInstructions(String, IEvent)
+	 * @since v0.2.3
+	 */
+	public boolean putAfterInstructions(String name, IEvent event) {
+		return list.putAfterInstructions(name, event);
 	}
 	
 	/**
@@ -185,6 +195,7 @@ public class OrderManager implements IPlatformComponent {
 	public AMoveEvent removeMoveEvent(byte no) {
 		return list.removeMoveEvent(no);
 	}
+	
 	/**
 	 * 添加默认的回合结束事件
 	 */
@@ -202,6 +213,7 @@ public class OrderManager implements IPlatformComponent {
 	 */
 	
 	Recorder recorder;
+	RecorderQuerier querier;
 	
 	/**
 	 * 存储消息
@@ -236,6 +248,40 @@ public class OrderManager implements IPlatformComponent {
 	public SkillReleasePackage[] getReleasePackage(int round) {
 		return recorder.getReleasePackage(round);
 	}
+
+	/**
+	 * @see RecorderQuerier#querySkillIdsByAtno(byte)
+	 * @since v0.2.3
+	 */
+	public short querySkillIdByAtno(byte atno) {
+		return querier.querySkillIdByAtno(atno);
+	}
+
+	/**
+	 * @see RecorderQuerier#queryByAtno(byte)
+	 * @since v0.2.3
+	 */
+	public PackageIterator queryByAtno(byte atno) {
+		return querier.queryByAtno(atno);
+	}
+	
+	/**
+	 * call {@code RecorderQuerier.query(func, null)}
+	 * @see RecorderQuerier#query(Predicate, Predicate)
+	 * @since v0.2.3
+	 */
+	public SkillReleasePackage query(Predicate<SkillReleasePackage> func) {
+		return querier.query(func, null);
+	}
+	
+	/**
+	 * @see RecorderQuerier#query(Predicate, Predicate)
+	 * @since v0.2.3
+	 */
+	public SkillReleasePackage query(Predicate<SkillReleasePackage> func,
+			Predicate<SkillReleasePackage> checker) {
+		return querier.query(func, checker);
+	}
 	
 	/* ************
 	 *	 初始化   *
@@ -268,6 +314,7 @@ public class OrderManager implements IPlatformComponent {
 		}
 		
 		recorder = new Recorder(this);
+		querier = new RecorderQuerier(this);
 		this.pf = pf;
 	}
 	

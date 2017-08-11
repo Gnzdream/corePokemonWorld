@@ -23,9 +23,20 @@
     
 3.  请求行动: request-move
     SEATS
-    team: 队伍, byte
+    team: byte, 队伍
     seats: byte 数组
-    已经注册的状态: 蓄力状态
+    [limits]: byte[]
+    	黑名单 seats 列表
+    [limit_skills]: int[][]
+    	黑名单中对应于上面每一个 limits 的 seat, 它不允许使用的技能列表
+    [option]: byte[]
+    	白名单 seats 列表
+    [option_skill]: int[]
+    	白名单中对应于上面每一个 option 的 seat, 它只能使用的技能.
+    	每个 seat 只有一项.
+    	当白名单和黑名单同时存在时, 黑名单失效
+    	(选择上看似失效, 实际上如果白名单出现的技能黑名单上也出现, 则怪兽只能使用挣扎)
+    已经注册的状态: 蓄力状态, 定身术状态
     
 *   请求选择精灵上场: request-commit
     SEATS 所有存在怪兽的位置
@@ -65,8 +76,13 @@
     注: 它在 v0.2.2 之前叫 release-skill
     SEATS [攻击方 seat]
     seat: byte 攻击方座位号
-    skillID: short 技能 ID (可修改)
-    已经注册的状态: 混乱, 蓄力(period,p=-5), 愤怒(后拦截)
+    oriSkillID: short 在精灵的技能表中显示的技能的 ID (不可修改)
+    skillID: short 技能 ID (可修改), 开始等同于 oriSkillID
+        当数据为 -1 时说明不能发动
+    [reason]: String, 当 skillID = -1 时存在,
+        说明不能发动的理由
+    已经注册的状态: 混乱, 蓄力(period,p=-5), 愤怒(后拦截),
+        定身(disable,p=-5)
     
 9.  真 * 释放技能 (可能包括使用道具等): release-skill
     SEATS [攻击方 seat]
@@ -82,7 +98,7 @@
 
 101.判定行动: judge-moveable
     seat: byte
-    skillNum: byte 第几个技能，不是技能 ID
+    skillNum: int 第几个技能，不是技能 ID
     result: boolean
     [fail]: String (可以含 [] 来添加说明性的指令代码)
         比如，因为麻痹无法行动，fault="PARALYSIS"，得到的 cmd 就是 "judge-moveable fault PARALYSIS"
@@ -361,7 +377,20 @@ skill.ReleaseData 的 key:
 
 2.  请求行动（系统）：request-move x1 x2
     x1 队伍号，整数
-    x2 seats，数组形式（例：[0,1]，无空格）
+    x2 seats，数组形式（例：[0,1]）
+    
+    其它参数:
+    *	黑名单参数
+    -limit x3 x4 [x3 x4 ...]
+    x3 seat, x4 的黑名单是哪个座位的怪兽的
+    x4 黑名单, 不允许选择的技能, 允许的格式有:
+    	1       如果只有一个参数
+    	[0,1]   如果有多个参数
+    
+    *	白名单参数
+    -option x5 x6 [x5 x6 ...]
+    x5 seat, x6 的白名单是哪个座位的怪兽的
+    x6 白名单, 只能选择的技能, 白名单只能含一个参数
 
 3.  扣 PP：ppSub x1 x2 x3
     x1 seat，整数
@@ -463,12 +492,22 @@ skill.ReleaseData 的 key:
     	broadcast immune -atseat <atseat> -dfseat <dfseat>
     invalid: 技能发动失败
     	broadcast immune -atseat <atseat>
+    	
+    disable: 定身术发动
+    	broadcast disable -atseat <atseat>
 	
 	多轮攻击中:
 	连击开始
 		broadcast multi -tag start
 	连击结束
 		broadcast multi -tag end -round <连击总次数, int>
+
+--------------- v0.2.3 特殊状态的施加规则
+定身法:
+	force-state disabled -no 1 -source SKILL -skillID 50 -lock <x1>
+		x1: int 定住的是被施加方的技能 ID
+(诅咒之躯 | 特性)
+
 
 ======== 灵感
 欺骗空间的效果是，所有精灵的速度 x -1

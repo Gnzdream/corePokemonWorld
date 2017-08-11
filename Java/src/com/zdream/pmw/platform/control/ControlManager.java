@@ -252,6 +252,26 @@ public class ControlManager implements IPlatformComponent {
 	}
 	
 	/**
+	 * @param team
+	 *   队伍号
+	 * @see ControlBase#putMoveLimit(byte, int)
+	 * @version v0.2.3
+	 */
+	public void putMoveLimit(byte team, byte seat, int skillNum) {
+		ctrls[team].putMoveLimit(seat, skillNum);
+	}
+	
+	/**
+	 * @param team
+	 *   队伍号
+	 * @see ControlBase#putMoveOption(byte, int)
+	 * @version v0.2.3
+	 */
+	public void putMoveOption(byte team, byte seat, int skillNum) {
+		ctrls[team].putMoveOption(seat, skillNum);
+	}
+	
+	/**
 	 * <p>将选择怪兽上场的请求数据放入到对应队伍的控制体中,
 	 * 等待之后正式提出请求.</p>
 	 * <p>一般发生在原有的怪兽已经退场, 请求新的怪兽代替它的位置.</p>

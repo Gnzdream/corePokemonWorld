@@ -1,4 +1,5 @@
 {
+"50":{"pp_max":20,"effect":[{"t":"init","recqr":{"in":"atno","keys":"recent_sk","out":"skillNum"}},{"t":"a","v":"disable","_context":{"-lock":"recent_sk"},"n":"a.state"}],"accuracy":100,"skill_id":50,"power":0,"title":"定身术","type":"normal","category":"status","desc":"阻碍对手行动，之前使出的招式将在４回合内无法使用。"},
 "51":{"pp_max":30,"effect":[{"r":10,"t":"a","v":-1,"i":"SD","n":"a.ablc"}],"accuracy":100,"skill_id":51,"power":40,"title":"溶解液","type":"poison","category":"special","desc":"将强酸泼向对手进行攻击。有时会降低对手的特防。"},
 "52":{"pp_max":25,"effect":[{"r":10,"t":"a","i":"BURN","n":"a.abn"}],"accuracy":100,"skill_id":52,"power":40,"title":"火花","type":"fire","category":"special","desc":"向对手发射小型火焰进行攻击。有时会让对手陷入灼伤状态。"},
 "53":{"pp_max":15,"effect":[{"r":10,"t":"a","i":"BURN","n":"a.abn"}],"accuracy":100,"skill_id":53,"power":90,"title":"喷射火焰","type":"fire","category":"special","desc":"向对手发射烈焰进行攻击。有时会让对手陷入灼伤状态。"},

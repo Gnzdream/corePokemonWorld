@@ -151,6 +151,11 @@ public class SkillReleasePackage {
 	 */
 	public static final String DATA_KEY_RANGE = "range";
 	/**
+	 * 目标的 no 列表, byte[]<br>
+	 * 与上面的 seat 列表的元素一一对应
+	 */
+	public static final String DATA_KEY_RANGE_NO = "range_no";
+	/**
 	 * 分配到每个 instruction 的参数, 含部分 formula, JsonObject
 	 */
 	public static final String DATA_KEY_PARAM = "_p";
@@ -243,13 +248,14 @@ public class SkillReleasePackage {
 	/*
 	 * 技能发动的原始数据
 	 * 攻击方 no（byte）
-	 * 选择技能序号（byte）
+	 * 选择技能序号（int）
 	 * 原始目标（byte）
 	 * v0.2.3
 	 */
 	byte atno;
-	byte skillNum;
+	int skillNum;
 	byte originTarget;
+	int round;
 	
 	/**
 	 * @reurn
@@ -263,7 +269,7 @@ public class SkillReleasePackage {
 	 * 该释放的技能是怪兽的第几个技能
 	 * @return
 	 */
-	public byte getSkillNum() {
+	public int getSkillNum() {
 		return skillNum;
 	}
 	
@@ -280,6 +286,15 @@ public class SkillReleasePackage {
 	}
 	
 	/**
+	 * 这是在第几回合释放的
+	 * @return
+	 * @since v0.2.3
+	 */
+	public int getRound() {
+		return round;
+	}
+	
+	/**
 	 * 设置原始的命令, 包括原攻击方、选择的技能序号、原始选择的目标
 	 * @param no
 	 *   原攻击方 no
@@ -287,7 +302,7 @@ public class SkillReleasePackage {
 	 *   原选择的技能, 在该攻击方怪兽
 	 * @param originTarget
 	 */
-	void setOriginCommand(byte no, byte skillNum, byte originTarget) {
+	void setOriginCommand(byte no, int skillNum, byte originTarget) {
 		this.atno = no;
 		this.skillNum = skillNum;
 		this.originTarget = originTarget;
@@ -385,6 +400,19 @@ public class SkillReleasePackage {
 	}
 	
 	/**
+	 * 释放的技能 Id
+	 * @return
+	 * @since v0.2.3
+	 */
+	public short getSkillId() {
+		Object o = getData(DATA_KEY_SKILL_ID);
+		if (o != null) {
+			return (short) o;
+		}
+		return -1;
+	}
+	
+	/**
 	 * 能否行动的参数
 	 */
 	public static final int
@@ -410,6 +438,15 @@ public class SkillReleasePackage {
 	}
 	
 	/**
+	 * 技能释放范围的 seat 集合
+	 * @return
+	 * @since v0.2.3
+	 */
+	public byte[] getRanges() {
+		return ((byte[]) report.getData(DATA_KEY_RANGE));
+	}
+	
+	/**
 	 * 在技能目标中第 index 个防御方的 seat
 	 * @param index
 	 *   从 0 开始
@@ -420,9 +457,7 @@ public class SkillReleasePackage {
 	}
 	
 	/**
-	 * 在技能目标中第 index 个防御方的 seat
-	 * @param index
-	 *   从 0 开始
+	 * 在技能目标中当前判定的所有 seat 集合, 可能和 range 不同
 	 * @return
 	 */
 	public byte[] getTargets() {
@@ -618,10 +653,19 @@ public class SkillReleasePackage {
 	}
 
 	/**
-	 * 
+	 * <p>通知这个 SkillReleasePackage 一个消息, 它将被存储到 om.recoder 中.
+	 * <p>因此在这个时间点中, SkillReleasePackage 中的所有的数据将不能被修改,
+	 * 所有的环境引用需要被清除, 只允许留有数据.
+	 * <p>该方法由 om 模块调用.</p>
+	 * @param round
+	 *   当前的回合数
+	 * @since v0.2.3
 	 */
-	public void clear() {
-		
+	public void store(int round) {
+		this.round = round;
+		this.skr = null;
+		this.atStaff = null;
+		this.dfStaffs = null;
 	}
 	
 	

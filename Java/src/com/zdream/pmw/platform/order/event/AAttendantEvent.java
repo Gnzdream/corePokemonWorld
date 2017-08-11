@@ -43,7 +43,7 @@ public abstract class AAttendantEvent implements IEvent {
 			}
 		}
 		
-		return ArraysUtils.copyArray(seats, index);
+		return ArraysUtils.splitArray(seats, index);
 	}
 	
 	/**
@@ -66,7 +66,7 @@ public abstract class AAttendantEvent implements IEvent {
 		if (index == 0) {
 			return null;
 		} else {
-			return ArraysUtils.copyArray(seatsForTeam, index);
+			return ArraysUtils.splitArray(seatsForTeam, index);
 		}
 	}
 	

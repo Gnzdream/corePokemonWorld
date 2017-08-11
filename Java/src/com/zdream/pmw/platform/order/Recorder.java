@@ -50,7 +50,7 @@ public class Recorder {
 	 * @param pack
 	 */
 	public void storeReleasePackage(SkillReleasePackage pack) {
-		pack.clear();
+		pack.store(om.round);
 		om.logPrintf(OrderManager.PRINT_LEVEL_DEBUG,
 				"--- recent release report ---\n\t" + pack.getReport().toString());
 		packs.add(pack);

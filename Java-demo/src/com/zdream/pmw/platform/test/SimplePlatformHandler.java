@@ -104,8 +104,11 @@ public class SimplePlatformHandler {
 			
 			switch (act) {
 			case 0: case 1: case 2: case 3:
-				ctrl.chooseMove(seat, act);
-				return 1; // 该轮行动重判断结束, 下一个
+				if (ctrl.chooseMove(seat, act)) {
+					return 1; // 该轮行动重判断结束, 下一个
+				}
+				System.out.println("不能选择该技能");
+				break;
 				
 			case 6:
 				return actReplace(platform, ctrl, seat);
@@ -128,8 +131,11 @@ public class SimplePlatformHandler {
 			return 0;
 		}
 		int num = Integer.valueOf(str.trim());
-		ctrl.chooseReplace(seat, (byte) num);
-		return 1;
+		
+		if (ctrl.chooseReplace(seat, (byte) num)) {
+			return 1;
+		}
+		return 0;
 	}
 	
 	private void screenInfo(BattlePlatform platform, ControlBase ctrl) {

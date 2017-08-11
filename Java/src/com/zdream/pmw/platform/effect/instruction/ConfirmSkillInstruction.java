@@ -11,6 +11,7 @@ import com.zdream.pmw.platform.effect.AInstruction;
 import com.zdream.pmw.platform.effect.Aperitif;
 import com.zdream.pmw.platform.effect.SkillReleasePackage;
 import com.zdream.pmw.platform.order.event.IEvent;
+import com.zdream.pmw.platform.prototype.BattlePlatform;
 import com.zdream.pmw.util.json.JsonArray;
 import com.zdream.pmw.util.json.JsonObject;
 import com.zdream.pmw.util.json.JsonValue;
@@ -71,13 +72,18 @@ public final class ConfirmSkillInstruction extends AInstruction {
 	@Override
 	protected void execute() {
 		short skillId = comfirmSkill();
-		skr = am.getSkillRelease(skillId);
-		putData(SkillReleasePackage.DATA_KEY_SKILL_ID, skillId);
+		if (skillId != -1) {
+			skr = am.getSkillRelease(skillId);
+			putData(SkillReleasePackage.DATA_KEY_SKILL_ID, skillId);
+			
+			confirmFormula();
+			putData0();
+	
+			putNextInstructions();
+		} else {
+			// TODO 技能不能发动, 可能是定身术启动
+		}
 		
-		confirmFormula();
-		putData0();
-
-		putNextInstructions();
 	}
 	
 	private short comfirmSkill() {
@@ -88,10 +94,17 @@ public final class ConfirmSkillInstruction extends AInstruction {
 				.getSkill()[pack.getSkillNum()];
 		ap.put("seat", atseat);
 		ap.put("skillID", skillID);
+		ap.put("oriSkillID", skillID);
 		em.getRoot().readyCode(ap);
 		
 		// 像混乱触发、变身等状态触发时, 能够修改释放的技能
-		return (short) ap.get("skillID");
+		short newId = (short) ap.get("skillID");
+		if (newId == -1) {
+			pf.logPrintf(BattlePlatform.PRINT_LEVEL_INFO, "at : " + Thread.currentThread().getStackTrace()[1]);
+			pf.logPrintf(BattlePlatform.PRINT_LEVEL_INFO, "由于 %s 的原因, 技能无法发动", ap.get("reason"));
+		}
+		
+		return newId;
 	}
 	
 	/* ************
@@ -213,9 +226,13 @@ public final class ConfirmSkillInstruction extends AInstruction {
 		list.add(ins);
 		
 		if (hasInstruction(confsk, "pp-sub", true)) {
-			ins = (AInstruction) loadFormula("i.ppsub");
-			ins.setPackage(pack);
-			list.add(ins);
+			// 判断这是否是蓄力技的第二、第三及更后面的回合
+			// 如果下面条件不满足, 说明是, 不需要扣 PP 值
+			if (getData(SkillReleasePackage.DATA_KEY_PERIOD_COUNT) == null) {
+				ins = (AInstruction) loadFormula("i.ppsub");
+				ins.setPackage(pack);
+				list.add(ins);
+			}
 		}
 		
 		if (hasInstruction(confsk, "range", true)) {

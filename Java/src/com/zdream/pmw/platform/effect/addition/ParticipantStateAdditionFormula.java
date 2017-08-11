@@ -1,6 +1,8 @@
 package com.zdream.pmw.platform.effect.addition;
 
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import com.zdream.pmw.platform.effect.Aperitif;
 import com.zdream.pmw.platform.effect.EffectManage;
@@ -137,9 +139,39 @@ public class ParticipantStateAdditionFormula extends AAdditionFormula {
 		rate = 100;
 	}
 	
+	@Override
+	protected void preHandle() {
+		super.preHandle();
+		
+		// 在环境中存在的形参, 替换的参数, v0.2.3
+		// _context
+		Object o = value.get("_context");
+		if (o != null) {
+			handleContext((JsonObject) o);
+		}
+	}
+	
 	/* ************
 	 *	私有方法  *
 	 ************ */
+	
+	/**
+	 * 将 package 中的数据直接传递到 value 中
+	 * @param jo
+	 * @since v0.2.3
+	 */
+	protected void handleContext(JsonObject jo) {
+		Map<String, JsonValue> map = jo.asMap();
+		
+		for (Iterator<Entry<String, JsonValue>> it = map.entrySet().iterator(); it.hasNext();) {
+			Entry<String, JsonValue> entry = it.next();
+			String key = entry.getKey();
+			String ckey = entry.getValue().getString();
+			this.value.put(key, getData(ckey));
+		}
+		
+		map.remove("_context");
+	}
 	
 	protected boolean canTrigger() {
 		// 计算附加状态真实释放几率

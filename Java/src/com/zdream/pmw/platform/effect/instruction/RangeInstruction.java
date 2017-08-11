@@ -62,10 +62,14 @@ public class RangeInstruction extends AInstruction {
 		
 		seats = (byte[]) ap.get("result");
 		putData(SkillReleasePackage.DATA_KEY_RANGE, seats);
+		byte[] nos = new byte[seats.length];
 		
 		for (int i = 0; i < seats.length; i++) {
-			pack.setDfStaff(em.getAttends().getParticipant(seats[i]), i);
+			byte seat = seats[i];
+			nos[i] = am.noForSeat(seat);
+			pack.setDfStaff(em.getAttends().getParticipant(seat), i);
 		}
+		putData(SkillReleasePackage.DATA_KEY_RANGE_NO, nos);
 	}
 
 }

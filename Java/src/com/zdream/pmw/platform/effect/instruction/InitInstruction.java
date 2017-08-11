@@ -99,7 +99,18 @@ public class InitInstruction extends AInstruction {
 	private void createInstruction(String key, JsonObject jo, ArrayList<IEvent> list) {
 		AInstruction ins = (AInstruction) loadFormula("i." + key);
 		ins.setPackage(pack);
-		list.add(ins);
+		
+		// 关于 instruction 放的位置
+		String pos = em.getConfig("pos-after.inst." + key);
+		if (pos == null) {
+			list.add(ins);
+		} else {
+			boolean b = pf.getOrderManager().putAfterInstructions(pos, ins);
+			if (!b) {
+				em.logPrintf(EffectManage.PRINT_LEVEL_WARN, "%s 事件无法添加到指定位置: %s 之后 \r\n\t%s",
+						key, pos, Thread.currentThread().getStackTrace()[1]);
+			}
+		}
 		
 		JsonObject jo0 = super.getParameterOrCreate(key);
 		jo0.putAll(jo);

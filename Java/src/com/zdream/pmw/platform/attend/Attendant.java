@@ -270,7 +270,7 @@ public class Attendant implements Serializable{
 	/**
 	 * （能力值）参数长度，包括战斗和表演的能力值
 	 */
-	private static final int SKILL_LENGTH = 4;
+	public static final int SKILL_LENGTH = 4;
 	
 	/**
 	 * 技能列表 skill<br>

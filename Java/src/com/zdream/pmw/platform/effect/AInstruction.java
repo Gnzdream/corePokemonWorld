@@ -114,7 +114,7 @@ public abstract class AInstruction implements IEvent, IFormula, IMessageCode {
 		pf.getOrderManager().pushEventToNext(eve);
 	}
 	
-	protected void putNextEvents(List<IEvent> eves) {
+	protected void putNextEvents(List<? extends IEvent> eves) {
 		pf.getOrderManager().pushEventsToNext(eves);
 	}
 	

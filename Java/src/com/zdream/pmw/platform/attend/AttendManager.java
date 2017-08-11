@@ -255,6 +255,37 @@ public class AttendManager implements IPlatformComponent {
 	}
 	
 	/**
+	 * 指定队伍中有怪兽的 seat 列表
+	 * @param team
+	 *   队伍号
+	 * @return
+	 * @since v0.2.3
+	 */
+	public byte[] existSeats(byte team) {
+		int length = 0; // result 的长度
+		int seatLength = this.seatLength();
+		boolean[] exists = new boolean[seatLength];
+		
+		for (byte seat = 0; seat < seatLength; seat++) {
+			if (participants[seat] != null && teamForSeat(seat) == team) {
+				exists[seat] = true;
+				length++;
+			}
+		}
+		
+		byte[] result = new byte[length];
+		int index = 0; // result 的索引
+		
+		for (byte seat = 0; seat < seatLength; seat++) {
+			if (exists[seat]) {
+				result[index++] = seat;
+			}
+		}
+		
+		return result;
+	}
+	
+	/**
 	 * 获得胜利方的阵营<br>
 	 * 当战场进行到一定的阶段，有且只有一个阵营还有能够战斗的精灵<br>
 	 * 那么该阵营以及该阵营的所有队伍均获得胜利<br>

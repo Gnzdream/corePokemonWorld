@@ -103,9 +103,8 @@ public class DefaultAIBrain implements IAIRunnable {
 			while (true) {
 				move = random.nextInt(moveLength);
 				if (skills[move] != 0) {
-					ctrl.setCommand(seat, ControlBase.COMMAND_MOVES);
-					ctrl.setParam(seat, Integer.toString(move));
-					break;
+					if (ctrl.chooseMove(seat, move));
+						break;
 				}
 			}
 		}
@@ -127,8 +126,8 @@ public class DefaultAIBrain implements IAIRunnable {
 			for (; no < length; no++) {
 				Attendant at = am.getAttendant(no);
 				if (am.teamForNo(no) == team && am.seatForNo(no) == -1 && at.getHpi() > 0) {
-					ctrl.chooseReplace(seat, no);
-					break;
+					if (ctrl.chooseReplace(seat, no));
+						break;
 				}
 			}
 		}

@@ -26,7 +26,8 @@ public interface IRequestSemaphore {
 	
 	/**
 	 * 客户端 (玩家 / AI 等) 部分提交请求时触发<br>
-	 * 该函数需要检查数据的完整性, 在多线程模式中还需要改动信号量. <br>
+	 * 该函数需要检查数据的完整性, 尽管在 ControlBase 中已经进行了一次初步的检查.<br>
+	 * 在多线程模式中还需要改动信号量.<br>
 	 */
 	public void onCommitResponse();
 	

@@ -40,18 +40,18 @@ public class MoveEvent extends AMoveEvent {
 	 * 指明了该技能释放者的技能<br>
 	 * 该号码是指精灵释放的技能在精灵的列表的索引，而不是技能的号码
 	 */
-	private byte skillNum;
+	private int skillNum;
 	
 	/**
 	 * 目标参数
 	 */
 	private byte target;
 
-	public byte getSkillNum() {
+	public int getSkillNum() {
 		return skillNum;
 	}
 
-	public void setSkillNum(byte skillNum) {
+	public void setSkillNum(int skillNum) {
 		this.skillNum = skillNum;
 	}
 

@@ -47,7 +47,7 @@ public class SkillReleaseBox implements IPokemonDataType {
 	 *   原始目标数据<br>
 	 * 例如训练师下达命令中，选择的对象，可能为 -1
 	 */
-	public void moveAct(byte no, byte skillNum, byte originTarget) {
+	public void moveAct(byte no, int skillNum, byte originTarget) {
 		moveAct(no, skillNum, originTarget, null);
 	}
 	
@@ -67,7 +67,7 @@ public class SkillReleaseBox implements IPokemonDataType {
 	 *   选项, 用于修改该技能的计算方式. 默认为空.<br>
 	 *   格式:
 	 */
-	public void moveAct(byte no, byte skillNum, byte originTarget, final JsonObject param) {
+	public void moveAct(byte no, int skillNum, byte originTarget, final JsonObject param) {
 		initMoveAct(no, skillNum, originTarget);
 		
 		AInstruction[] insts = new AInstruction[] {
@@ -92,7 +92,7 @@ public class SkillReleaseBox implements IPokemonDataType {
 	 * @param skillNum
 	 * @param originTarget
 	 */
-	private void initMoveAct(byte no, byte skillNum, byte originTarget) {
+	private void initMoveAct(byte no, int skillNum, byte originTarget) {
 		AttendManager am = em.getAttends();
 		pack = new SkillReleasePackage();
 		// pack.initEnvironment(em.getRoot());

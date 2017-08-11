@@ -120,7 +120,7 @@ public class EffectManage implements IPlatformComponent {
 	 *   原始目标数据<br>
 	 * 例如训练师下达命令中，选择的对象，可能为 -1
 	 */
-	public void moveAct(byte no, byte skillNum, byte originTarget) {
+	public void moveAct(byte no, int skillNum, byte originTarget) {
 		box.moveAct(no, skillNum, originTarget);
 	}
 	
@@ -128,7 +128,7 @@ public class EffectManage implements IPlatformComponent {
 	 * 技能行动释放, 并加入选项参数, 来修改该技能的计算方式
 	 * @see SkillReleaseBox#moveAct(byte, byte, byte, JsonValue)
 	 */
-	public void moveAct(byte no, byte skillNum, byte originTarget, JsonObject param) {
+	public void moveAct(byte no, int skillNum, byte originTarget, JsonObject param) {
 		box.moveAct(no, skillNum, originTarget, param);
 	}
 

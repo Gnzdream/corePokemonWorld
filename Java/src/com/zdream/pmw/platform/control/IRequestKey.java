@@ -5,10 +5,12 @@ package com.zdream.pmw.platform.control;
  * 将常用的请求指令在此写明<br>
  * 写明系统向玩家或 AI 发送的信息的种类<br>
  * 
- * @since v0.1.1
+ * <p><b>v0.2.3</b><br>
+ * 补充了黑白名单 key.</p>
+ * 
+ * @since v0.1.1 [2016-04-05]
  * @author Zdream
- * @date 2016年4月5日
- * @version v0.1.1
+ * @version v0.2.3 [2017-05-09]
  */
 public interface IRequestKey {
 	
@@ -62,5 +64,25 @@ public interface IRequestKey {
 		VALUE_REQ_RESULT_SUCCESS = "success",
 		VALUE_REQ_RESULT_TIED = "tied",
 		VALUE_REQ_RESULT_LOSE = "lose";
+	
+	/**
+	 * <p>对应的怪兽不允许使用哪些技能
+	 * <p>{@code KEY_REQ_LIMITS + <seat>} 作为座位号 seat 的怪兽不允许使用技能的 key,
+	 * 从请求域中获得的数据类型为 int[], 为技能选择的黑名单, 在数组中的所有元素代表着
+	 * 对应怪兽的技能列表的索引. 黑名单与白名单同时存在存在时, 黑名单将失效.
+	 * <p>该类数据可选</p>
+	 * @since v0.2.3
+	 */
+	public static final String KEY_REQ_LIMITS = "req_limits";
+	
+	/**
+	 * <p>对应的怪兽只允许使用哪些技能
+	 * <p>{@code KEY_REQ_OPTIONS + <seat>} 作为座位号 seat 的怪兽只能选择的技能的 key,
+	 * 从请求域中获得的数据类型为 int (不是数组), 这也意味着白名单只有一项,
+	 * 该值对应怪兽的技能列表的索引. 黑名单与白名单同时存在存在时, 黑名单将失效.
+	 * <p>该类数据可选</p>
+	 * @since v0.2.3
+	 */
+	public static final String KEY_REQ_OPTION = "req_options";
 	
 }

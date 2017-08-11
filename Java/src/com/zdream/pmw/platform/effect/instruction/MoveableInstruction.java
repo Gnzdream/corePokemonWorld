@@ -1,5 +1,8 @@
 package com.zdream.pmw.platform.effect.instruction;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.zdream.pmw.platform.effect.AInstruction;
 import com.zdream.pmw.platform.effect.SkillReleasePackage;
 import com.zdream.pmw.platform.effect.moveable.IMoveableFormula;
@@ -67,18 +70,33 @@ public class MoveableInstruction extends AInstruction {
 	}
 	
 	private void onMoveSuccess() {
-		// TODO 向下执行: 数据初始化、扣 PP、检查是否发动失败、判断属性免疫和命中
+		// 向下执行: 数据初始化、扣 PP、检查是否发动失败、判断属性免疫和命中
 	}
 	
 	private void onMoveFail() {
+		List<AInstruction> list = new ArrayList<>();
+		
+		// broadcast
 		JsonObject jo = new JsonObject();
+		jo.put("type", "disable");
+		jo.put("-atseat", pack.getAtStaff().getSeat());
+		
+		AInstruction ins = (AInstruction) loadFormula("i.broadcast");
+		ins.setPackage(pack);
+		ins.set(jo);
+		list.add(ins);
+		
+		// finish
+		jo = new JsonObject();
 		jo.put("result", ReleaseFinishInstruction.RESULT_FAIL);
 		jo.put("reason", moveable.reasonOf());
 		
-		AInstruction ins = (AInstruction) loadFormula("i.finish");
+		ins = (AInstruction) loadFormula("i.finish");
 		ins.setPackage(pack);
 		ins.set(jo);
-		putNextEvent(ins);
+		list.add(ins);
+		
+		putNextEvents(list);
 	}
 
 }

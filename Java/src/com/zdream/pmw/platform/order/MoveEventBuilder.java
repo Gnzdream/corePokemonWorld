@@ -132,19 +132,18 @@ public class MoveEventBuilder {
 			String cmd = base.getCommand(seat);
 			switch (cmd) {
 			case ControlBase.COMMAND_MOVES: { // 选择释放技能
-				String skillNumStr = base.getParam(seat);
-				String targetStr = base.getTarget(seat);
+				int skillNum = base.getParam(seat);
+				byte target = base.getTarget(seat);
 				
 				events.add(buildMoveEvent0(am.noForSeat(seat), 
-						Byte.parseByte(skillNumStr), 
-						(targetStr == null) ? (byte) -1 : Byte.parseByte(targetStr)));
+						skillNum, target));
 			} break;
 			
 			case ControlBase.COMMAND_REPLACE: { // 选择换怪兽上场
-				String replaceStr = base.getParam(seat);
+				byte replace = (byte) base.getParam(seat);
 				
 				events.add(buildReplaceEvent(am.noForSeat(seat),
-						Byte.parseByte(replaceStr), seat));
+						replace, seat));
 			} break;
 			
 			case ControlBase.COMMAND_BAG: { // 选择使用背包道具
@@ -168,7 +167,7 @@ public class MoveEventBuilder {
 	 * @param target
 	 * @return
 	 */
-	private MoveEvent buildMoveEvent0(byte no, byte skillNum, byte target) {
+	private MoveEvent buildMoveEvent0(byte no, int skillNum, byte target) {
 		MoveEvent event = new MoveEvent();
 		
 		event.setNo(no);

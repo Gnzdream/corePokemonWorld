@@ -189,7 +189,7 @@ public class HitInstruction extends AInstruction {
 		
 		float rate = (acc * hitrate / hide);
 
-		boolean result = !RanValue.isBigger((int) (rate * 1000), 1000);
+		boolean result = !RanValue.isBigger((int) (rate * 10), 1000);
 		return result;
 	}
 

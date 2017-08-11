@@ -67,12 +67,13 @@ public interface IState extends IMessageCode {
 	 * 那么比飞空状态优先度低的状态，道具光粉产生的状态都不会执行
 	 * @param interceptor
 	 *   拦截器
-	 * @param value
-	 * @param pf @since 0.2
+	 * @param ap
+	 * @param pf
+	 *   版本 v0.2 增加的参数<br>
 	 *   这是环境
 	 * @return
 	 */
-	default public String execute(Aperitif value,
+	default public String execute(Aperitif ap,
 			IStateInterceptable interceptor,
 			BattlePlatform pf) {
 		return interceptor.nextState();

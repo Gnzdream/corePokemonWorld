@@ -1,0 +1,47 @@
+【技能发动流程】
+
+1.	玩家和 AI 是通过 ControlBase 向系统发送使用的技能、道具、换精灵的指令的.
+	在该玩家完成所有的指令的输入后, 会调用 ControlBase.commit() 方法.
+	然后控制权交回到系统的手中.
+
+	在 ControlBase.commit() 中会进行对指令合法性的检查. 这里只讨论发动技能的情况.
+
+	在请求玩家或 AI 进行指令输入之前, 系统已经在 ControlBase 中放入了技能选择的白名单和黑名单.
+	检查指令合法性时, 会进行黑名单、白名单以及 PP 数值的检查.
+
+	所有技能的合法性的检查完毕之后, 会调用
+	IRequestSemaphore.onCommitResponse()
+
+2.	随后进入 DefaultRequestEvent.buildMoveEvent() 将所有的请求指令转化成行动事件.
+	它会调用 MoveEventBuilder.build() 方法
+	将所有的 ControlBase 控制体里面存放的指令产生一个 MoveEvent, 并存放到 EventList.Storage 里面
+
+3.	OrderManager 每次将优先度最高的 MoveEvent 拿出来, 调用其 IEvent.action(BattlePlatform) 方法运行
+	MoveEvent 实现了这个接口, 因此调用了 action 方法也是技能发动命令建立的入口.
+
+	MoveEvent.action(BattlePlatform)
+	  EffectManage.moveAct(byte no, int skillNum, byte originTarget, JsonObject param)
+	    SkillReleaseBox.moveAct(byte no, int skillNum, byte originTarget, JsonObject param)
+	      SkillReleaseBox.initMoveAct(byte no, int skillNum, byte originTarget)
+	        里面新建一个 SkillReleasePackage 并加入了基础数据
+	      建立 ConfirmSkillInstruction 的指挥部分, 并初始化;
+	      然后让 ConfirmSkillInstruction 接管 SkillReleasePackage;
+	      将 ConfirmSkillInstruction 作为一个 Event 交给 OrderManage 控制;
+
+4.	AInstruction 是一类能够当作 Event, 并交给 OrderManage 管理并逐个执行的控制单元.
+	ConfirmSkillInstruction 是一个技能发动的第一个单元.
+	它主要负责确定怪兽释放的是哪个技能. 一般而言, 玩家输入的是哪个技能, 确定的就是哪个技能;
+	但是碰到像【混乱】触发、【摇手指】这样的技能的话, 就需要重新确定发动的是什么技能.
+	确定技能时会向系统发送消息 CODE_CONFIRM_SKILL, 来辅助确定技能 ID.
+	然后它还会确定接下去发动哪些 AInstruction, 并把它们放入 OrderManage 中.
+
+	【混乱】触发攻击自己的技能 ID 是 0.
+
+	SkillReleasePackage 是存储 AInstruction 数据的地方.
+	它能将前面的 AInstruction 的数据带到下一个 AInstruction 中.
+
+	ConfirmSkillInstruction 存放了以下数据
+	skillId (DATA_KEY_SKILL_ID): 确定要发动的技能 ID
+	_p (DATA_KEY_PARAM): 分配到每个 instruction 的参数, 含部分 formula, JsonObject
+
+5.	MoveableInstruction 是判断怪兽能否行动的指示 (控制单元)
